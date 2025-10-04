@@ -1,6 +1,6 @@
 "use client";
 
-import { getCategories, type Category } from "@/actions/get-categories.action";
+import { type Category } from "@/actions/get-categories.action";
 import { updateCategory } from "@/actions/update-category.action";
 import ImageUpload from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useCategoriesForSelect } from "@/hooks/use-categories-for-select";
 import { categorySchema, type CategoryFormData } from "@/schemas/category.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -27,8 +28,9 @@ interface EditCategoryModalProps {
 const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ category, open, onOpenChange }) => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
-  const [loadingCategories, setLoadingCategories] = useState<boolean>(false);
+
+  // Use SWR hook for categories, excluding the current category to prevent circular reference
+  const { categories, isLoading: loadingCategories, mutate } = useCategoriesForSelect([category.id]);
 
   const {
     register,
@@ -46,33 +48,6 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ category, open, o
       parentId: category.parentId,
     },
   });
-
-  // Fetch categories when modal opens
-  useEffect(() => {
-    if (open) {
-      setLoadingCategories(true);
-      getCategories()
-        .then((result) => {
-          if (result.success) {
-            // Filter out the current category and its descendants to prevent circular references
-            setCategories(
-              result.data
-                .filter((cat) => cat.id !== category.id)
-                .map((cat) => ({
-                  id: cat.id,
-                  name: cat.name,
-                })),
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching categories:", error);
-        })
-        .finally(() => {
-          setLoadingCategories(false);
-        });
-    }
-  }, [open, category.id]);
 
   // Reset form when category changes
   useEffect(() => {
@@ -94,6 +69,8 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ category, open, o
       if (result.success) {
         toast.success(`Category "${result.data.name}" updated successfully!`);
         onOpenChange(false);
+        // Revalidate SWR cache to show updated category immediately
+        await mutate();
         router.refresh();
       } else {
         toast.error(result.error);
@@ -187,7 +164,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ category, open, o
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None (Top-level category)</SelectItem>
-                    {categories.map((cat) => (
+                    {categories?.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}
                       </SelectItem>

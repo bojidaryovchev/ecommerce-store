@@ -1,7 +1,6 @@
 "use client";
 
 import { createCategory } from "@/actions/create-category.action";
-import { getCategories } from "@/actions/get-categories.action";
 import ImageUpload from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,12 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useCategoriesForSelect } from "@/hooks/use-categories-for-select";
 import { categorySchema, type CategoryFormData } from "@/schemas/category.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
@@ -29,8 +29,9 @@ const CreateCategoryModal: React.FC = () => {
   const router = useRouter();
   const [open, setOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
-  const [loadingCategories, setLoadingCategories] = useState<boolean>(false);
+
+  // Use SWR hook for categories
+  const { categories, isLoading: loadingCategories, mutate } = useCategoriesForSelect();
 
   const {
     register,
@@ -42,30 +43,6 @@ const CreateCategoryModal: React.FC = () => {
     resolver: zodResolver(categorySchema),
   });
 
-  // Fetch categories when modal opens
-  useEffect(() => {
-    if (open) {
-      setLoadingCategories(true);
-      getCategories()
-        .then((result) => {
-          if (result.success) {
-            setCategories(
-              result.data.map((cat) => ({
-                id: cat.id,
-                name: cat.name,
-              })),
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching categories:", error);
-        })
-        .finally(() => {
-          setLoadingCategories(false);
-        });
-    }
-  }, [open]);
-
   const onSubmit = async (data: CategoryFormData) => {
     setIsSubmitting(true);
 
@@ -76,6 +53,8 @@ const CreateCategoryModal: React.FC = () => {
         toast.success(`Category "${result.data.name}" created successfully!`);
         reset(); // Clear the form
         setOpen(false); // Close the modal
+        // Revalidate SWR cache to show new category immediately
+        await mutate();
         router.refresh(); // Refresh the page to show new category
       } else {
         toast.error(result.error);
@@ -175,7 +154,7 @@ const CreateCategoryModal: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None (Top-level category)</SelectItem>
-                    {categories.map((category) => (
+                    {categories?.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
                       </SelectItem>
