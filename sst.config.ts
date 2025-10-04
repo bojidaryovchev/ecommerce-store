@@ -54,6 +54,9 @@ export default $config({
       },
       environment: {
         DEPLOYMENT_ENV: $app.stage,
+        AUTH_SECRET: process.env.AUTH_SECRET!,
+        AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID!,
+        AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET!,
       },
       link: [...identities],
     });

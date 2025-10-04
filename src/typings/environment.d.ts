@@ -4,5 +4,8 @@ declare namespace NodeJS {
     PORT: string;
     DEPLOYMENT_ENV?: "dev" | "prod";
     DATABASE_URL: string;
+    AUTH_SECRET: string;
+    AUTH_GOOGLE_ID: string;
+    AUTH_GOOGLE_SECRET: string;
   }
 }
