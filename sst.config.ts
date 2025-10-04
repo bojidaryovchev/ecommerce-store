@@ -13,7 +13,7 @@ interface Identity {
 export default $config({
   app(input) {
     return {
-      name: "a-unique-kebab-case-name-for-your-resources",
+      name: "pinref-com",
       removal: isProd(input.stage) ? "retain" : "remove",
       home: "aws",
     };
@@ -22,7 +22,7 @@ export default $config({
   // The main run function where all Pulumi resources are defined
   async run() {
     // Determine the domain name based on the deployment stage
-    const domainName = isProd($app.stage) ? "yourdomain.com" : `${$app.stage}.yourdomain.com`;
+    const domainName = isProd($app.stage) ? "pinref.com" : `${$app.stage}.pinref.com`;
 
     // Create a SES domain identity with DMARC policy for email sending
     const domainIdentity = new sst.aws.Email("NextEmail", {
@@ -30,7 +30,7 @@ export default $config({
       dmarc: "v=DMARC1; p=quarantine; adkim=s; aspf=s;",
     });
 
-    const emailIdentities: Identity[] = [{ name: "SupportEmail", sender: "contact@yourcompany.com" }];
+    const emailIdentities: Identity[] = [{ name: "SupportEmail", sender: "support@pinref.com" }];
 
     const identities = [
       domainIdentity,
@@ -41,12 +41,30 @@ export default $config({
       ),
     ];
 
+    const uploadsBucketName = `pinref-uploads-${$app.stage}`;
+    const uploadsBucketArgs: sst.aws.BucketArgs = {
+      access: "public",
+      cors: {
+        allowHeaders: ["*"],
+        allowMethods: ["GET", "PUT", "POST", "HEAD"],
+        allowOrigins: ["http://localhost:3000", `https://${domainName}`],
+        exposeHeaders: [],
+      },
+      transform: {
+        bucket: {
+          bucket: uploadsBucketName,
+        },
+      },
+    };
+
+    const uploadsBucket = new sst.aws.Bucket("Uploads", uploadsBucketArgs);
+
     // Deploy the Next.js application with specified domain
     new sst.aws.Nextjs("NextApp", {
       domain: {
         name: domainName,
         dns: sst.aws.dns({
-          zone: "YOUR_DOMAIN_HOSTED_ZONE_ID",
+          zone: "Z00860783LFS4Z4XIHT4N",
         }),
       },
       server: {
@@ -57,8 +75,9 @@ export default $config({
         AUTH_SECRET: process.env.AUTH_SECRET!,
         AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID!,
         AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET!,
+        NEXT_PUBLIC_APP_URL: `https://${domainName}`,
       },
-      link: [...identities],
+      link: [...identities, uploadsBucket],
     });
   },
 });

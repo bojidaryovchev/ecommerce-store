@@ -22,7 +22,12 @@ export const categorySchema = z.object({
 
   image: z.url("Image must be a valid URL").optional().nullable(),
 
-  parentId: z.cuid("Invalid parent category ID").optional().nullable(),
+  parentId: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val))
+    .pipe(z.cuid("Invalid parent category ID").optional().nullable()),
 });
 
 /**

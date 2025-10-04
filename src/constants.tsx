@@ -1,5 +1,5 @@
 // Support email
-export const CONTACT_EMAIL = "contact@yourcompany.com";
+export const CONTACT_EMAIL = "support@pinref.com";
 
 // Site metadata
 export const SITE_TITLE = "Next.js SST Starter";

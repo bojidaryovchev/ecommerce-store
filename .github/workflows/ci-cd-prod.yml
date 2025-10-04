@@ -31,6 +31,7 @@ jobs:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
           AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           npx sst unlock --stage prod
           npx sst deploy --stage prod --print-logs --verbose
