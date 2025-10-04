@@ -12,7 +12,7 @@ else
 fi
 
 # Step 2: Automatically detect an SSO-enabled profile
-PROFILE="explicitly_write_your_profile_here_if_it_cannot_be_found"
+PROFILE="dev-sso"
 for profile in $(aws configure list-profiles); do
   SSO_START_URL=$(aws configure get sso_start_url --profile "$profile" 2>/dev/null)
   if [[ -n "$SSO_START_URL" ]]; then
