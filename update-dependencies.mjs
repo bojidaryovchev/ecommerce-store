@@ -3,6 +3,7 @@
 import { execSync } from "child_process";
 import { copyFileSync, existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { join } from "path";
+import { cwd } from "process";
 
 /**
  * Dependency Update Script
@@ -18,8 +19,8 @@ import { join } from "path";
  * - Creates backup before making changes
  */
 
-const PACKAGE_JSON_PATH = join(__dirname, "package.json");
-const BACKUP_PATH = join(__dirname, "package.json.backup");
+const PACKAGE_JSON_PATH = join(cwd(), "package.json");
+const BACKUP_PATH = join(cwd(), "package.json.backup");
 
 // Color codes for console output
 const colors = {
