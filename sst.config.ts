@@ -75,6 +75,7 @@ export default $config({
         AUTH_SECRET: process.env.AUTH_SECRET!,
         AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID!,
         AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET!,
+        AUTH_TRUST_HOST: "true",
         NEXT_PUBLIC_APP_URL: `https://${domainName}`,
       },
       link: [...identities, uploadsBucket],
