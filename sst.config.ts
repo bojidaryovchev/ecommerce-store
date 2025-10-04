@@ -69,10 +69,10 @@ export default $config({
       },
       server: {
         architecture: "arm64",
-        streaming: false,
       },
       environment: {
         DEPLOYMENT_ENV: $app.stage,
+        DATABASE_URL: process.env.DATABASE_URL!,
         AUTH_SECRET: process.env.AUTH_SECRET!,
         AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID!,
         AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET!,
@@ -81,9 +81,6 @@ export default $config({
         NEXT_PUBLIC_UPLOADS_BUCKET: uploadsBucketName,
       },
       link: [...identities, uploadsBucket],
-      experimental: {
-        disableIncrementalCache: true,
-      },
     });
   },
 });

@@ -15,21 +15,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
-    // Add support for WASM files
-    config.experiments = {
-      ...config.experiments,
-      asyncWebAssembly: true,
-      layers: true,
-    };
-
-    // Ensure WASM files are copied to the output
-    if (isServer) {
-      config.output.webassemblyModuleFilename = "chunks/[id].wasm";
-    }
-
-    return config;
-  },
 };
 
 export default nextConfig;

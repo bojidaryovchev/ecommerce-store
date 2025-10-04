@@ -5,7 +5,7 @@
   "scripts": {
     "prepare": "husky install",
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "lint": "eslint",
     "lint-staged:eslint:fix": "eslint --fix **/*.{js,mjs,ts,tsx}",
     "lint-staged:prettier:write": "prettier --write **/*.{js,mjs,ts,tsx,css,md,json}",
