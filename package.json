@@ -4,10 +4,9 @@
   "private": true,
   "scripts": {
     "prepare": "husky install",
-    "build": "next build",
     "dev": "next dev --turbopack",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit",
+    "build": "next build --turbopack",
+    "lint": "eslint",
     "lint-staged:eslint:fix": "eslint --fix **/*.{js,mjs,ts,tsx}",
     "lint-staged:prettier:write": "prettier --write **/*.{js,mjs,ts,tsx,css,md,json}",
     "prisma:migrate": "prisma migrate dev",
