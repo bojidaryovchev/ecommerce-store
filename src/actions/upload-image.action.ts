@@ -2,7 +2,6 @@
 
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { Resource } from "sst";
 import { v4 as uuidv4 } from "uuid";
 
 const s3Client = new S3Client({});
@@ -35,7 +34,7 @@ export async function getUploadUrl(fileName: string, fileType: string): Promise<
 
     // Create presigned URL for upload
     const command = new PutObjectCommand({
-      Bucket: Resource.UploadsBucket.name,
+      Bucket: process.env.NEXT_PUBLIC_UPLOADS_BUCKET,
       Key: key,
       ContentType: fileType,
     });
@@ -45,7 +44,7 @@ export async function getUploadUrl(fileName: string, fileType: string): Promise<
     });
 
     // Construct the public URL
-    const fileUrl = `https://${Resource.UploadsBucket.name}.s3.amazonaws.com/${key}`;
+    const fileUrl = `https://${process.env.NEXT_PUBLIC_UPLOADS_BUCKET}.s3.amazonaws.com/${key}`;
 
     return {
       success: true,
