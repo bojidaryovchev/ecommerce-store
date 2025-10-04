@@ -69,6 +69,7 @@ export default $config({
       },
       server: {
         architecture: "arm64",
+        streaming: false,
       },
       environment: {
         DEPLOYMENT_ENV: $app.stage,
@@ -80,6 +81,9 @@ export default $config({
         NEXT_PUBLIC_UPLOADS_BUCKET: uploadsBucketName,
       },
       link: [...identities, uploadsBucket],
+      experimental: {
+        disableIncrementalCache: true,
+      },
     });
   },
 });
