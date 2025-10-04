@@ -13,5 +13,9 @@ declare module "sst" {
       type: "sst.aws.Email";
       sender: string;
     };
+    UploadsBucket: {
+      type: "sst.aws.Bucket";
+      name: string;
+    };
   }
 }
