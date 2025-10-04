@@ -1,4 +1,4 @@
-import { sendContactFormEmail } from "@/API";
+import { sendContactFormEmail } from "@/actions/send-contact-form-email.action";
 import { contactFormSchema } from "@/schemas/contact-form.schema";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Validation failed",
-          details: error.errors,
+          details: error.issues,
         },
         { status: 400 },
       );
