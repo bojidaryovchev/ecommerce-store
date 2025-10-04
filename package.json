@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint-staged:eslint:fix": "eslint --fix **/*.{js,mjs,ts,tsx}",
     "lint-staged:prettier:write": "prettier --write **/*.{js,mjs,ts,tsx,css,md,json}",
-    "prisma:migrate": "prisma migrate",
+    "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
   },
   "lint-staged": {
