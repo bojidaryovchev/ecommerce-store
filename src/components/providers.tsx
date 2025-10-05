@@ -1,6 +1,7 @@
 import AuthProviders from "@/components/auth-providers";
 import HtmlProviders from "@/components/html-providers";
 import ToasterProviders from "@/components/toaster-providers";
+import { CartProvider } from "@/contexts/cart-context";
 import React, { PropsWithChildren } from "react";
 
 const Providers: React.FC<PropsWithChildren> = ({ children }) => {
@@ -8,7 +9,9 @@ const Providers: React.FC<PropsWithChildren> = ({ children }) => {
     <>
       <HtmlProviders>
         <AuthProviders>
-          <ToasterProviders>{children}</ToasterProviders>
+          <CartProvider>
+            <ToasterProviders>{children}</ToasterProviders>
+          </CartProvider>
         </AuthProviders>
       </HtmlProviders>
     </>
