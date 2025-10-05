@@ -1,7 +1,9 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { sendCriticalStockAlert, sendLowStockAlert, sendOutOfStockAlert } from "@/lib/email-notifications";
 import { prisma } from "@/lib/prisma";
+import { checkVariantNeedsRestock } from "@/lib/stock-monitor";
 import {
   adjustVariantStockSchema,
   bulkAdjustStockSchema,
@@ -53,7 +55,46 @@ export async function adjustVariantStock(data: AdjustVariantStockInput) {
     const updatedVariant = await prisma.productVariant.update({
       where: { id: validated.id },
       data: { stockQuantity: newStockQuantity },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            lowStockThreshold: true,
+          },
+        },
+      },
     });
+
+    // Check if stock alert needs to be triggered
+    const stockCheck = await checkVariantNeedsRestock(validated.id);
+    if (stockCheck && stockCheck.needsRestock) {
+      // Only send alert if stock is decreasing (to avoid alert spam on restocks)
+      if (validated.adjustment < 0) {
+        const alertItem = {
+          type: "variant" as const,
+          id: updatedVariant.id,
+          productId: updatedVariant.productId,
+          productName: updatedVariant.product.name,
+          productSlug: updatedVariant.product.slug,
+          variantId: updatedVariant.id,
+          stockQuantity: updatedVariant.stockQuantity,
+          threshold: updatedVariant.product.lowStockThreshold || 5,
+          status: stockCheck.status,
+          lastUpdated: new Date(),
+        };
+
+        // Send appropriate alert based on status
+        if (stockCheck.status === "out-of-stock") {
+          await sendOutOfStockAlert([alertItem]);
+        } else if (stockCheck.status === "critical") {
+          await sendCriticalStockAlert([alertItem]);
+        } else if (stockCheck.status === "low-stock") {
+          await sendLowStockAlert([alertItem]);
+        }
+      }
+    }
 
     revalidatePath("/admin/products");
     revalidatePath(`/admin/products/${variant.productId}`);
@@ -64,6 +105,7 @@ export async function adjustVariantStock(data: AdjustVariantStockInput) {
       previousStock: variant.stockQuantity,
       newStock: newStockQuantity,
       adjustment: validated.adjustment,
+      stockAlert: stockCheck?.needsRestock ? stockCheck.status : null,
     };
   } catch (error) {
     console.error("Adjust variant stock error:", error);
@@ -112,9 +154,55 @@ export async function bulkAdjustVariantStock(data: BulkAdjustStockInput) {
         prisma.productVariant.update({
           where: { id: adjustment.id },
           data: { stockQuantity: adjustment.newQuantity },
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                lowStockThreshold: true,
+              },
+            },
+          },
         }),
       ),
     );
+
+    // Check all updated variants for stock alerts
+    const stockChecks = await Promise.all(updates.map((variant) => checkVariantNeedsRestock(variant.id)));
+
+    // Collect items that need alerts
+    const alertItems = updates
+      .map((variant, index) => {
+        const check = stockChecks[index];
+        if (!check || !check.needsRestock) return null;
+
+        return {
+          type: "variant" as const,
+          id: variant.id,
+          productId: variant.productId,
+          productName: variant.product.name,
+          productSlug: variant.product.slug,
+          variantId: variant.id,
+          stockQuantity: variant.stockQuantity,
+          threshold: variant.product.lowStockThreshold || 5,
+          status: check.status,
+          lastUpdated: new Date(),
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    // Group alerts by status and send
+    if (alertItems.length > 0) {
+      const critical = alertItems.filter((i) => i.status === "critical");
+      const outOfStock = alertItems.filter((i) => i.status === "out-of-stock");
+      const lowStock = alertItems.filter((i) => i.status === "low-stock");
+
+      // Send alerts (no await to avoid blocking)
+      if (critical.length > 0) sendCriticalStockAlert(critical);
+      if (outOfStock.length > 0) sendOutOfStockAlert(outOfStock);
+      if (lowStock.length > 0) sendLowStockAlert(lowStock);
+    }
 
     // Get unique product IDs for revalidation
     const productIds = [...new Set(variants.map((v) => v.productId))];
@@ -129,6 +217,7 @@ export async function bulkAdjustVariantStock(data: BulkAdjustStockInput) {
       updatedVariants: updates,
       count: updates.length,
       message: `Successfully updated ${updates.length} variant${updates.length === 1 ? "" : "s"}`,
+      alertsTriggered: alertItems.length,
     };
   } catch (error) {
     console.error("Bulk adjust stock error:", error);
