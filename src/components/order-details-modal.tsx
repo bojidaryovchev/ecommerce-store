@@ -2,7 +2,9 @@
 
 import type { OrderDetails } from "@/actions/get-order-details.action";
 import CancelOrderDialog from "@/components/cancel-order-dialog";
+import { OrderStatusTracker } from "@/components/order-status-tracker";
 import OrderStatusUpdateForm from "@/components/order-status-update-form";
+import { OrderTimeline } from "@/components/order-timeline";
 import RefundOrderDialog from "@/components/refund-order-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,6 +93,12 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, open, onOp
           </TabsList>
 
           <TabsContent value="details" className="space-y-6 pt-4">
+            {/* Real-time Order Status Tracker */}
+            <OrderStatusTracker order={order} />
+
+            {/* Order Timeline */}
+            <OrderTimeline history={order.statusHistory} />
+
             {/* Customer Information */}
             <Card>
               <CardHeader>
@@ -292,40 +300,6 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, open, onOp
                 )}
               </CardContent>
             </Card>
-
-            {/* Status History */}
-            {order.statusHistory.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Status History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {order.statusHistory.map((history) => (
-                      <div key={history.id} className="flex gap-3 text-sm">
-                        <div className="text-muted-foreground whitespace-nowrap">
-                          {new Date(history.createdAt).toLocaleString()}
-                        </div>
-                        <div>
-                          {history.fromStatus && (
-                            <>
-                              <Badge className={getOrderStatusInfo(history.fromStatus).color} variant="outline">
-                                {getOrderStatusInfo(history.fromStatus).label}
-                              </Badge>
-                              <span className="mx-2">→</span>
-                            </>
-                          )}
-                          <Badge className={getOrderStatusInfo(history.toStatus).color}>
-                            {getOrderStatusInfo(history.toStatus).label}
-                          </Badge>
-                          {history.note && <p className="text-muted-foreground mt-1">{history.note}</p>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
 
           <TabsContent value="manage" className="space-y-4 pt-4">

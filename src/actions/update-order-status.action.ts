@@ -1,5 +1,6 @@
 "use server";
 
+import { orderEvents } from "@/lib/order-events";
 import { canUpdateOrderStatus } from "@/lib/order-utils";
 import { prisma } from "@/lib/prisma";
 import type { OrderStatusUpdateFormData } from "@/schemas/order.schema";
@@ -40,7 +41,7 @@ export async function updateOrderStatus(
     }
 
     // Update order status and create status history
-    await prisma.$transaction(async (tx) => {
+    const updatedOrder = await prisma.$transaction(async (tx) => {
       // Update order
       const updateData: Record<string, unknown> = {
         status: targetStatus,
@@ -63,9 +64,10 @@ export async function updateOrderStatus(
           break;
       }
 
-      await tx.order.update({
+      const updated = await tx.order.update({
         where: { id: orderId },
         data: updateData,
+        select: { id: true, userId: true, status: true },
       });
 
       // Create status history entry
@@ -77,6 +79,18 @@ export async function updateOrderStatus(
           note: validated.note,
         },
       });
+
+      return updated;
+    });
+
+    // Emit real-time event for order status change
+    orderEvents.emitOrderUpdate({
+      orderId: updatedOrder.id,
+      userId: updatedOrder.userId,
+      status: updatedOrder.status,
+      previousStatus: order.status,
+      timestamp: new Date(),
+      note: validated.note ?? undefined,
     });
 
     revalidatePath("/admin/orders");
