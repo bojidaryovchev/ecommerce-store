@@ -1,16 +1,33 @@
 "use client";
 
 import type { OrderDetails } from "@/actions/get-order-details.action";
+import CancelOrderDialog from "@/components/cancel-order-dialog";
 import OrderStatusUpdateForm from "@/components/order-status-update-form";
+import RefundOrderDialog from "@/components/refund-order-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatOrderTotal, getOrderStatusInfo, getPaymentStatusInfo } from "@/lib/order-utils";
-import { Calendar, CreditCard, Info, MapPin, Package, Phone, Settings, ShoppingBag, Truck, User } from "lucide-react";
+import {
+  Calendar,
+  CreditCard,
+  Info,
+  MapPin,
+  Package,
+  Phone,
+  RefreshCcw,
+  Settings,
+  ShoppingBag,
+  Truck,
+  User,
+  XCircle,
+} from "lucide-react";
 import Image from "next/image";
 import type React from "react";
+import { useState } from "react";
 
 interface OrderDetailsModalProps {
   order: OrderDetails;
@@ -20,6 +37,9 @@ interface OrderDetailsModalProps {
 }
 
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, open, onOpenChange, onOrderUpdated }) => {
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
   const handleOrderUpdate = () => {
     onOrderUpdated?.();
     onOpenChange(false);
@@ -28,6 +48,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, open, onOp
   const paymentStatus = getPaymentStatusInfo(order.paymentStatus);
   const customerName = order.user?.name || order.customerName || "Guest";
   const customerEmail = order.user?.email || order.customerEmail;
+
+  const canCancel = order.status !== "CANCELLED" && order.status !== "REFUNDED" && order.status !== "DELIVERED";
+  const canRefund = order.paymentStatus === "PAID" && order.status !== "REFUNDED";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -306,9 +329,10 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, open, onOp
           </TabsContent>
 
           <TabsContent value="manage" className="space-y-4 pt-4">
+            {/* Status Management */}
             <Card>
               <CardHeader>
-                <CardTitle>Order Management</CardTitle>
+                <CardTitle>Order Status Management</CardTitle>
               </CardHeader>
               <CardContent>
                 <OrderStatusUpdateForm
@@ -319,9 +343,66 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, open, onOp
                 />
               </CardContent>
             </Card>
+
+            {/* Refund & Cancel Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {/* Refund Button */}
+                {canRefund && (
+                  <div className="space-y-2">
+                    <Button variant="outline" className="w-full" onClick={() => setRefundDialogOpen(true)}>
+                      <RefreshCcw className="mr-2 h-4 w-4" />
+                      Process Refund
+                    </Button>
+                    <p className="text-muted-foreground text-xs">Issue a full or partial refund to the customer</p>
+                  </div>
+                )}
+
+                {/* Cancel Button */}
+                {canCancel && (
+                  <div className="space-y-2">
+                    <Button variant="destructive" className="w-full" onClick={() => setCancelDialogOpen(true)}>
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Cancel Order
+                    </Button>
+                    <p className="text-muted-foreground text-xs">
+                      Cancel this order {order.paymentStatus === "PAID" ? "and optionally issue a refund" : ""}
+                    </p>
+                  </div>
+                )}
+
+                {!canRefund && !canCancel && (
+                  <p className="text-muted-foreground text-center text-sm">No actions available for this order</p>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Refund Dialog */}
+      <RefundOrderDialog
+        orderId={order.id}
+        orderNumber={order.orderNumber}
+        orderTotal={Number(order.total)}
+        open={refundDialogOpen}
+        onOpenChange={setRefundDialogOpen}
+        onSuccess={handleOrderUpdate}
+      />
+
+      {/* Cancel Dialog */}
+      <CancelOrderDialog
+        orderId={order.id}
+        orderNumber={order.orderNumber}
+        currentStatus={order.status}
+        paymentStatus={order.paymentStatus}
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        onSuccess={handleOrderUpdate}
+      />
     </Dialog>
   );
 };

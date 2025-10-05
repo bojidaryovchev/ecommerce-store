@@ -183,7 +183,8 @@ export const orderStatusUpdateSchema = z.object({
 export const orderFilterSchema = z.object({
   status: orderStatusEnum.optional(),
   paymentStatus: paymentStatusEnum.optional(),
-  customerEmail: z.string().email().optional(),
+  orderNumber: z.string().optional(),
+  customerEmail: z.string().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   page: z.number().int().min(1).default(1),

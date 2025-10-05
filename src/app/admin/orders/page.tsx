@@ -1,15 +1,19 @@
-import { getOrders } from "@/actions/get-orders.action";
+"use client";
+
+import OrderFilters from "@/components/order-filters";
+import OrderSearchBar from "@/components/order-search-bar";
 import OrdersList from "@/components/orders-list";
-import type { Metadata } from "next";
+import type { OrderFilterData } from "@/schemas/order.schema";
 import type React from "react";
+import { useState } from "react";
 
-export const metadata: Metadata = {
-  title: "Orders",
-  description: "Manage customer orders",
-};
+const OrdersPage: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<Partial<OrderFilterData>>({});
 
-const OrdersPage: React.FC = async () => {
-  const { orders } = await getOrders();
+  const handleFiltersChange = (newFilters: Partial<OrderFilterData>) => {
+    setFilters(newFilters);
+  };
 
   return (
     <div className="space-y-8">
@@ -21,8 +25,16 @@ const OrdersPage: React.FC = async () => {
         </div>
       </div>
 
+      {/* Search and Filters */}
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <div className="flex-1">
+          <OrderSearchBar value={searchQuery} onChange={setSearchQuery} />
+        </div>
+        <OrderFilters filters={filters} onFiltersChange={handleFiltersChange} />
+      </div>
+
       {/* Orders List */}
-      <OrdersList orders={orders} />
+      <OrdersList searchQuery={searchQuery} filters={filters} />
     </div>
   );
 };

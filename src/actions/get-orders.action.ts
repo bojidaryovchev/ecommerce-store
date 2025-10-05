@@ -62,6 +62,10 @@ export async function getOrders(filters?: Partial<OrderFilterData>): Promise<Get
       where.paymentStatus = filters.paymentStatus;
     }
 
+    if (filters?.orderNumber) {
+      where.orderNumber = { contains: filters.orderNumber, mode: "insensitive" };
+    }
+
     if (filters?.customerEmail) {
       where.OR = [
         { customerEmail: { contains: filters.customerEmail, mode: "insensitive" } },

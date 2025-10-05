@@ -1,31 +1,48 @@
 "use client";
 
 import { getOrderDetails } from "@/actions/get-order-details.action";
-import type { Order } from "@/actions/get-orders.action";
 import OrderDetailsModal from "@/components/order-details-modal";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { useOrders } from "@/hooks/use-orders";
 import { formatOrderTotal, getOrderStatusInfo, getPaymentStatusInfo } from "@/lib/order-utils";
-import { Calendar, Package, ShoppingCart, User } from "lucide-react";
+import type { OrderFilterData } from "@/schemas/order.schema";
+import { Calendar, Loader2, Package, ShoppingCart, User } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface OrdersListProps {
-  orders: Order[];
+  searchQuery?: string;
+  filters?: Partial<OrderFilterData>;
 }
 
-const OrdersList: React.FC<OrdersListProps> = ({ orders }) => {
+const OrdersList: React.FC<OrdersListProps> = ({ searchQuery = "", filters: externalFilters = {} }) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [orderDetails, setOrderDetails] = useState<Awaited<ReturnType<typeof getOrderDetails>> | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [clickLoading, setClickLoading] = useState<boolean>(false);
 
-  const handleOrderClick = async (order: Order) => {
-    setLoading(true);
-    setSelectedOrderId(order.id);
+  // Merge search query with external filters
+  const isEmail = searchQuery.includes("@");
+  const searchFilters = searchQuery
+    ? {
+        ...(isEmail ? { customerEmail: searchQuery } : { orderNumber: searchQuery }),
+      }
+    : {};
+
+  const mergedFilters = {
+    ...externalFilters,
+    ...searchFilters,
+  };
+
+  const { orders, isLoading, mutate } = useOrders({ filters: mergedFilters });
+
+  const handleOrderClick = async (orderId: string) => {
+    setClickLoading(true);
+    setSelectedOrderId(orderId);
     try {
-      const details = await getOrderDetails(order.id);
+      const details = await getOrderDetails(orderId);
       if (details) {
         setOrderDetails(details);
         setDetailsModalOpen(true);
@@ -36,11 +53,21 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders }) => {
       toast.error("Failed to load order details");
       console.error(error);
     } finally {
-      setLoading(false);
+      setClickLoading(false);
     }
   };
 
-  if (orders.length === 0) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Empty state
+  if (!orders || orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
         <ShoppingCart className="text-muted-foreground mb-4 h-12 w-12" />
@@ -63,8 +90,8 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders }) => {
             <Card
               key={order.id}
               className="cursor-pointer transition-all hover:shadow-lg"
-              onClick={() => handleOrderClick(order)}
-              style={{ opacity: loading && selectedOrderId === order.id ? 0.6 : 1 }}
+              onClick={() => handleOrderClick(order.id)}
+              style={{ opacity: clickLoading && selectedOrderId === order.id ? 0.6 : 1 }}
             >
               <CardContent className="p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -128,11 +155,12 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders }) => {
           open={detailsModalOpen}
           onOpenChange={setDetailsModalOpen}
           onOrderUpdated={async () => {
-            // Refresh the order details
+            // Refresh the order details and the list
             const updated = await getOrderDetails(orderDetails.id);
             if (updated) {
               setOrderDetails(updated);
             }
+            mutate();
           }}
         />
       )}
