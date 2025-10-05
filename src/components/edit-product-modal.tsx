@@ -240,7 +240,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ product, open, onOp
                   min="0"
                   placeholder="0.00"
                   {...register("compareAtPrice", {
-                    setValueAs: (v) => (v === "" || isNaN(v) ? null : parseFloat(v)),
+                    setValueAs: (v) => {
+                      if (v === "" || v === null || v === undefined) return null;
+                      const parsed = parseFloat(v);
+                      return isNaN(parsed) ? null : parsed;
+                    },
                   })}
                   disabled={isSubmitting}
                 />
@@ -258,7 +262,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ product, open, onOp
                   min="0"
                   placeholder="0.00"
                   {...register("costPrice", {
-                    setValueAs: (v) => (v === "" || isNaN(v) ? null : parseFloat(v)),
+                    setValueAs: (v) => {
+                      if (v === "" || v === null || v === undefined) return null;
+                      const parsed = parseFloat(v);
+                      return isNaN(parsed) ? null : parsed;
+                    },
                   })}
                   disabled={isSubmitting}
                 />
