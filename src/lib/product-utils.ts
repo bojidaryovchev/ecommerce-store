@@ -6,17 +6,25 @@ import { DEFAULT_CURRENCY, DEFAULT_LOW_STOCK_THRESHOLD, DEFAULT_PRODUCT_SKU_PREF
  */
 
 /**
+ * Generates a URL-friendly slug from text
+ * Example: "Wireless Headphones" -> "wireless-headphones"
+ */
+export function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
  * Generates a SKU from product name and optional variant
  * Format: PREFIX-SLUG-RANDOM
  * Example: PRD-wireless-headphones-A1B2
  */
 export function generateSKU(productName: string, prefix: string = DEFAULT_PRODUCT_SKU_PREFIX): string {
   // Convert name to slug format
-  const slug = productName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .substring(0, 20); // Limit length
+  const slug = generateSlug(productName).substring(0, 20); // Limit length
 
   // Generate random alphanumeric suffix (4 characters)
   const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();

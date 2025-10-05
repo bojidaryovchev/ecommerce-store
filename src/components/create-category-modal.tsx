@@ -16,9 +16,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategoriesForSelect } from "@/hooks/use-categories-for-select";
+import { generateSlug } from "@/lib/product-utils";
 import { categorySchema, type CategoryFormData } from "@/schemas/category.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
@@ -39,6 +40,8 @@ const CreateCategoryModal: React.FC = () => {
     formState: { errors },
     reset,
     control,
+    watch,
+    setValue,
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
   });
@@ -96,13 +99,32 @@ const CreateCategoryModal: React.FC = () => {
             <Label htmlFor="slug">
               Slug <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="slug"
-              placeholder="e.g., electronics"
-              {...register("slug")}
-              disabled={isSubmitting}
-              className="font-mono"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="slug"
+                placeholder="e.g., electronics"
+                {...register("slug")}
+                disabled={isSubmitting}
+                className="font-mono"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const categoryName = watch("name");
+                  if (categoryName) {
+                    setValue("slug", generateSlug(categoryName));
+                  } else {
+                    toast.error("Please enter a category name first");
+                  }
+                }}
+                disabled={isSubmitting}
+                className="shrink-0"
+              >
+                <Sparkles className="h-4 w-4" />
+              </Button>
+            </div>
             <p className="text-muted-foreground text-sm">
               Lowercase alphanumeric with hyphens (e.g., electronics-gadgets)
             </p>

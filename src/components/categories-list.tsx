@@ -2,8 +2,9 @@
 
 import { type Category } from "@/actions/get-categories.action";
 import EditCategoryModal from "@/components/edit-category-modal";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FolderTree, Image as ImageIcon, Package } from "lucide-react";
+import { Edit, FolderTree, Image as ImageIcon, Package } from "lucide-react";
 import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
@@ -38,19 +39,34 @@ const CategoriesList: React.FC<CategoriesListProps> = ({ categories }) => {
         {categories.map((category) => (
           <Card
             key={category.id}
-            className="hover:ring-primary/20 cursor-pointer overflow-hidden transition-all hover:shadow-md hover:ring-2"
+            className="group cursor-pointer overflow-hidden transition-all hover:shadow-lg"
             onClick={() => handleCategoryClick(category)}
           >
             {/* Category Image */}
-            {category.image ? (
-              <div className="bg-muted relative aspect-video w-full overflow-hidden">
-                <Image src={category.image} alt={category.name} fill className="object-cover" />
+            <div className="relative">
+              {category.image ? (
+                <div className="bg-muted relative aspect-video w-full overflow-hidden">
+                  <Image
+                    src={category.image}
+                    alt={category.name}
+                    fill
+                    className="object-cover transition-transform group-hover:scale-105"
+                  />
+                </div>
+              ) : (
+                <div className="bg-muted flex aspect-video w-full items-center justify-center">
+                  <ImageIcon className="text-muted-foreground h-12 w-12" />
+                </div>
+              )}
+
+              {/* Edit Button Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                <Button variant="secondary" size="sm">
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Category
+                </Button>
               </div>
-            ) : (
-              <div className="bg-muted flex aspect-video w-full items-center justify-center">
-                <ImageIcon className="text-muted-foreground h-12 w-12" />
-              </div>
-            )}
+            </div>
 
             <CardContent className="p-4">
               {/* Category Name */}
