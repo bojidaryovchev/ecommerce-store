@@ -46,10 +46,11 @@ model User {
   roles         UserRole[] @default([USER])
 
   // E-commerce relations
-  cart      Cart?
-  orders    Order[]
-  reviews   Review[]
-  addresses Address[]
+  cart         Cart?
+  orders       Order[]
+  reviews      Review[]
+  addresses    Address[]
+  wishlistItems WishlistItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -106,13 +107,14 @@ model Product {
   isFeatured Boolean @default(false)
 
   // Relations
-  categoryId String?
-  category   Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  images     ProductImage[]
-  variants   ProductVariant[]
-  cartItems  CartItem[]
-  orderItems OrderItem[]
-  reviews    Review[]
+  categoryId    String?
+  category      Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images        ProductImage[]
+  variants      ProductVariant[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
 
   // SEO
   metaTitle       String?
@@ -380,6 +382,21 @@ model OrderStatusHistory {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+  @@index([createdAt])
+}
+
+model WishlistItem {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
   @@index([createdAt])
 }
 
