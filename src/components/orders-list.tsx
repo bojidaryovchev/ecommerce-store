@@ -2,6 +2,7 @@
 
 import { getOrderDetails } from "@/actions/get-order-details.action";
 import OrderDetailsModal from "@/components/order-details-modal";
+import OrderPagination from "@/components/order-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useOrders } from "@/hooks/use-orders";
@@ -15,9 +16,14 @@ import toast from "react-hot-toast";
 interface OrdersListProps {
   searchQuery?: string;
   filters?: Partial<OrderFilterData>;
+  onFiltersChange?: (filters: Partial<OrderFilterData>) => void;
 }
 
-const OrdersList: React.FC<OrdersListProps> = ({ searchQuery = "", filters: externalFilters = {} }) => {
+const OrdersList: React.FC<OrdersListProps> = ({
+  searchQuery = "",
+  filters: externalFilters = {},
+  onFiltersChange,
+}) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [orderDetails, setOrderDetails] = useState<Awaited<ReturnType<typeof getOrderDetails>> | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState<boolean>(false);
@@ -36,7 +42,19 @@ const OrdersList: React.FC<OrdersListProps> = ({ searchQuery = "", filters: exte
     ...searchFilters,
   };
 
-  const { orders, isLoading, mutate } = useOrders({ filters: mergedFilters });
+  const { orders, pagination, isLoading, mutate } = useOrders({ filters: mergedFilters });
+
+  const handlePageChange = (page: number) => {
+    if (onFiltersChange) {
+      onFiltersChange({ ...externalFilters, page });
+    }
+  };
+
+  const handlePageSizeChange = (limit: number) => {
+    if (onFiltersChange) {
+      onFiltersChange({ ...externalFilters, page: 1, limit });
+    }
+  };
 
   const handleOrderClick = async (orderId: string) => {
     setClickLoading(true);
@@ -147,6 +165,18 @@ const OrdersList: React.FC<OrdersListProps> = ({ searchQuery = "", filters: exte
           );
         })}
       </div>
+
+      {/* Pagination */}
+      {pagination && pagination.total > 0 && (
+        <OrderPagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          pageSize={pagination.limit}
+          totalItems={pagination.total}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
 
       {/* Order Details Modal */}
       {orderDetails && (
