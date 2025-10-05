@@ -49,12 +49,13 @@ export const productSchema = z
     barcode: z.string().max(100, "Barcode must be less than 100 characters").trim().optional().nullable(),
 
     // Inventory
-    trackInventory: z.boolean().default(true),
+    trackInventory: z.boolean().optional().default(true),
 
     stockQuantity: z
       .number()
       .int("Stock quantity must be a whole number")
       .min(0, "Stock quantity cannot be negative")
+      .optional()
       .default(0),
 
     lowStockThreshold: z
@@ -97,14 +98,19 @@ export const productSchema = z
       .optional()
       .nullable(),
 
-    requiresShipping: z.boolean().default(true),
+    requiresShipping: z.boolean().optional().default(true),
 
     // Status
-    isActive: z.boolean().default(true),
-    isFeatured: z.boolean().default(false),
+    isActive: z.boolean().optional().default(true),
+    isFeatured: z.boolean().optional().default(false),
 
     // Relations
-    categoryId: z.cuid("Invalid category ID").optional().nullable(),
+    categoryId: z
+      .string()
+      .optional()
+      .nullable()
+      .transform((val) => val || null)
+      .pipe(z.cuid("Invalid category ID").nullable()),
 
     // SEO
     metaTitle: z.string().max(255, "Meta title must be less than 255 characters").trim().optional().nullable(),
@@ -138,5 +144,5 @@ export const productUpdateSchema = productSchema.partial();
 /**
  * Type inference for product form data
  */
-export type ProductFormData = z.infer<typeof productSchema>;
-export type ProductUpdateFormData = z.infer<typeof productUpdateSchema>;
+export type ProductFormData = z.input<typeof productSchema>;
+export type ProductUpdateFormData = z.input<typeof productUpdateSchema>;
