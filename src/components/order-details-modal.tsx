@@ -2,6 +2,7 @@
 
 import type { OrderDetails } from "@/actions/get-order-details.action";
 import CancelOrderDialog from "@/components/cancel-order-dialog";
+import GiftMessageCard from "@/components/gift-message-card";
 import { OrderStatusTracker } from "@/components/order-status-tracker";
 import OrderStatusUpdateForm from "@/components/order-status-update-form";
 import { OrderTimeline } from "@/components/order-timeline";
@@ -68,6 +69,11 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, open, onOp
               <h3 className="text-xl font-bold">{order.orderNumber}</h3>
               <Badge className={orderStatus.color}>{orderStatus.label}</Badge>
               <Badge className={paymentStatus.color}>{paymentStatus.label}</Badge>
+              {order.isGift && (
+                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                  🎁 Gift Order
+                </Badge>
+              )}
             </div>
             <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4" />
@@ -300,6 +306,11 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, open, onOp
                 )}
               </CardContent>
             </Card>
+
+            {/* Gift Message */}
+            {order.isGift && order.giftMessage && (
+              <GiftMessageCard message={order.giftMessage} senderName={customerName} variant="default" />
+            )}
           </TabsContent>
 
           <TabsContent value="manage" className="space-y-4 pt-4">

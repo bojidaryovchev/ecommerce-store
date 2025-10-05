@@ -150,6 +150,11 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     <div className="flex flex-wrap gap-2">
                       <Badge className={orderStatus.color}>{orderStatus.label}</Badge>
                       <Badge className={paymentStatus.color}>{paymentStatus.label}</Badge>
+                      {order.isGift && (
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                          🎁 Gift
+                        </Badge>
+                      )}
                     </div>
 
                     {/* Shipping Address Preview */}
