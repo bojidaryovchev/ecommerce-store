@@ -424,3 +424,43 @@ enum UserRole {
   ADMIN
   SUPER_ADMIN
 }
+
+enum TaxType {
+  SALES_TAX
+  VAT
+  GST
+  EXEMPT
+}
+
+model TaxRate {
+  id String @id @default(cuid())
+
+  // Location identifiers (ISO codes)
+  country    String // ISO 3166-1 alpha-2 (e.g., "US", "CA", "GB")
+  state      String? // State/province code (e.g., "CA", "NY", "ON")
+  city       String? // City name for hyper-local tax
+  postalCode String? // Postal/ZIP code for very specific tax
+
+  // Tax details
+  rate        Decimal @db.Decimal(5, 4) // Tax rate (e.g., 0.0825 for 8.25%)
+  type        TaxType @default(SALES_TAX)
+  name        String // Display name (e.g., "California Sales Tax")
+  description String? @db.Text
+
+  // Effective dates
+  startDate DateTime? // When this rate becomes effective
+  endDate   DateTime? // When this rate expires
+
+  // Priority and status
+  priority Int     @default(1) // Higher priority rates override lower ones
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([country, state, city, postalCode])
+  @@index([country])
+  @@index([country, state])
+  @@index([isActive])
+  @@index([startDate, endDate])
+}

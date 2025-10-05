@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import type { CartItemWithRelations } from "@/lib/cart-utils";
 import { calculateCartTotals, isCartExpired } from "@/lib/cart-utils";
 import { prisma } from "@/lib/prisma";
+import { getTaxRate } from "@/lib/tax-calculator";
 import type { CartSummary } from "@/schemas/cart.schema";
 
 export interface CartData {
@@ -82,8 +83,29 @@ export async function getCart(sessionId?: string): Promise<CartData | null> {
       return null;
     }
 
-    // Calculate cart totals
-    const summary = calculateCartTotals(cart.items);
+    // Get user's default address for tax calculation
+    let taxRate = 0;
+    if (userId) {
+      const defaultAddress = await prisma.address.findFirst({
+        where: {
+          userId,
+          isDefault: true,
+        },
+      });
+
+      if (defaultAddress) {
+        const taxRateData = await getTaxRate(
+          defaultAddress.country,
+          defaultAddress.state || undefined,
+          defaultAddress.city || undefined,
+          defaultAddress.postalCode || undefined,
+        );
+        taxRate = taxRateData?.rate || 0;
+      }
+    }
+
+    // Calculate cart totals with tax
+    const summary = calculateCartTotals(cart.items, taxRate);
 
     return {
       id: cart.id,
