@@ -1,5 +1,6 @@
 "use server";
 
+import { validateAddress as validateAddressService } from "@/lib/address-validation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { addressSchema } from "@/schemas/address.schema";
@@ -37,16 +38,48 @@ export async function createAddress(data: z.infer<typeof addressSchema>) {
       });
     }
 
+    // Validate address with Google Maps API if enabled
+    let isValidated = false;
+    let validationResult = null;
+
+    try {
+      const validation = await validateAddressService(
+        {
+          addressLine1: validatedData.address1,
+          addressLine2: validatedData.address2 || undefined,
+          city: validatedData.city,
+          state: validatedData.state || "",
+          postalCode: validatedData.postalCode,
+          country: validatedData.country,
+        },
+        {
+          enableCache: true,
+          enableRetry: true,
+        },
+      );
+
+      isValidated = validation.isValid;
+      validationResult = validation;
+    } catch (error) {
+      // If validation service fails, allow address creation without validation
+      console.warn("Address validation service unavailable:", error);
+    }
+
     // Create the address
     const address = await prisma.address.create({
       data: {
         ...validatedData,
         isDefault: shouldBeDefault,
+        isValidated,
       },
     });
 
     revalidatePath("/account/addresses");
-    return { success: true, address };
+    return {
+      success: true,
+      address,
+      validation: validationResult,
+    };
   } catch (error) {
     console.error("Error creating address:", error);
 

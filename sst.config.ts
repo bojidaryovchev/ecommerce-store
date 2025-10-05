@@ -83,6 +83,7 @@ export default $config({
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
         STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET!,
         CRON_SECRET: process.env.CRON_SECRET!,
+        GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY!,
       },
       link: [...identities, uploadsBucket],
     });
