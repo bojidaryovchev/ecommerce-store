@@ -178,10 +178,24 @@ export const orderStatusUpdateSchema = z.object({
 });
 
 /**
+ * Order filter schema for querying orders
+ */
+export const orderFilterSchema = z.object({
+  status: orderStatusEnum.optional(),
+  paymentStatus: paymentStatusEnum.optional(),
+  customerEmail: z.string().email().optional(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(20),
+});
+
+/**
  * Type inference for order form data
  */
 export type OrderFormData = z.infer<typeof orderSchema>;
 export type OrderUpdateFormData = z.infer<typeof orderUpdateSchema>;
 export type OrderStatusUpdateFormData = z.infer<typeof orderStatusUpdateSchema>;
+export type OrderFilterData = z.infer<typeof orderFilterSchema>;
 export type OrderStatus = z.infer<typeof orderStatusEnum>;
 export type PaymentStatus = z.infer<typeof paymentStatusEnum>;
