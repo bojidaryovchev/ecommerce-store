@@ -54,6 +54,7 @@
     "react-dom": "19.1.1",
     "react-hook-form": "7.64.0",
     "react-hot-toast": "2.6.0",
+    "recharts": "^3.2.1",
     "sst": "3.9.28",
     "stripe": "19.1.0",
     "swiper": "12.0.2",
