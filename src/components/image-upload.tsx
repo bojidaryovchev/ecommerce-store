@@ -100,7 +100,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ value, onChange, disabled = f
       )}
 
       {/* Upload Button */}
-      <div className="flex gap-2">
+      <div>
         <Input
           ref={fileInputRef}
           type="file"
@@ -129,20 +129,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ value, onChange, disabled = f
             </>
           )}
         </Button>
-
-        {!value && <span className="text-muted-foreground flex items-center text-sm">or paste URL</span>}
       </div>
-
-      {/* Manual URL Input */}
-      {!value && (
-        <Input
-          type="url"
-          placeholder="https://example.com/image.jpg"
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value || null)}
-          disabled={disabled || uploading}
-        />
-      )}
 
       <p className="text-muted-foreground text-xs">Supported formats: JPEG, PNG, WebP, GIF. Max size: 5MB.</p>
     </div>

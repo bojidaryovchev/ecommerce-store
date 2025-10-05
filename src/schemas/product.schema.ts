@@ -112,6 +112,9 @@ export const productSchema = z
       .transform((val) => val || null)
       .pipe(z.cuid("Invalid category ID").nullable()),
 
+    // Image (primary image URL)
+    image: z.string().url("Must be a valid URL").trim().optional().nullable(),
+
     // SEO
     metaTitle: z.string().max(255, "Meta title must be less than 255 characters").trim().optional().nullable(),
 

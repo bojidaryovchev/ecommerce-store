@@ -9,7 +9,12 @@ export const cartItemSchema = z.object({
 
   productId: z.cuid("Invalid product ID"),
 
-  variantId: z.cuid("Invalid variant ID").optional().nullable(),
+  variantId: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => val || null)
+    .pipe(z.cuid("Invalid variant ID").nullable()),
 
   quantity: z
     .number()
@@ -36,7 +41,12 @@ export const cartItemUpdateSchema = z.object({
 export const addToCartSchema = z.object({
   productId: z.cuid("Invalid product ID"),
 
-  variantId: z.cuid("Invalid variant ID").optional().nullable(),
+  variantId: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => val || null)
+    .pipe(z.cuid("Invalid variant ID").nullable()),
 
   quantity: z
     .number()

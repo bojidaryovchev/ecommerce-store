@@ -70,7 +70,7 @@ export async function createProduct(formData: ProductFormData): Promise<CreatePr
       }
     }
 
-    // Create product
+    // Create product with image if provided
     const product = await prisma.product.create({
       data: {
         name: validatedData.name,
@@ -94,6 +94,16 @@ export async function createProduct(formData: ProductFormData): Promise<CreatePr
         categoryId: validatedData.categoryId,
         metaTitle: validatedData.metaTitle,
         metaDescription: validatedData.metaDescription,
+        // Create primary image if provided
+        ...(validatedData.image && {
+          images: {
+            create: {
+              url: validatedData.image,
+              alt: validatedData.name,
+              position: 0,
+            },
+          },
+        }),
       },
       select: {
         id: true,

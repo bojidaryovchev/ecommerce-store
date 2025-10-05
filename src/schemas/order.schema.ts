@@ -22,7 +22,12 @@ export const orderSchema = z
       .max(100, "Order number must be less than 100 characters")
       .trim(),
 
-    userId: z.cuid("Invalid user ID").optional().nullable(),
+    userId: z
+      .string()
+      .optional()
+      .nullable()
+      .transform((val) => val || null)
+      .pipe(z.cuid("Invalid user ID").nullable()),
 
     // Order status
     status: orderStatusEnum.default("PENDING"),
@@ -87,9 +92,19 @@ export const orderSchema = z
     deliveredAt: z.date().optional().nullable(),
     cancelledAt: z.date().optional().nullable(),
     refundedAt: z.date().optional().nullable(),
-    shippingAddressId: z.cuid("Invalid shipping address ID").optional().nullable(),
+    shippingAddressId: z
+      .string()
+      .optional()
+      .nullable()
+      .transform((val) => val || null)
+      .pipe(z.cuid("Invalid shipping address ID").nullable()),
 
-    billingAddressId: z.cuid("Invalid billing address ID").optional().nullable(),
+    billingAddressId: z
+      .string()
+      .optional()
+      .nullable()
+      .transform((val) => val || null)
+      .pipe(z.cuid("Invalid billing address ID").nullable()),
 
     // Customer info for guest orders
     customerEmail: z

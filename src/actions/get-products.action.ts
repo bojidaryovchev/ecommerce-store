@@ -9,7 +9,13 @@ export type Product = {
   description: string | null;
   price: number;
   compareAtPrice: number | null;
+  costPrice: number | null;
   stockQuantity: number;
+  lowStockThreshold: number | null;
+  sku: string | null;
+  barcode: string | null;
+  trackInventory: boolean;
+  requiresShipping: boolean;
   isActive: boolean;
   isFeatured: boolean;
   categoryId: string | null;
@@ -77,7 +83,13 @@ export async function getProducts(options: GetProductsOptions = {}): Promise<Get
         description: true,
         price: true,
         compareAtPrice: true,
+        costPrice: true,
         stockQuantity: true,
+        lowStockThreshold: true,
+        sku: true,
+        barcode: true,
+        trackInventory: true,
+        requiresShipping: true,
         isActive: true,
         isFeatured: true,
         categoryId: true,
@@ -117,6 +129,7 @@ export async function getProducts(options: GetProductsOptions = {}): Promise<Get
       ...product,
       price: product.price.toNumber(),
       compareAtPrice: product.compareAtPrice?.toNumber() ?? null,
+      costPrice: product.costPrice?.toNumber() ?? null,
     }));
 
     return {

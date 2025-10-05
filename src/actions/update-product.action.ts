@@ -99,6 +99,26 @@ export async function updateProduct(productId: string, formData: ProductFormData
       }
     }
 
+    // Handle image update
+    if (validatedData.image) {
+      // Delete existing primary image (position 0) and create new one
+      await prisma.productImage.deleteMany({
+        where: {
+          productId,
+          position: 0,
+        },
+      });
+
+      await prisma.productImage.create({
+        data: {
+          productId,
+          url: validatedData.image,
+          alt: validatedData.name,
+          position: 0,
+        },
+      });
+    }
+
     // Update product
     const product = await prisma.product.update({
       where: { id: productId },

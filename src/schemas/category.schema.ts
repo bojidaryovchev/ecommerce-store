@@ -26,8 +26,8 @@ export const categorySchema = z.object({
     .string()
     .optional()
     .nullable()
-    .transform((val) => (val === "" ? null : val))
-    .pipe(z.cuid("Invalid parent category ID").optional().nullable()),
+    .transform((val) => val || null)
+    .pipe(z.cuid("Invalid parent category ID").nullable()),
 });
 
 /**
@@ -37,6 +37,7 @@ export const categoryUpdateSchema = categorySchema.partial();
 
 /**
  * Type inference for category form data
+ * Using z.input<> to get the input type before transformations
  */
-export type CategoryFormData = z.infer<typeof categorySchema>;
-export type CategoryUpdateFormData = z.infer<typeof categoryUpdateSchema>;
+export type CategoryFormData = z.input<typeof categorySchema>;
+export type CategoryUpdateFormData = z.input<typeof categoryUpdateSchema>;

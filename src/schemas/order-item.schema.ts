@@ -10,7 +10,12 @@ export const orderItemSchema = z
 
     productId: z.cuid("Invalid product ID"),
 
-    variantId: z.cuid("Invalid variant ID").optional().nullable(),
+    variantId: z
+      .string()
+      .optional()
+      .nullable()
+      .transform((val) => val || null)
+      .pipe(z.cuid("Invalid variant ID").nullable()),
 
     // Snapshot data at time of order
     productName: z

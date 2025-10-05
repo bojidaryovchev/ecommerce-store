@@ -1,6 +1,7 @@
 "use client";
 
 import { createProduct } from "@/actions/create-product.action";
+import ImageUpload from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,9 +16,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategoriesForSelect } from "@/hooks/use-categories-for-select";
+import { generateBarcode, generateSKU } from "@/lib/product-utils";
 import { productSchema, type ProductFormData } from "@/schemas/product.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
@@ -39,6 +41,7 @@ const CreateProductModal: React.FC = () => {
     reset,
     control,
     watch,
+    setValue,
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -162,6 +165,21 @@ const CreateProductModal: React.FC = () => {
               />
               {errors.categoryId && <p className="text-sm text-red-500">{errors.categoryId.message}</p>}
             </div>
+
+            {/* Product Image */}
+            <Controller
+              name="image"
+              control={control}
+              render={({ field }) => (
+                <ImageUpload
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={isSubmitting}
+                  label="Product Image"
+                />
+              )}
+            />
+            {errors.image && <p className="text-sm text-red-500">{errors.image.message}</p>}
           </div>
 
           {/* Pricing */}
@@ -281,7 +299,26 @@ const CreateProductModal: React.FC = () => {
               {/* SKU */}
               <div className="space-y-2">
                 <Label htmlFor="sku">SKU</Label>
-                <Input id="sku" placeholder="e.g., WH-001" {...register("sku")} disabled={isSubmitting} />
+                <div className="flex gap-2">
+                  <Input id="sku" placeholder="e.g., WH-001" {...register("sku")} disabled={isSubmitting} />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const productName = watch("name");
+                      if (productName) {
+                        setValue("sku", generateSKU(productName));
+                      } else {
+                        toast.error("Please enter a product name first");
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    className="shrink-0"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+                </div>
                 <p className="text-muted-foreground text-xs">Stock Keeping Unit</p>
                 {errors.sku && <p className="text-sm text-red-500">{errors.sku.message}</p>}
               </div>
@@ -289,7 +326,25 @@ const CreateProductModal: React.FC = () => {
               {/* Barcode */}
               <div className="space-y-2">
                 <Label htmlFor="barcode">Barcode</Label>
-                <Input id="barcode" placeholder="e.g., 123456789012" {...register("barcode")} disabled={isSubmitting} />
+                <div className="flex gap-2">
+                  <Input
+                    id="barcode"
+                    placeholder="e.g., 123456789012"
+                    {...register("barcode")}
+                    disabled={isSubmitting}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setValue("barcode", generateBarcode())}
+                    disabled={isSubmitting}
+                    className="shrink-0"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-muted-foreground text-xs">EAN-13 format</p>
                 {errors.barcode && <p className="text-sm text-red-500">{errors.barcode.message}</p>}
               </div>
             </div>

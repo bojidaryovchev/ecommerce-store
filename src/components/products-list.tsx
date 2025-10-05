@@ -3,6 +3,7 @@
 import type { Product } from "@/actions/get-products.action";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { calculateDiscountPercentage, formatPrice, getStockStatus } from "@/lib/product-utils";
 import { Edit, Package } from "lucide-react";
 import Image from "next/image";
 import type React from "react";
@@ -22,23 +23,6 @@ const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
     setEditModalOpen(true);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
-
-  const getStockStatus = (quantity: number) => {
-    if (quantity === 0) {
-      return { label: "Out of stock", className: "text-red-600 bg-red-50" };
-    }
-    if (quantity < 10) {
-      return { label: `Low stock (${quantity})`, className: "text-orange-600 bg-orange-50" };
-    }
-    return { label: `In stock (${quantity})`, className: "text-green-600 bg-green-50" };
-  };
-
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
@@ -53,8 +37,11 @@ const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
     <>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {products.map((product) => {
-          const stockStatus = getStockStatus(product.stockQuantity);
+          const stockStatus = getStockStatus(product.stockQuantity, product.lowStockThreshold);
           const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
+          const discountPercentage = hasDiscount
+            ? calculateDiscountPercentage(product.compareAtPrice!, product.price)
+            : 0;
 
           return (
             <Card
@@ -87,7 +74,7 @@ const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
                 {/* Discount Badge */}
                 {hasDiscount && (
                   <div className="absolute top-2 right-2 rounded-full bg-red-500 px-2 py-1 text-xs font-semibold text-white">
-                    {Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)}% OFF
+                    {discountPercentage}% OFF
                   </div>
                 )}
 
