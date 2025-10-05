@@ -1,5 +1,6 @@
 "use client";
 
+import { getAbandonedCartStats } from "@/actions/abandoned-cart.action";
 import { getCustomerAnalytics } from "@/actions/get-customer-analytics.action";
 import { getProductAnalytics } from "@/actions/get-product-analytics.action";
 import { getRevenueAnalytics, getRevenueSummary } from "@/actions/get-revenue-analytics.action";
@@ -16,6 +17,7 @@ import {
 } from "@/lib/analytics-utils";
 import { DollarSign, Package, RefreshCw, ShoppingCart, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AnalyticsAbandonedCartInsights } from "./analytics-abandoned-cart-insights";
 import { AnalyticsCustomerInsights } from "./analytics-customer-insights";
 import { AnalyticsDateRangeSelector } from "./analytics-date-range-selector";
 import { AnalyticsKpiCard } from "./analytics-kpi-card";
@@ -43,6 +45,8 @@ export function AnalyticsDashboard() {
   const [topProducts, setTopProducts] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [customerData, setCustomerData] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [abandonedCartData, setAbandonedCartData] = useState<any>(null);
 
   // Fetch all analytics data
   const fetchAnalytics = async () => {
@@ -102,6 +106,12 @@ export function AnalyticsDashboard() {
 
       if (customersResult.success) {
         setCustomerData(customersResult.data);
+      }
+
+      // Fetch abandoned cart stats
+      const abandonedCartResult = await getAbandonedCartStats(dateRange.from, dateRange.to);
+      if (abandonedCartResult.success) {
+        setAbandonedCartData(abandonedCartResult.data);
       }
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -217,6 +227,7 @@ export function AnalyticsDashboard() {
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="customers">Customers</TabsTrigger>
+          <TabsTrigger value="abandoned-carts">Abandoned Carts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="revenue" className="space-y-4">
@@ -281,6 +292,15 @@ export function AnalyticsDashboard() {
               current={customerData.current}
               previous={customerData.previous}
               description="Customer acquisition and retention metrics"
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="abandoned-carts" className="space-y-4">
+          {abandonedCartData && (
+            <AnalyticsAbandonedCartInsights
+              stats={abandonedCartData}
+              description="Track abandoned cart recovery performance and conversion rates"
             />
           )}
         </TabsContent>

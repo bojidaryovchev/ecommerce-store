@@ -60,7 +60,7 @@ export default $config({
     const uploadsBucket = new sst.aws.Bucket("Uploads", uploadsBucketArgs);
 
     // Deploy the Next.js application with specified domain
-    new sst.aws.Nextjs("NextApp", {
+    const nextApp = new sst.aws.Nextjs("NextApp", {
       domain: {
         name: domainName,
         dns: sst.aws.dns({
@@ -82,8 +82,31 @@ export default $config({
         STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY!,
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
         STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET!,
+        CRON_SECRET: process.env.CRON_SECRET!,
       },
       link: [...identities, uploadsBucket],
     });
+
+    // Create a Lambda function that triggers the abandoned cart cron endpoint
+    const abandonedCartCron = new sst.aws.Function("AbandonedCartCron", {
+      handler: "src/functions/abandoned-cart-cron.handler",
+      link: [...identities],
+      timeout: "5 minutes",
+      environment: {
+        NEXT_PUBLIC_APP_URL: `https://${domainName}`,
+        CRON_SECRET: process.env.CRON_SECRET!,
+      },
+    });
+
+    // Schedule the function to run every hour
+    new sst.aws.Cron("AbandonedCartSchedule", {
+      job: abandonedCartCron,
+      schedule: "rate(1 hour)",
+    });
+
+    return {
+      nextAppUrl: nextApp.url,
+      uploadsBucket: uploadsBucket.name,
+    };
   },
 });

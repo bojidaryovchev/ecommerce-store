@@ -1,17 +1,65 @@
 "use client";
 
+import { saveCartEmail } from "@/actions/save-cart-email.action";
 import CartItem from "@/components/cart-item";
+import { CartSaveModal } from "@/components/cart-save-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCartContext } from "@/contexts/cart-context";
+import { useExitIntent } from "@/hooks/use-exit-intent";
 import { formatCartPrice } from "@/lib/cart-utils";
 import { ArrowLeft, Loader2, ShoppingBag, ShoppingCart } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import type React from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 const CartPage: React.FC = () => {
   const { cart, isLoading, itemCount, subtotal, total } = useCartContext();
+  const { data: session } = useSession();
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [hasShownModal, setHasShownModal] = useState(false);
+
+  // Only trigger exit intent for guest users with items in cart
+  const shouldEnableExitIntent = !session && itemCount > 0 && !hasShownModal && !isLoading;
+
+  const { shouldShow, reset } = useExitIntent({
+    threshold: 20,
+    delay: 1000,
+    enabled: shouldEnableExitIntent,
+  });
+
+  // Show modal when exit intent is detected
+  useEffect(() => {
+    if (shouldShow && !hasShownModal) {
+      setShowSaveModal(true);
+      setHasShownModal(true);
+      reset();
+    }
+  }, [shouldShow, hasShownModal, reset]);
+
+  const handleSaveCart = async (email: string) => {
+    try {
+      const result = await saveCartEmail(email);
+
+      if (result.success) {
+        toast.success("Cart saved! We'll remind you if you forget.");
+        setShowSaveModal(false);
+        return;
+      }
+
+      throw new Error(result.error || "Failed to save cart");
+    } catch (error) {
+      console.error("Error saving cart:", error);
+      throw error;
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowSaveModal(false);
+  };
 
   if (isLoading) {
     return (
@@ -146,6 +194,15 @@ const CartPage: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      {/* Cart Save Modal - Exit Intent */}
+      <CartSaveModal
+        isOpen={showSaveModal}
+        onClose={handleCloseModal}
+        onSave={handleSaveCart}
+        itemCount={itemCount}
+        cartTotal={total}
+      />
     </div>
   );
 };

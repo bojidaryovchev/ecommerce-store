@@ -187,7 +187,8 @@ model Cart {
   // Track last activity for abandoned cart cleanup
   expiresAt DateTime?
 
-  items CartItem[]
+  items         CartItem[]
+  abandonedCart AbandonedCart?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -463,4 +464,46 @@ model TaxRate {
   @@index([country, state])
   @@index([isActive])
   @@index([startDate, endDate])
+}
+
+model AbandonedCart {
+  id String @id @default(cuid())
+
+  // Cart reference
+  cartId String @unique
+  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  // Customer info (for email)
+  userEmail String // User email or guest email for recovery
+  userName  String? // Optional user name for personalization
+
+  // Cart snapshot (for analytics and email)
+  itemCount     Int // Number of items in cart
+  cartTotal     Decimal @db.Decimal(10, 2) // Total cart value
+  itemsSnapshot Json // Snapshot of cart items for recovery email
+
+  // Recovery tracking
+  recoveryToken    String   @unique @default(cuid()) // Secure token for recovery link
+  tokenExpiresAt   DateTime // Token expiration (typically 7 days)
+  remindersSent    Int      @default(0) // Number of recovery emails sent (0-3)
+  lastReminderSent DateTime? // When the last reminder was sent
+
+  // Recovery status
+  isRecovered     Boolean   @default(false) // Whether cart was recovered
+  recoveredAt     DateTime? // When the cart was recovered
+  orderCreated    Boolean   @default(false) // Whether an order was created
+  orderId         String? // Reference to created order
+  recoveryChannel String? // How it was recovered (email, manual, etc.)
+
+  // Metadata
+  abandonedAt DateTime @default(now()) // When cart was marked as abandoned
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userEmail])
+  @@index([recoveryToken])
+  @@index([isRecovered])
+  @@index([abandonedAt])
+  @@index([tokenExpiresAt])
+  @@index([remindersSent])
 }
