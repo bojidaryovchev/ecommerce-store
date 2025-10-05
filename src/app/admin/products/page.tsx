@@ -14,8 +14,8 @@ const AdminProductsPage: React.FC = async () => {
 
   if (!result.success) {
     return (
-      <div className="container mx-auto py-10">
-        <div className="mb-8 flex items-center justify-between">
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Products</h1>
             <p className="text-muted-foreground mt-2">Manage your store inventory</p>
@@ -31,8 +31,8 @@ const AdminProductsPage: React.FC = async () => {
   const products = result.data;
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="text-muted-foreground mt-2">

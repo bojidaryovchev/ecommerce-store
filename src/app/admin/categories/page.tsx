@@ -7,9 +7,9 @@ const CategoriesPage: React.FC = async () => {
   const result = await getCategories();
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Categories</h1>
           <p className="text-muted-foreground mt-2">Manage your product categories</p>
