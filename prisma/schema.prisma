@@ -37,18 +37,24 @@ model Account {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
+  roles         UserRole[] @default([USER])
 
   // E-commerce relations
   cart      Cart?
   orders    Order[]
   reviews   Review[]
   addresses Address[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
 }
 
 // E-commerce Models
@@ -394,4 +400,10 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   PARTIALLY_REFUNDED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
 }

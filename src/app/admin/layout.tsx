@@ -15,6 +15,7 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+  // Protection handled by middleware
   return <AdminLayoutClient>{children}</AdminLayoutClient>;
 };
 
