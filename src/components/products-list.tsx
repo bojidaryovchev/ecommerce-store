@@ -1,13 +1,16 @@
 "use client";
 
+import { deleteProduct } from "@/actions/delete-product.action";
 import type { Product } from "@/actions/get-products.action";
+import ConfirmDialog from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { calculateDiscountPercentage, formatPrice, getStockStatus } from "@/lib/product-utils";
-import { Edit, Package } from "lucide-react";
+import { Edit, Package, Trash2 } from "lucide-react";
 import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import EditProductModal from "./edit-product-modal";
 
 interface ProductsListProps {
@@ -17,10 +20,35 @@ interface ProductsListProps {
 const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [productToDelete, setProductToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
     setEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, productId: string, productName: string) => {
+    e.stopPropagation();
+    setProductToDelete({ id: productId, name: productName });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+
+    setDeletingId(productToDelete.id);
+    const result = await deleteProduct(productToDelete.id);
+
+    if (result.success) {
+      toast.success("Product deleted successfully");
+    } else {
+      toast.error(result.error || "Failed to delete product");
+    }
+
+    setDeletingId(null);
+    setProductToDelete(null);
   };
 
   if (products.length === 0) {
@@ -78,11 +106,20 @@ const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
                   </div>
                 )}
 
-                {/* Edit Button Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                {/* Edit & Delete Buttons Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                   <Button variant="secondary" size="sm">
                     <Edit className="mr-2 h-4 w-4" />
-                    Edit Product
+                    Edit
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => handleDeleteClick(e, product.id, product.name)}
+                    disabled={deletingId === product.id}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {deletingId === product.id ? "Deleting..." : "Delete"}
                   </Button>
                 </div>
               </div>
@@ -134,6 +171,16 @@ const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
       {selectedProduct && (
         <EditProductModal product={selectedProduct} open={editModalOpen} onOpenChange={setEditModalOpen} />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Product"
+        description={`Are you sure you want to delete "${productToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+      />
     </>
   );
 };

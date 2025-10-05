@@ -1,13 +1,16 @@
 "use client";
 
+import { deleteCategory } from "@/actions/delete-category.action";
 import { type Category } from "@/actions/get-categories.action";
+import ConfirmDialog from "@/components/confirm-dialog";
 import EditCategoryModal from "@/components/edit-category-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Edit, FolderTree, Image as ImageIcon, Package } from "lucide-react";
+import { Edit, FolderTree, Image as ImageIcon, Package, Trash2 } from "lucide-react";
 import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface CategoriesListProps {
   categories: Category[];
@@ -16,10 +19,35 @@ interface CategoriesListProps {
 const CategoriesList: React.FC<CategoriesListProps> = ({ categories }) => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const handleCategoryClick = (category: Category) => {
     setSelectedCategory(category);
     setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, categoryId: string, categoryName: string) => {
+    e.stopPropagation();
+    setCategoryToDelete({ id: categoryId, name: categoryName });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!categoryToDelete) return;
+
+    setDeletingId(categoryToDelete.id);
+    const result = await deleteCategory(categoryToDelete.id);
+
+    if (result.success) {
+      toast.success("Category deleted successfully");
+    } else {
+      toast.error(result.error || "Failed to delete category");
+    }
+
+    setDeletingId(null);
+    setCategoryToDelete(null);
   };
   if (categories.length === 0) {
     return (
@@ -59,11 +87,20 @@ const CategoriesList: React.FC<CategoriesListProps> = ({ categories }) => {
                 </div>
               )}
 
-              {/* Edit Button Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+              {/* Edit & Delete Buttons Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                 <Button variant="secondary" size="sm">
                   <Edit className="mr-2 h-4 w-4" />
-                  Edit Category
+                  Edit
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={(e) => handleDeleteClick(e, category.id, category.name)}
+                  disabled={deletingId === category.id}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {deletingId === category.id ? "Deleting..." : "Delete"}
                 </Button>
               </div>
             </div>
@@ -122,6 +159,16 @@ const CategoriesList: React.FC<CategoriesListProps> = ({ categories }) => {
       {selectedCategory && (
         <EditCategoryModal category={selectedCategory} open={isEditModalOpen} onOpenChange={setIsEditModalOpen} />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Category"
+        description={`Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+      />
     </>
   );
 };
