@@ -5,8 +5,35 @@ import { revalidatePath } from "next/cache";
 
 export async function deleteProduct(id: string) {
   try {
-    // Delete the product (cascade will handle related records)
-    await prisma.product.deleteMany({
+    // Check if product has variants with orders
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        variants: {
+          include: {
+            orderItems: true,
+          },
+        },
+        orderItems: true,
+      },
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    // Check if product or its variants have been ordered
+    const hasOrders = product.orderItems.length > 0 || product.variants.some((v) => v.orderItems.length > 0);
+
+    if (hasOrders) {
+      return {
+        success: false,
+        error: "Cannot delete product that has been ordered. Consider deactivating it instead.",
+      };
+    }
+
+    // Delete the product (cascade will handle variants, images, cart items, etc.)
+    await prisma.product.delete({
       where: { id },
     });
 

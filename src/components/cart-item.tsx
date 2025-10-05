@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useCartContext } from "@/contexts/cart-context";
 import type { CartItemWithRelations } from "@/lib/cart-utils";
 import { formatCartPrice } from "@/lib/cart-utils";
+import { formatVariantDisplay } from "@/lib/variant-utils";
 import { Loader2, Minus, Plus, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,7 +27,11 @@ const CartItem: React.FC<CartItemProps> = ({ item, compact = false }) => {
   const subtotal = price * item.quantity;
   const productImage = item.product.images[0]?.url || "/placeholder-product.png";
   const productName = item.product.name;
-  const variantName = item.variant?.name;
+
+  // Format variant options for display
+  const variantOptions = item.variant?.options
+    ? formatVariantDisplay(item.variant.options as Record<string, string>)
+    : null;
 
   const handleUpdateQuantity = async (newQuantity: number) => {
     if (newQuantity === item.quantity) return;
@@ -77,7 +82,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, compact = false }) => {
           <Link href={`/products/${item.product.slug}`} className="line-clamp-2 text-sm font-medium hover:underline">
             {productName}
           </Link>
-          {variantName && <p className="text-muted-foreground text-xs">{variantName}</p>}
+          {variantOptions && <p className="text-muted-foreground text-xs">{variantOptions}</p>}
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold">{formatCartPrice(price)}</p>
             <p className="text-muted-foreground text-xs">Qty: {item.quantity}</p>
@@ -113,7 +118,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, compact = false }) => {
           <Link href={`/products/${item.product.slug}`} className="text-lg font-semibold hover:underline">
             {productName}
           </Link>
-          {variantName && <p className="text-muted-foreground mt-1 text-sm">{variantName}</p>}
+          {variantOptions && <p className="text-muted-foreground mt-1 text-sm">{variantOptions}</p>}
           <p className="mt-2 text-lg font-bold">{formatCartPrice(price)}</p>
         </div>
 

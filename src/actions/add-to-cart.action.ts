@@ -4,6 +4,7 @@ import type { CartData } from "@/actions/get-cart.action";
 import { getOrCreateCart } from "@/actions/get-cart.action";
 import { calculateCartTotals, getCartExpirationDate } from "@/lib/cart-utils";
 import { prisma } from "@/lib/prisma";
+import { isVariantAvailable } from "@/lib/variant-utils";
 import { addToCartSchema, type AddToCartData } from "@/schemas/cart.schema";
 
 /**
@@ -45,16 +46,23 @@ export async function addToCart(data: AddToCartData, sessionId?: string): Promis
         where: { id: validatedData.variantId },
       });
 
-      if (!variant || !variant.isActive) {
-        throw new Error("Variant not found or is inactive");
+      if (!variant) {
+        throw new Error("Variant not found");
+      }
+
+      // Use variant utility function for validation
+      if (!isVariantAvailable(variant, validatedData.quantity)) {
+        if (!variant.isActive) {
+          throw new Error("This variant is not available");
+        }
+        throw new Error(`Insufficient stock. Only ${variant.stockQuantity} available`);
       }
     }
 
-    // Check stock availability
-    if (product.trackInventory) {
-      const availableStock = variant ? variant.stockQuantity : product.stockQuantity;
-      if (availableStock < validatedData.quantity) {
-        throw new Error(`Insufficient stock. Only ${availableStock} available`);
+    // Check stock availability for products without variants
+    if (!variant && product.trackInventory) {
+      if (product.stockQuantity < validatedData.quantity) {
+        throw new Error(`Insufficient stock. Only ${product.stockQuantity} available`);
       }
     }
 

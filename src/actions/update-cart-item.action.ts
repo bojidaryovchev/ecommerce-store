@@ -3,6 +3,7 @@
 import type { CartData } from "@/actions/get-cart.action";
 import { calculateCartTotals } from "@/lib/cart-utils";
 import { prisma } from "@/lib/prisma";
+import { isVariantAvailable } from "@/lib/variant-utils";
 import { updateCartItemSchema, type UpdateCartItemData } from "@/schemas/cart.schema";
 
 /**
@@ -37,11 +38,18 @@ export async function updateCartItem(data: UpdateCartItemData): Promise<CartData
       });
     } else {
       // Validate stock availability
-      if (cartItem.product.trackInventory) {
-        const availableStock = cartItem.variant ? cartItem.variant.stockQuantity : cartItem.product.stockQuantity;
-
-        if (validatedData.quantity > availableStock) {
-          throw new Error(`Insufficient stock. Only ${availableStock} available`);
+      if (cartItem.variant) {
+        // Use variant utility function for validation
+        if (!isVariantAvailable(cartItem.variant, validatedData.quantity)) {
+          if (!cartItem.variant.isActive) {
+            throw new Error("This variant is not available");
+          }
+          throw new Error(`Insufficient stock. Only ${cartItem.variant.stockQuantity} available`);
+        }
+      } else if (cartItem.product.trackInventory) {
+        // Check product stock for non-variant items
+        if (validatedData.quantity > cartItem.product.stockQuantity) {
+          throw new Error(`Insufficient stock. Only ${cartItem.product.stockQuantity} available`);
         }
       }
 

@@ -6,8 +6,9 @@ import ConfirmDialog from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { calculateDiscountPercentage, formatPrice, getStockStatus } from "@/lib/product-utils";
-import { Edit, Package, Trash2 } from "lucide-react";
+import { Edit, ListTree, Package, Trash2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -106,19 +107,25 @@ const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
                   </div>
                 )}
 
-                {/* Edit & Delete Buttons Overlay */}
+                {/* Edit, Variants & Delete Buttons Overlay */}
                 <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                   <Button variant="secondary" size="sm">
-                    <Edit className="mr-2 h-4 w-4" />
+                    <Edit className="mr-1 h-4 w-4" />
                     Edit
                   </Button>
+                  <Link href={`/admin/products/${product.id}/variants`} onClick={(e) => e.stopPropagation()}>
+                    <Button variant="secondary" size="sm">
+                      <ListTree className="mr-1 h-4 w-4" />
+                      Variants
+                    </Button>
+                  </Link>
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={(e) => handleDeleteClick(e, product.id, product.name)}
                     disabled={deletingId === product.id}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash2 className="mr-1 h-4 w-4" />
                     {deletingId === product.id ? "Deleting..." : "Delete"}
                   </Button>
                 </div>
@@ -131,13 +138,36 @@ const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
                 {/* Category */}
                 {product.category && <p className="text-muted-foreground mb-2 text-xs">{product.category.name}</p>}
 
-                {/* Price */}
+                {/* Price - Show range if product has variants */}
                 <div className="mb-2 flex items-baseline gap-2">
-                  <span className="text-lg font-bold">{formatPrice(product.price)}</span>
-                  {hasDiscount && (
-                    <span className="text-muted-foreground text-sm line-through">
-                      {formatPrice(product.compareAtPrice!)}
-                    </span>
+                  {product.variants && product.variants.length > 0 ? (
+                    (() => {
+                      const prices = product.variants.map((v) => v.price).filter((p): p is number => p !== null);
+
+                      if (prices.length === 0) {
+                        return <span className="text-lg font-bold">{formatPrice(product.price)}</span>;
+                      }
+
+                      const minPrice = Math.min(...prices);
+                      const maxPrice = Math.max(...prices);
+
+                      return minPrice === maxPrice ? (
+                        <span className="text-lg font-bold">{formatPrice(minPrice)}</span>
+                      ) : (
+                        <span className="text-lg font-bold">
+                          {formatPrice(minPrice)} - {formatPrice(maxPrice)}
+                        </span>
+                      );
+                    })()
+                  ) : (
+                    <>
+                      <span className="text-lg font-bold">{formatPrice(product.price)}</span>
+                      {hasDiscount && (
+                        <span className="text-muted-foreground text-sm line-through">
+                          {formatPrice(product.compareAtPrice!)}
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
 

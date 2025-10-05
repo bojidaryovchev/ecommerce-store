@@ -33,7 +33,13 @@ export type Product = {
   _count: {
     reviews: number;
     orderItems: number;
+    variants: number;
   };
+  variants: {
+    id: string;
+    price: number | null;
+    stockQuantity: number;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 };
@@ -116,6 +122,17 @@ export async function getProducts(options: GetProductsOptions = {}): Promise<Get
           select: {
             reviews: true,
             orderItems: true,
+            variants: true,
+          },
+        },
+        variants: {
+          where: {
+            isActive: true,
+          },
+          select: {
+            id: true,
+            price: true,
+            stockQuantity: true,
           },
         },
         createdAt: true,
@@ -130,6 +147,10 @@ export async function getProducts(options: GetProductsOptions = {}): Promise<Get
       price: product.price.toNumber(),
       compareAtPrice: product.compareAtPrice?.toNumber() ?? null,
       costPrice: product.costPrice?.toNumber() ?? null,
+      variants: product.variants.map((v) => ({
+        ...v,
+        price: v.price?.toNumber() ?? null,
+      })),
     }));
 
     return {
