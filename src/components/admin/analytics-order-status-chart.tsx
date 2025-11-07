@@ -25,6 +25,21 @@ const STATUS_COLORS: Record<string, string> = {
   REFUNDED: "hsl(24, 95%, 53%)", // Orange
 };
 
+// Custom tooltip component - moved outside render
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background rounded-lg border p-3 shadow-lg">
+        <p className="mb-1 font-medium">{payload[0].name}</p>
+        <p className="text-muted-foreground text-sm">Orders: {payload[0].value}</p>
+        <p className="text-muted-foreground text-sm">{payload[0].payload.percentage.toFixed(1)}% of total</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function AnalyticsOrderStatusChart({
   data,
   title = "Order Status Distribution",
@@ -36,21 +51,6 @@ export function AnalyticsOrderStatusChart({
     value: item.count,
     percentage: item.percentage,
   }));
-
-  // Custom tooltip
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background rounded-lg border p-3 shadow-lg">
-          <p className="mb-1 font-medium">{payload[0].name}</p>
-          <p className="text-muted-foreground text-sm">Orders: {payload[0].value}</p>
-          <p className="text-muted-foreground text-sm">{payload[0].payload.percentage.toFixed(1)}% of total</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   // Custom label
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

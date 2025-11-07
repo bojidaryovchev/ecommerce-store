@@ -5,7 +5,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useCartMerge } from "@/hooks/use-cart-merge";
 import { getSessionId } from "@/lib/session";
 import type { AddToCartData, RemoveFromCartData, UpdateCartItemData } from "@/schemas/cart.schema";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext } from "react";
 
 interface CartContextValue {
   cart: CartData | null;
@@ -33,13 +33,7 @@ interface CartProviderProps {
  * Manages global cart state and provides cart operations throughout the app
  */
 export function CartProvider({ children }: CartProviderProps) {
-  const [sessionId, setSessionIdState] = useState<string | undefined>(undefined);
-
-  // Initialize session ID from cookies on mount
-  useEffect(() => {
-    const id = getSessionId();
-    setSessionIdState(id);
-  }, []);
+  const sessionId = getSessionId();
 
   const { cart, isLoading, isError, itemCount, subtotal, total, addItem, updateItem, removeItem, clear, mutate } =
     useCart({

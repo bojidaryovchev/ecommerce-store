@@ -49,18 +49,19 @@ export function VariantSelector({
     }));
   }, [activeVariants]);
 
-  // Selected options state
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
-
-  // Set default variant if provided
-  useEffect(() => {
+  // Initialize selected options from default variant
+  const getInitialOptions = () => {
     if (defaultVariantId) {
       const defaultVariant = activeVariants.find((v) => v.id === defaultVariantId);
       if (defaultVariant?.options) {
-        setSelectedOptions(defaultVariant.options as Record<string, string>);
+        return defaultVariant.options as Record<string, string>;
       }
     }
-  }, [defaultVariantId, activeVariants]);
+    return {};
+  };
+
+  // Selected options state - initialized from default variant
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(getInitialOptions());
 
   // Find current variant based on selected options
   const currentVariant = useMemo(() => {

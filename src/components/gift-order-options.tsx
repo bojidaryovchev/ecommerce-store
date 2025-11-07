@@ -36,7 +36,7 @@ const GiftOrderOptions: React.FC<GiftOrderOptionsProps> = ({
   // Character count info
   const charInfo = getGiftMessageCharacterInfo(giftMessage);
 
-  // Notify parent of changes
+  // Notify parent of changes and update error state
   useEffect(() => {
     if (onChange) {
       const result = giftOrderOptionsSchema.safeParse({
@@ -46,7 +46,7 @@ const GiftOrderOptions: React.FC<GiftOrderOptionsProps> = ({
 
       if (result.success) {
         onChange(result.data);
-        setError(null);
+        // Only clear error in the change handler, not here
       }
     }
   }, [isGift, giftMessage, onChange]);

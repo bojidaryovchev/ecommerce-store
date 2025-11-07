@@ -27,6 +27,24 @@ interface AnalyticsTopProductsTableProps {
 type SortColumn = "revenue" | "unitsSold" | "orders";
 type SortDirection = "asc" | "desc";
 
+// SortIcon component - moved outside render
+const SortIcon = ({
+  column,
+  sortColumn,
+  sortDirection,
+}: {
+  column: SortColumn;
+  sortColumn: SortColumn;
+  sortDirection: SortDirection;
+}) => {
+  if (sortColumn !== column) return null;
+  return sortDirection === "asc" ? (
+    <ArrowUp className="ml-1 inline h-4 w-4" />
+  ) : (
+    <ArrowDown className="ml-1 inline h-4 w-4" />
+  );
+};
+
 export function AnalyticsTopProductsTable({
   data,
   title = "Top Products",
@@ -50,15 +68,6 @@ export function AnalyticsTopProductsTable({
     return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
   });
 
-  const SortIcon = ({ column }: { column: SortColumn }) => {
-    if (sortColumn !== column) return null;
-    return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 inline h-4 w-4" />
-    ) : (
-      <ArrowDown className="ml-1 inline h-4 w-4" />
-    );
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -75,19 +84,19 @@ export function AnalyticsTopProductsTable({
                 className="hover:text-foreground cursor-pointer text-right"
                 onClick={() => handleSort("revenue")}
               >
-                Revenue <SortIcon column="revenue" />
+                Revenue <SortIcon column="revenue" sortColumn={sortColumn} sortDirection={sortDirection} />
               </TableHead>
               <TableHead
                 className="hover:text-foreground cursor-pointer text-right"
                 onClick={() => handleSort("unitsSold")}
               >
-                Units Sold <SortIcon column="unitsSold" />
+                Units Sold <SortIcon column="unitsSold" sortColumn={sortColumn} sortDirection={sortDirection} />
               </TableHead>
               <TableHead
                 className="hover:text-foreground cursor-pointer text-right"
                 onClick={() => handleSort("orders")}
               >
-                Orders <SortIcon column="orders" />
+                Orders <SortIcon column="orders" sortColumn={sortColumn} sortDirection={sortDirection} />
               </TableHead>
             </TableRow>
           </TableHeader>

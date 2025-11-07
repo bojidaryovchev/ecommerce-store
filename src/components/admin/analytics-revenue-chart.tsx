@@ -21,6 +21,36 @@ interface AnalyticsRevenueChartProps {
   timeGrouping?: "hour" | "day" | "week" | "month";
 }
 
+// Custom tooltip component - moved outside render
+
+const CustomTooltip = ({
+  active,
+  payload,
+  showComparison,
+}: {
+  active?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any[];
+  showComparison?: boolean;
+}) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background rounded-lg border p-3 shadow-lg">
+        <p className="mb-2 font-medium">{payload[0].payload.date}</p>
+        <div className="space-y-1 text-sm">
+          <p className="text-blue-600 dark:text-blue-400">Revenue: {formatCurrency(payload[0].value)}</p>
+          {showComparison && payload.length > 1 && (
+            <p className="text-gray-500 dark:text-gray-400">Previous: {formatCurrency(payload[1].value)}</p>
+          )}
+          <p className="text-muted-foreground">Orders: {payload[0].payload.orders}</p>
+          <p className="text-muted-foreground">AOV: {formatCurrency(payload[0].payload.aov)}</p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function AnalyticsRevenueChart({
   data,
   comparisonData,
@@ -63,27 +93,6 @@ export function AnalyticsRevenueChart({
     }));
   }
 
-  // Custom tooltip
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background rounded-lg border p-3 shadow-lg">
-          <p className="mb-2 font-medium">{payload[0].payload.date}</p>
-          <div className="space-y-1 text-sm">
-            <p className="text-blue-600 dark:text-blue-400">Revenue: {formatCurrency(payload[0].value)}</p>
-            {showComparison && payload.length > 1 && (
-              <p className="text-gray-500 dark:text-gray-400">Previous: {formatCurrency(payload[1].value)}</p>
-            )}
-            <p className="text-muted-foreground">Orders: {payload[0].payload.orders}</p>
-            <p className="text-muted-foreground">AOV: {formatCurrency(payload[0].payload.aov)}</p>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -100,7 +109,7 @@ export function AnalyticsRevenueChart({
               tick={{ fill: "currentColor" }}
               tickFormatter={(value: number) => formatCurrency(value)}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip showComparison={showComparison} />} />
             <Legend />
             <Line
               type="monotone"

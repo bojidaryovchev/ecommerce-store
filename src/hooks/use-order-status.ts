@@ -27,6 +27,8 @@ export function useOrderStatus(orderId: string, initialStatus: OrderStatus, opti
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const mountedRef = useRef(true);
+  const sseAttemptedRef = useRef(false);
 
   // Fetch current order status
   const fetchOrderStatus = useCallback(async () => {
@@ -79,7 +81,13 @@ export function useOrderStatus(orderId: string, initialStatus: OrderStatus, opti
 
   // Set up SSE connection
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
+
+    // Only attempt SSE once
+    if (sseAttemptedRef.current) {
+      return;
+    }
+    sseAttemptedRef.current = true;
 
     // Try to establish SSE connection
     try {
@@ -87,14 +95,14 @@ export function useOrderStatus(orderId: string, initialStatus: OrderStatus, opti
       eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {
-        if (!mounted) return;
+        if (!mountedRef.current) return;
         setIsConnected(true);
         setConnectionType("sse");
         console.log(`[SSE] Connected to order ${orderId}`);
       };
 
       eventSource.onmessage = (event) => {
-        if (!mounted) return;
+        if (!mountedRef.current) return;
 
         try {
           const data = JSON.parse(event.data);
@@ -149,22 +157,32 @@ export function useOrderStatus(orderId: string, initialStatus: OrderStatus, opti
         eventSource.close();
 
         // Fallback to polling after SSE failure
-        if (mounted) {
+        if (mountedRef.current) {
           console.log("[SSE] Falling back to polling");
-          startPolling();
+          // Use setTimeout to avoid calling setState synchronously in effect
+          setTimeout(() => {
+            if (mountedRef.current) {
+              startPolling();
+            }
+          }, 0);
         }
       };
     } catch (error) {
       console.error("[SSE] Failed to create EventSource:", error);
       // SSE not supported, use polling
-      if (mounted) {
-        startPolling();
+      if (mountedRef.current) {
+        // Use setTimeout to avoid calling setState synchronously in effect
+        setTimeout(() => {
+          if (mountedRef.current) {
+            startPolling();
+          }
+        }, 0);
       }
     }
 
     // Cleanup
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
