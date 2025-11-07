@@ -46,10 +46,10 @@ model User {
   roles         UserRole[] @default([USER])
 
   // E-commerce relations
-  cart         Cart?
-  orders       Order[]
-  reviews      Review[]
-  addresses    Address[]
+  cart          Cart?
+  orders        Order[]
+  reviews       Review[]
+  addresses     Address[]
   wishlistItems WishlistItem[]
 
   createdAt DateTime @default(now())
@@ -483,9 +483,9 @@ model AbandonedCart {
   itemsSnapshot Json // Snapshot of cart items for recovery email
 
   // Recovery tracking
-  recoveryToken    String   @unique @default(cuid()) // Secure token for recovery link
+  recoveryToken    String    @unique @default(cuid()) // Secure token for recovery link
   tokenExpiresAt   DateTime // Token expiration (typically 7 days)
-  remindersSent    Int      @default(0) // Number of recovery emails sent (0-3)
+  remindersSent    Int       @default(0) // Number of recovery emails sent (0-3)
   lastReminderSent DateTime? // When the last reminder was sent
 
   // Recovery status
