@@ -1,38 +1,38 @@
-import { sendContactFormEmail } from "@/actions/send-contact-form-email.action";
-import { contactFormSchema } from "@/schemas/contact-form.schema";
-import { type NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+// import { sendContactFormEmail } from "@/actions/send-contact-form-email.action";
+// import { contactFormSchema } from "@/schemas/contact-form.schema";
+// import { type NextRequest, NextResponse } from "next/server";
+// import { z } from "zod";
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+// export async function POST(request: NextRequest) {
+//   try {
+//     const body = await request.json();
 
-    // ✅ Validate request body
-    const { name, email, message } = contactFormSchema.parse(body);
+//     // ✅ Validate request body
+//     const { name, email, message } = contactFormSchema.parse(body);
 
-    // ✅ Send email using SES
-    await sendContactFormEmail({ name, email, message });
+//     // ✅ Send email using SES
+//     await sendContactFormEmail({ name, email, message });
 
-    return NextResponse.json(
-      {
-        message: "Contact form submitted successfully",
-        data: { name, email, message },
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error("Error processing contact form:", error);
+//     return NextResponse.json(
+//       {
+//         message: "Contact form submitted successfully",
+//         data: { name, email, message },
+//       },
+//       { status: 200 },
+//     );
+//   } catch (error) {
+//     console.error("Error processing contact form:", error);
 
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: error.issues,
-        },
-        { status: 400 },
-      );
-    }
+//     if (error instanceof z.ZodError) {
+//       return NextResponse.json(
+//         {
+//           error: "Validation failed",
+//           details: error.issues,
+//         },
+//         { status: 400 },
+//       );
+//     }
 
-    return NextResponse.json({ error: "Failed to process contact form" }, { status: 500 });
-  }
-}
+//     return NextResponse.json({ error: "Failed to process contact form" }, { status: 500 });
+//   }
+// }
