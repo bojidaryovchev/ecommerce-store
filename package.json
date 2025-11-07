@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prepare": "husky",
     "dev": "next dev --turbopack",
     "build": "next build",
     "lint": "eslint",
@@ -14,7 +15,7 @@
     "deps:update:patch": "node scripts/update-dependencies.mjs patch",
     "deps:update:minor": "node scripts/update-dependencies.mjs minor",
     "deps:update:major": "node scripts/update-dependencies.mjs major",
-    "prepare": "husky"
+    "stripe:logs": "docker logs ecommerce-store-stripe-cli"
   },
   "lint-staged": {
     "*.{js,mjs,ts,tsx,css,md,json}": [
