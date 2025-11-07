@@ -1,27 +1,25 @@
-version: "3.8"
-
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres
+  mongodb:
+    image: mongodb/mongodb-atlas-local
     environment:
-      POSTGRES_DB: ecommerce_db
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      - MONGODB_INITDB_ROOT_USERNAME=user
+      - MONGODB_INITDB_ROOT_PASSWORD=pass
     ports:
-      - "5432:5432"
+      - "27019:27017"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - data:/data/db
+      - config:/data/configdb
 
   stripe-cli:
     image: stripe/stripe-cli:latest
-    container_name: ecommerce-store-stripe-cli
+    container_name: stripe-cli
     command: listen --forward-to host.docker.internal:3000/api/stripe/webhook --skip-verify
     environment:
       - STRIPE_API_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_DEVICE_NAME=ecommerce-store-docker
+      - STRIPE_DEVICE_NAME=devsrc-docker
     network_mode: host
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  data:
+  config:
