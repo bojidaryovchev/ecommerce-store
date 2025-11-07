@@ -54,3 +54,144 @@ enum UserRole {
   ADMIN
   SUPER_ADMIN
 }
+
+model Product {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  description     String?
+  images          String[]
+  active          Boolean  @default(true)
+  stripeProductId String?  @unique
+  metadata        Json?
+
+  prices     Price[]
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("products")
+}
+
+model Price {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  productId       String    @db.ObjectId
+  active          Boolean   @default(true)
+  currency        String    @default("usd")
+  unitAmount      Int // Amount in cents
+  type            PriceType @default(ONE_TIME)
+  interval        String? // For recurring: day, week, month, year
+  intervalCount   Int? // For recurring: billing frequency
+  trialPeriodDays Int?
+  stripePriceId   String?   @unique
+  metadata        Json?
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("prices")
+}
+
+enum PriceType {
+  ONE_TIME
+  RECURRING
+}
+
+model Cart {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String? @db.ObjectId
+  sessionId String? @unique
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  cartId    String @db.ObjectId
+  productId String @db.ObjectId
+  priceId   String @db.ObjectId
+  quantity  Int    @default(1)
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price   Price   @relation(fields: [priceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cart_items")
+}
+
+model Order {
+  id                      String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId                  String?     @db.ObjectId
+  customerEmail           String?
+  stripeCheckoutSessionId String?     @unique
+  stripePaymentIntentId   String?     @unique
+  status                  OrderStatus @default(PENDING)
+  currency                String      @default("usd")
+  subtotal                Int // Amount in cents
+  tax                     Int? // Amount in cents
+  total                   Int // Amount in cents
+  shippingAddress         Json?
+  billingAddress          Json?
+  metadata                Json?
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  orderId    String @db.ObjectId
+  productId  String @db.ObjectId
+  priceId    String @db.ObjectId
+  quantity   Int
+  unitAmount Int // Amount in cents at time of purchase
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+  price   Price   @relation(fields: [priceId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+model WebhookEvent {
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  stripeEventId   String  @unique
+  type            String
+  data            Json
+  processed       Boolean @default(false)
+  processingError String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("webhook_events")
+}

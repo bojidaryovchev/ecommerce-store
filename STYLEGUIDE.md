@@ -18,7 +18,7 @@ Constants should be more descriptive, e.g. `export const REFRESH_INTERVAL_MS = 6
 - `scripts` - helpful scripts
 - `src/actions` - server actions
 - `src/app` - Next.js App directory - pages, API routes, framework specifics
-- `src/components` - components, each in its own folder
+- `src/components` - components in a flat structure
 - `src/components/layouts` - common layouts
 - `src/components/providers` - providers (different from React Context API, see below)
 - `src/components/ui` - shadcn components
@@ -69,10 +69,6 @@ Files should follow `kebab-case`
 
 ## Components
 
-- each component should live in its own folder, e.g. `src/components/FooBar`
-- each component should encapsulate everything related to it in that folder
-- each component folder should contain an `index.ts` file
-- each component folder `index.ts` file should contain a named default export of the component, e.g. `export { default as FooBar } from "./foo-bar";`, as well as an export for anything we might want to expose to the outside world
 - components are server-side by default unless we explicitly mark them as client-side using the `"use client";` directive
 - client-side components should be suffixed with `-client` to directly indicate they are client-side, e.g. `articles-client.component.ts`
 
