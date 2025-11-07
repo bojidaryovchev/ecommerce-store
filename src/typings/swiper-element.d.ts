@@ -1,13 +1,16 @@
-import { SwiperContainer, SwiperSlide } from "swiper/element";
-import { SwiperOptions } from "swiper/types";
+// types/swiper-elements.d.ts
 
-type DetailedHTMLProps<T> = React.DetailedHTMLProps<React.HTMLAttributes<T>, T>;
+import type { SwiperContainer, SwiperSlide } from "swiper/element";
+import type { SwiperOptions } from "swiper/types";
 
-declare global {
+// Extend React's existing JSX definitions instead of overwriting them
+declare module "react" {
   namespace JSX {
     interface IntrinsicElements {
-      "swiper-container": DetailedHTMLProps<SwiperContainer> & SwiperOptions;
-      "swiper-slide": DetailedHTMLProps<SwiperSlide>;
+      "swiper-container": React.DetailedHTMLProps<React.HTMLAttributes<SwiperContainer>, SwiperContainer> &
+        SwiperOptions;
+
+      "swiper-slide": React.DetailedHTMLProps<React.HTMLAttributes<SwiperSlide>, SwiperSlide>;
     }
   }
 }
