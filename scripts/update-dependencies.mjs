@@ -12,15 +12,33 @@ import { cwd } from "process";
  * and updates package.json with exact versions (no ^ or ~ prefixes).
  * Only considers proper major.minor.patch versions (no pre-release versions).
  *
+ * Usage:
+ *   node scripts/update-dependencies.mjs [patch|minor|major]
+ *
+ * Options:
+ *   patch (default) - Only update patch versions (1.2.3 -> 1.2.4)
+ *   minor           - Update patch and minor versions (1.2.3 -> 1.3.0)
+ *   major           - Update to latest version including major (1.2.3 -> 2.0.0)
+ *
  * Features:
  * - Converts all version constraints (^, ~) to exact versions
  * - Only considers stable releases (no rc, beta, alpha, etc.)
- * - Respects semver compatibility for finding latest versions
+ * - Respects update level (patch/minor/major)
  * - Creates backup before making changes
  */
 
 const PACKAGE_JSON_PATH = join(cwd(), "package.json");
 const BACKUP_PATH = join(cwd(), "package.json.backup");
+
+// Parse command-line arguments
+const args = process.argv.slice(2);
+const updateLevel = args[0] || "patch"; // default to patch
+
+if (!["patch", "minor", "major"].includes(updateLevel)) {
+  log(`❌ Invalid update level: ${updateLevel}`, "red");
+  log(`   Valid options: patch, minor, major`, "yellow");
+  process.exit(1);
+}
 
 // Color codes for console output
 const colors = {
@@ -53,9 +71,9 @@ function isStableVersion(version) {
 }
 
 /**
- * Get the latest stable version that satisfies the semver range and return as exact version
+ * Get the latest stable version based on the specified update level
  */
-async function getLatestCompatibleVersion(packageName, currentVersion) {
+async function getLatestCompatibleVersion(packageName, currentVersion, updateLevel) {
   try {
     // Get package information from npm
     const result = execSync(`npm view ${packageName} versions --json`, {
@@ -74,11 +92,6 @@ async function getLatestCompatibleVersion(packageName, currentVersion) {
       return currentVersion;
     }
 
-    // Determine version constraint pattern
-    const hasCaretPrefix = currentVersion.startsWith("^");
-    const hasTildePrefix = currentVersion.startsWith("~");
-    const isExact = !hasCaretPrefix && !hasTildePrefix;
-
     // Clean current version (remove ^, ~, etc.)
     const cleanCurrentVersion = currentVersion.replace(/^[\^~>=<]/, "");
 
@@ -88,31 +101,33 @@ async function getLatestCompatibleVersion(packageName, currentVersion) {
     const currentMinor = parseInt(currentParts[1]) || 0;
     const currentPatch = parseInt(currentParts[2]) || 0;
 
-    // Filter versions based on constraint type
+    // Filter versions based on update level
     const compatibleVersions = stableVersions.filter((version) => {
       const parts = version.split(".");
       const major = parseInt(parts[0]) || 0;
       const minor = parseInt(parts[1]) || 0;
       const patch = parseInt(parts[2]) || 0;
 
-      if (isExact) {
-        // For exact versions, only allow patch updates
-        return major === currentMajor && minor === currentMinor && patch >= currentPatch;
-      } else if (hasTildePrefix) {
-        // ~ allows patch-level changes: ~1.2.3 := >=1.2.3 <1.(2+1).0
-        return major === currentMajor && minor === currentMinor && patch >= currentPatch;
-      } else if (hasCaretPrefix) {
-        // ^ allows changes that do not modify left-most non-zero digit
-        if (currentMajor > 0) {
-          return major === currentMajor && (minor > currentMinor || (minor === currentMinor && patch >= currentPatch));
-        } else if (currentMinor > 0) {
-          return major === 0 && minor === currentMinor && patch >= currentPatch;
-        } else {
-          return major === 0 && minor === 0 && patch >= currentPatch;
-        }
-      }
+      switch (updateLevel) {
+        case "patch":
+          // Only allow patch updates within same major.minor
+          return major === currentMajor && minor === currentMinor && patch >= currentPatch;
 
-      return false;
+        case "minor":
+          // Allow minor and patch updates within same major
+          return major === currentMajor && (minor > currentMinor || (minor === currentMinor && patch >= currentPatch));
+
+        case "major":
+          // Allow any version that's >= current version
+          if (major > currentMajor) return true;
+          if (major < currentMajor) return false;
+          if (minor > currentMinor) return true;
+          if (minor < currentMinor) return false;
+          return patch >= currentPatch;
+
+        default:
+          return false;
+      }
     });
 
     if (compatibleVersions.length === 0) {
@@ -163,6 +178,7 @@ function needsUpdate(current, latest) {
  */
 async function updateDependencies() {
   logBright("🔍 Dependency Update Script Starting...", "cyan");
+  logBright(`📝 Update level: ${updateLevel.toUpperCase()}`, "magenta");
 
   // Create backup
   try {
@@ -195,7 +211,7 @@ async function updateDependencies() {
     for (const [packageName, currentVersion] of Object.entries(packageJson.dependencies)) {
       log(`  Checking ${packageName}@${currentVersion}...`, "white");
 
-      const latestVersion = await getLatestCompatibleVersion(packageName, currentVersion);
+      const latestVersion = await getLatestCompatibleVersion(packageName, currentVersion, updateLevel);
 
       if (needsUpdate(currentVersion, latestVersion)) {
         packageJson.dependencies[packageName] = latestVersion;
@@ -218,7 +234,7 @@ async function updateDependencies() {
     for (const [packageName, currentVersion] of Object.entries(packageJson.devDependencies)) {
       log(`  Checking ${packageName}@${currentVersion}...`, "white");
 
-      const latestVersion = await getLatestCompatibleVersion(packageName, currentVersion);
+      const latestVersion = await getLatestCompatibleVersion(packageName, currentVersion, updateLevel);
 
       if (needsUpdate(currentVersion, latestVersion)) {
         packageJson.devDependencies[packageName] = latestVersion;
