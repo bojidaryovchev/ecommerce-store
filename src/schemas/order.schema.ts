@@ -108,7 +108,6 @@ export const orderSchema = z
 
     // Customer info for guest orders
     customerEmail: z
-      .string()
       .email("Invalid email address")
       .max(255, "Email must be less than 255 characters")
       .optional()
