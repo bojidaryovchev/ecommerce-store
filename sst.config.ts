@@ -88,23 +88,6 @@ export default $config({
       link: [...identities, uploadsBucket],
     });
 
-    // Create a Lambda function that triggers the abandoned cart cron endpoint
-    const abandonedCartCron = new sst.aws.Function("AbandonedCartCron", {
-      handler: "src/functions/abandoned-cart-cron.handler",
-      link: [...identities],
-      timeout: "5 minutes",
-      environment: {
-        NEXT_PUBLIC_APP_URL: `https://${domainName}`,
-        CRON_SECRET: process.env.CRON_SECRET!,
-      },
-    });
-
-    // Schedule the function to run every hour
-    new sst.aws.Cron("AbandonedCartSchedule", {
-      job: abandonedCartCron,
-      schedule: "rate(1 hour)",
-    });
-
     return {
       nextAppUrl: nextApp.url,
       uploadsBucket: uploadsBucket.name,
