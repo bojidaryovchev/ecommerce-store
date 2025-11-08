@@ -4,7 +4,7 @@ import { prismaUpdateOrderStatus } from "@/actions/prisma-update-order-status.ac
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { Order, OrderItem, OrderStatus, Price, Product } from "@prisma/client";
+import { Order, OrderItem, OrderStatus, Price, Product } from "@prisma/client";
 import { BanIcon, CheckCircleIcon, ClockIcon, PackageIcon, RefreshCcwIcon, XCircleIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,14 +42,15 @@ const AdminOrdersListClient: React.FC<Props> = ({ orders }) => {
 
   const getStatusBadgeVariant = (status: OrderStatus) => {
     switch (status) {
-      case "COMPLETED":
+      case OrderStatus.COMPLETED:
         return "default";
-      case "PROCESSING":
+      case OrderStatus.PROCESSING:
         return "secondary";
-      case "FAILED":
-      case "CANCELLED":
+      case OrderStatus.FAILED:
+      case OrderStatus.CANCELLED:
         return "destructive";
-      case "REFUNDED":
+      case OrderStatus.REFUNDED:
+      case OrderStatus.PARTIALLY_REFUNDED:
         return "outline";
       default:
         return "secondary";
@@ -58,15 +59,16 @@ const AdminOrdersListClient: React.FC<Props> = ({ orders }) => {
 
   const getStatusIcon = (status: OrderStatus) => {
     switch (status) {
-      case "COMPLETED":
+      case OrderStatus.COMPLETED:
         return <CheckCircleIcon className="h-4 w-4" />;
-      case "PROCESSING":
+      case OrderStatus.PROCESSING:
         return <PackageIcon className="h-4 w-4" />;
-      case "FAILED":
+      case OrderStatus.FAILED:
         return <XCircleIcon className="h-4 w-4" />;
-      case "CANCELLED":
+      case OrderStatus.CANCELLED:
         return <BanIcon className="h-4 w-4" />;
-      case "REFUNDED":
+      case OrderStatus.REFUNDED:
+      case OrderStatus.PARTIALLY_REFUNDED:
         return <RefreshCcwIcon className="h-4 w-4" />;
       default:
         return <ClockIcon className="h-4 w-4" />;
@@ -120,12 +122,13 @@ const AdminOrdersListClient: React.FC<Props> = ({ orders }) => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PENDING">PENDING</SelectItem>
-                      <SelectItem value="PROCESSING">PROCESSING</SelectItem>
-                      <SelectItem value="COMPLETED">COMPLETED</SelectItem>
-                      <SelectItem value="FAILED">FAILED</SelectItem>
-                      <SelectItem value="CANCELLED">CANCELLED</SelectItem>
-                      <SelectItem value="REFUNDED">REFUNDED</SelectItem>
+                      <SelectItem value={OrderStatus.PENDING}>{OrderStatus.PENDING}</SelectItem>
+                      <SelectItem value={OrderStatus.PROCESSING}>{OrderStatus.PROCESSING}</SelectItem>
+                      <SelectItem value={OrderStatus.COMPLETED}>{OrderStatus.COMPLETED}</SelectItem>
+                      <SelectItem value={OrderStatus.FAILED}>{OrderStatus.FAILED}</SelectItem>
+                      <SelectItem value={OrderStatus.CANCELLED}>{OrderStatus.CANCELLED}</SelectItem>
+                      <SelectItem value={OrderStatus.REFUNDED}>{OrderStatus.REFUNDED}</SelectItem>
+                      <SelectItem value={OrderStatus.PARTIALLY_REFUNDED}>{OrderStatus.PARTIALLY_REFUNDED}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

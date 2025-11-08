@@ -174,8 +174,8 @@ model Order {
   stripeCheckoutSessionId String?           @unique
   stripePaymentIntentId   String?           @unique
   status                  OrderStatus       @default(PENDING)
-  paymentStatus           PaymentStatus     @default(PENDING)
-  fulfillmentStatus       FulfillmentStatus @default(UNFULFILLED)
+  paymentStatus           PaymentStatus     @default(unpaid)
+  fulfillmentStatus       FulfillmentStatus @default(unfulfilled)
   currency                String            @default("usd")
   subtotal                Int // Amount in cents
   tax                     Int? // Amount in cents
@@ -229,26 +229,23 @@ enum OrderStatus {
   FAILED
   CANCELLED
   REFUNDED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
   PARTIALLY_REFUNDED
-  REQUIRES_PAYMENT_METHOD
-  REQUIRES_CONFIRMATION
-  REQUIRES_ACTION
-  CANCELED
 }
 
+// Stripe Checkout Session payment_status values
+enum PaymentStatus {
+  paid // Payment successful
+  unpaid // Payment not yet completed
+  no_payment_required // No payment needed (e.g., free order)
+}
+
+// Internal fulfillment tracking
 enum FulfillmentStatus {
-  UNFULFILLED
-  FULFILLED
-  SHIPPED
-  DELIVERED
-  RETURNED
+  unfulfilled // Order not yet processed
+  fulfilled // Order packed/ready
+  shipped // Order shipped
+  delivered // Order delivered
+  returned // Order returned
 }
 
 model WebhookEvent {

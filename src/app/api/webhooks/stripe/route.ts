@@ -1,7 +1,7 @@
 import { generateOrderNumber } from "@/lib/order-number";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { mapStripePaymentStatus } from "@/lib/stripe-mapping";
+import { CartStatus, FulfillmentStatus, OrderStatus, PaymentStatus } from "@prisma/client";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -128,8 +128,8 @@ async function handleAsyncPaymentFailed(session: Stripe.Checkout.Session) {
   const result = await prisma.order.updateMany({
     where: { stripeCheckoutSessionId: session.id },
     data: {
-      status: "FAILED",
-      paymentStatus: "FAILED",
+      status: OrderStatus.FAILED,
+      paymentStatus: PaymentStatus.unpaid,
     },
   });
 
@@ -145,8 +145,8 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   const result = await prisma.order.updateMany({
     where: { stripePaymentIntentId: paymentIntent.id },
     data: {
-      status: "COMPLETED",
-      paymentStatus: "PAID",
+      status: OrderStatus.COMPLETED,
+      paymentStatus: PaymentStatus.paid,
     },
   });
 
@@ -162,8 +162,8 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   const result = await prisma.order.updateMany({
     where: { stripePaymentIntentId: paymentIntent.id },
     data: {
-      status: "FAILED",
-      paymentStatus: "FAILED",
+      status: OrderStatus.FAILED,
+      paymentStatus: PaymentStatus.unpaid,
     },
   });
 
@@ -184,8 +184,10 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   // Determine if full or partial refund
   const isFullRefund = charge.amount_refunded === charge.amount;
-  const paymentStatus = isFullRefund ? "REFUNDED" : "PARTIALLY_REFUNDED";
-  const orderStatus = isFullRefund ? "REFUNDED" : undefined;
+  const orderStatus = isFullRefund ? OrderStatus.REFUNDED : OrderStatus.PARTIALLY_REFUNDED;
+
+  // Payment status remains 'paid' since the payment succeeded, but was later refunded
+  const paymentStatus = PaymentStatus.paid;
 
   // Get refund reason from the latest refund
   const refundReason = charge.refunds?.data[0]?.reason || null;
@@ -193,7 +195,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   const result = await prisma.order.updateMany({
     where: { stripePaymentIntentId: paymentIntentId },
     data: {
-      ...(orderStatus && { status: orderStatus }),
+      status: orderStatus,
       paymentStatus,
       refundedAmount: charge.amount_refunded,
       refundReason,
@@ -261,11 +263,11 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
     }
   }
 
-  // Map Stripe payment status to our enum
-  const paymentStatus = mapStripePaymentStatus(session.payment_status || "unpaid");
+  // Use Stripe's payment_status directly (paid, unpaid, no_payment_required)
+  const paymentStatus = (session.payment_status as PaymentStatus) || PaymentStatus.unpaid;
 
   // Determine order status based on payment status
-  const orderStatus = paymentStatus === "PAID" ? "COMPLETED" : "PENDING";
+  const orderStatus = paymentStatus === PaymentStatus.paid ? OrderStatus.COMPLETED : OrderStatus.PENDING;
 
   // Generate unique order number (only used for new orders)
   const orderNumber = await generateOrderNumber();
@@ -336,7 +338,7 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
         stripePaymentIntentId: (session.payment_intent as string) || null,
         status: orderStatus,
         paymentStatus,
-        fulfillmentStatus: "UNFULFILLED",
+        fulfillmentStatus: FulfillmentStatus.unfulfilled,
         currency: session.currency || "usd",
         subtotal,
         tax,
@@ -377,7 +379,7 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
         return;
       }
 
-      if (cart.status !== "CHECKED_OUT") {
+      if (cart.status !== CartStatus.CHECKED_OUT) {
         console.warn(`Cart ${cartId} status is ${cart.status}, expected CHECKED_OUT. Skipping deletion.`);
         return;
       }

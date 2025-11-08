@@ -3,7 +3,7 @@
 import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
-import type { FulfillmentStatus, Order, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
+import { FulfillmentStatus, Order, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 interface UpdateOrderStatusParams {
@@ -31,6 +31,39 @@ export async function prismaUpdateOrderStatus(params: UpdateOrderStatusParams): 
       };
     }
 
+    // Validate status transitions (business logic)
+    if (status && status !== existingOrder.status) {
+      const currentStatus = existingOrder.status;
+
+      // Define valid status transitions
+      const validTransitions: Record<OrderStatus, OrderStatus[]> = {
+        [OrderStatus.PENDING]: [OrderStatus.PROCESSING, OrderStatus.CANCELLED, OrderStatus.FAILED],
+        [OrderStatus.PROCESSING]: [OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.FAILED],
+        [OrderStatus.COMPLETED]: [OrderStatus.REFUNDED, OrderStatus.PARTIALLY_REFUNDED],
+        [OrderStatus.FAILED]: [OrderStatus.PENDING, OrderStatus.CANCELLED], // Can retry
+        [OrderStatus.CANCELLED]: [], // Terminal state
+        [OrderStatus.REFUNDED]: [], // Terminal state
+        [OrderStatus.PARTIALLY_REFUNDED]: [OrderStatus.REFUNDED], // Can fully refund
+      };
+
+      const allowedTransitions = validTransitions[currentStatus] || [];
+
+      if (!allowedTransitions.includes(status)) {
+        return {
+          success: false,
+          error: `Invalid status transition from ${currentStatus} to ${status}`,
+        };
+      }
+    }
+
+    // Validate fulfillment status requirements
+    if (fulfillmentStatus === FulfillmentStatus.shipped && !trackingNumber) {
+      return {
+        success: false,
+        error: "Tracking number is required when marking order as shipped",
+      };
+    }
+
     // Build update data object
     const updateData: Prisma.OrderUpdateInput = {};
 
@@ -40,7 +73,7 @@ export async function prismaUpdateOrderStatus(params: UpdateOrderStatusParams): 
     if (lastModifiedBy) updateData.lastModifiedBy = lastModifiedBy;
 
     // Add tracking number to metadata if provided
-    if (trackingNumber && fulfillmentStatus === "SHIPPED") {
+    if (trackingNumber && fulfillmentStatus === FulfillmentStatus.shipped) {
       const currentMetadata = (existingOrder.metadata as Record<string, unknown> | null) || {};
       updateData.metadata = {
         ...currentMetadata,

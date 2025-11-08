@@ -22,6 +22,43 @@ export async function prismaCreateProduct(params: CreateProductParams): Promise<
   try {
     const { name, description, images, unitAmount, currency = "usd" } = params;
 
+    // Server-side validation (defense-in-depth)
+    if (!name || name.trim().length === 0) {
+      return { success: false, error: "Product name is required" };
+    }
+    if (name.length > 500) {
+      return { success: false, error: "Product name must not exceed 500 characters" };
+    }
+    if (description && description.length > 5000) {
+      return { success: false, error: "Description must not exceed 5000 characters" };
+    }
+    if (images && images.length > 10) {
+      return { success: false, error: "Maximum 10 images allowed" };
+    }
+    if (images) {
+      // Validate each image is a valid URL
+      for (const img of images) {
+        try {
+          new URL(img);
+        } catch {
+          return { success: false, error: `Invalid image URL: ${img}` };
+        }
+      }
+    }
+    if (!Number.isInteger(unitAmount)) {
+      return { success: false, error: "Unit amount must be an integer (in cents)" };
+    }
+    if (unitAmount < 0) {
+      return { success: false, error: "Unit amount cannot be negative" };
+    }
+    if (unitAmount > 99999999) {
+      return { success: false, error: "Unit amount exceeds maximum (999,999.99)" };
+    }
+    const validCurrencies = ["usd", "eur", "gbp", "jpy", "cad", "aud"];
+    if (!validCurrencies.includes(currency.toLowerCase())) {
+      return { success: false, error: "Invalid currency. Must be one of: USD, EUR, GBP, JPY, CAD, AUD" };
+    }
+
     // Create product in Stripe
     const stripeProduct = await stripe.products.create({
       name,

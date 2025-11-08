@@ -19,6 +19,32 @@ export async function prismaUpdateProduct(params: UpdateProductParams): Promise<
   try {
     const { productId, name, description, images, lastModifiedBy } = params;
 
+    // Server-side validation (defense-in-depth)
+    if (name !== undefined) {
+      if (name.trim().length === 0) {
+        return { success: false, error: "Product name cannot be empty" };
+      }
+      if (name.length > 500) {
+        return { success: false, error: "Product name must not exceed 500 characters" };
+      }
+    }
+    if (description !== undefined && description !== null && description.length > 5000) {
+      return { success: false, error: "Description must not exceed 5000 characters" };
+    }
+    if (images !== undefined) {
+      if (images.length > 10) {
+        return { success: false, error: "Maximum 10 images allowed" };
+      }
+      // Validate each image is a valid URL
+      for (const img of images) {
+        try {
+          new URL(img);
+        } catch {
+          return { success: false, error: `Invalid image URL: ${img}` };
+        }
+      }
+    }
+
     // Get existing product to get Stripe product ID
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },

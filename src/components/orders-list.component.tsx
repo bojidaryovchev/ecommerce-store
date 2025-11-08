@@ -1,5 +1,6 @@
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Order, OrderItem, Price, Product } from "@prisma/client";
+import { OrderStatus } from "@prisma/client";
 import { CheckCircleIcon, ClockIcon, PackageIcon, XCircleIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,11 +18,11 @@ interface Props {
 }
 
 const OrdersList: React.FC<Props> = ({ orders }) => {
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: OrderStatus) => {
     switch (status) {
-      case "COMPLETED":
+      case OrderStatus.COMPLETED:
         return <CheckCircleIcon className="mr-1 inline h-4 w-4" />;
-      case "FAILED":
+      case OrderStatus.FAILED:
         return <XCircleIcon className="mr-1 inline h-4 w-4" />;
       default:
         return <ClockIcon className="mr-1 inline h-4 w-4" />;
@@ -54,9 +55,9 @@ const OrdersList: React.FC<Props> = ({ orders }) => {
               <p className="text-sm text-gray-600">Status</p>
               <p
                 className={`font-medium ${
-                  order.status === "COMPLETED"
+                  order.status === OrderStatus.COMPLETED
                     ? "text-green-600"
-                    : order.status === "FAILED"
+                    : order.status === OrderStatus.FAILED
                       ? "text-red-600"
                       : "text-yellow-600"
                 }`}

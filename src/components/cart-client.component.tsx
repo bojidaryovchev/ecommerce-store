@@ -7,6 +7,7 @@ import { stripeCreateCheckoutSessionFromCart } from "@/actions/stripe-create-che
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
+import { cartQuantitySchema } from "@/schemas/cart-quantity.schema";
 import type { Cart, CartItem, Price, Product } from "@prisma/client";
 import { ArrowLeftIcon, CreditCardIcon, ShoppingBagIcon, Trash2Icon } from "lucide-react";
 import Image from "next/image";
@@ -30,8 +31,23 @@ const CartClient: React.FC<Props> = ({ cart }) => {
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = React.useState(false);
 
-  const handleQuantityChange = async (cartItemId: string, quantity: number) => {
-    if (quantity < 1) return;
+  const handleQuantityChange = async (cartItemId: string, inputValue: string) => {
+    // Parse and validate quantity
+    const quantity = parseInt(inputValue, 10);
+
+    if (isNaN(quantity)) {
+      toast.error("Please enter a valid number");
+      return;
+    }
+
+    // Validate with Zod schema
+    const validation = cartQuantitySchema.safeParse({ quantity });
+
+    if (!validation.success) {
+      const errorMessage = validation.error.issues[0]?.message || "Invalid quantity";
+      toast.error(errorMessage);
+      return;
+    }
 
     const result = await prismaUpdateCartItem({ cartItemId, quantity });
 
@@ -143,8 +159,9 @@ const CartClient: React.FC<Props> = ({ cart }) => {
                     <Input
                       type="number"
                       min="1"
+                      max="999"
                       value={item.quantity}
-                      onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
+                      onChange={(e) => handleQuantityChange(item.id, e.target.value)}
                       className="w-20"
                     />
                   </div>
