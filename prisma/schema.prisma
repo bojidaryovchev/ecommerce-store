@@ -79,6 +79,7 @@ model Product {
 
   @@index([active])
   @@index([deletedAt])
+  @@index([active, deletedAt])
   @@map("products")
 }
 
@@ -106,6 +107,7 @@ model Price {
   @@index([productId])
   @@index([active])
   @@index([deletedAt])
+  @@index([active, deletedAt])
   @@map("prices")
 }
 

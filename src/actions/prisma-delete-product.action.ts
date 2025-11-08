@@ -1,5 +1,6 @@
 "use server";
 
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
@@ -8,11 +9,12 @@ import { revalidatePath } from "next/cache";
 
 interface DeleteProductParams {
   productId: string;
+  lastModifiedBy?: string;
 }
 
 export async function prismaDeleteProduct(params: DeleteProductParams): Promise<ActionResult<Product>> {
   try {
-    const { productId } = params;
+    const { productId, lastModifiedBy } = params;
 
     // Get existing product to get Stripe product ID
     const existingProduct = await prisma.product.findUnique({
@@ -41,6 +43,7 @@ export async function prismaDeleteProduct(params: DeleteProductParams): Promise<
         data: {
           active: false,
           deletedAt: new Date(),
+          ...(lastModifiedBy && { lastModifiedBy }),
         },
         include: {
           prices: true,
@@ -67,7 +70,7 @@ export async function prismaDeleteProduct(params: DeleteProductParams): Promise<
     console.error("Error deleting product:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete product",
+      error: sanitizeError(error, ErrorMessages.PRODUCT_DELETE_FAILED),
     };
   }
 }

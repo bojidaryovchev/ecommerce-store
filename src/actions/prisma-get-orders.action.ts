@@ -1,5 +1,6 @@
 "use server";
 
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Order, OrderItem, Price, Product } from "@prisma/client";
@@ -44,7 +45,7 @@ export async function prismaGetOrders(params?: GetOrdersParams): Promise<ActionR
     console.error("Error fetching orders:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch orders",
+      error: sanitizeError(error, ErrorMessages.ORDER_FETCH_FAILED),
     };
   }
 }

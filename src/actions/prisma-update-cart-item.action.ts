@@ -1,6 +1,7 @@
 "use server";
 
 import { extendCartExpiration, updateCartActivity } from "@/lib/cart-helpers";
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 import type { CartItem } from "@prisma/client";
@@ -80,7 +81,7 @@ export async function prismaUpdateCartItem(params: UpdateCartItemParams): Promis
     console.error("Error updating cart item:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update cart item",
+      error: sanitizeError(error, ErrorMessages.CART_UPDATE_FAILED),
     };
   }
 }

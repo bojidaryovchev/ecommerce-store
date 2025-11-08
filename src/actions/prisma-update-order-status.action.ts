@@ -1,5 +1,6 @@
 "use server";
 
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 import type { FulfillmentStatus, Order, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
@@ -11,11 +12,12 @@ interface UpdateOrderStatusParams {
   paymentStatus?: PaymentStatus;
   fulfillmentStatus?: FulfillmentStatus;
   trackingNumber?: string;
+  lastModifiedBy?: string;
 }
 
 export async function prismaUpdateOrderStatus(params: UpdateOrderStatusParams): Promise<ActionResult<Order>> {
   try {
-    const { orderId, status, paymentStatus, fulfillmentStatus, trackingNumber } = params;
+    const { orderId, status, paymentStatus, fulfillmentStatus, trackingNumber, lastModifiedBy } = params;
 
     // Get existing order
     const existingOrder = await prisma.order.findUnique({
@@ -35,6 +37,7 @@ export async function prismaUpdateOrderStatus(params: UpdateOrderStatusParams): 
     if (status) updateData.status = status;
     if (paymentStatus) updateData.paymentStatus = paymentStatus;
     if (fulfillmentStatus) updateData.fulfillmentStatus = fulfillmentStatus;
+    if (lastModifiedBy) updateData.lastModifiedBy = lastModifiedBy;
 
     // Add tracking number to metadata if provided
     if (trackingNumber && fulfillmentStatus === "SHIPPED") {
@@ -70,7 +73,7 @@ export async function prismaUpdateOrderStatus(params: UpdateOrderStatusParams): 
     console.error("Error updating order status:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update order status",
+      error: sanitizeError(error, ErrorMessages.ORDER_UPDATE_FAILED),
     };
   }
 }

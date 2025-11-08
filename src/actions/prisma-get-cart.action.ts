@@ -1,8 +1,9 @@
 "use server";
 
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
-import type { Cart, CartItem, Price, Product } from "@prisma/client";
+import type { Cart, CartItem, CartStatus, Price, Product } from "@prisma/client";
 
 type CartWithItems = Cart & {
   items: (CartItem & {
@@ -14,11 +15,12 @@ type CartWithItems = Cart & {
 interface GetCartParams {
   userId?: string;
   sessionId?: string;
+  includeCheckedOut?: boolean; // Optional flag to include checked out carts
 }
 
 export async function prismaGetCart(params: GetCartParams): Promise<ActionResult<CartWithItems | null>> {
   try {
-    const { userId, sessionId } = params;
+    const { userId, sessionId, includeCheckedOut = false } = params;
 
     if (!userId && !sessionId) {
       return {
@@ -28,14 +30,24 @@ export async function prismaGetCart(params: GetCartParams): Promise<ActionResult
     }
 
     // Build where clause explicitly to avoid querying with undefined
-    const where = userId ? { userId } : sessionId ? { sessionId } : undefined;
+    const baseWhere = userId ? { userId } : sessionId ? { sessionId } : undefined;
 
-    if (!where) {
+    if (!baseWhere) {
       return {
         success: false,
         error: "Either userId or sessionId must be provided",
       };
     }
+
+    // Add status filter to exclude EXPIRED and optionally CHECKED_OUT carts
+    const statusFilter: CartStatus | { not: CartStatus } = includeCheckedOut
+      ? { not: "EXPIRED" as CartStatus }
+      : ("ACTIVE" as CartStatus);
+
+    const where = {
+      ...baseWhere,
+      status: statusFilter,
+    };
 
     // Try to find cart by userId or sessionId
     const cart = await prisma.cart.findFirst({
@@ -58,7 +70,7 @@ export async function prismaGetCart(params: GetCartParams): Promise<ActionResult
     console.error("Error fetching cart:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch cart",
+      error: sanitizeError(error, ErrorMessages.CART_FETCH_FAILED),
     };
   }
 }

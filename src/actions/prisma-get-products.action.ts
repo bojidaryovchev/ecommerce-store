@@ -1,5 +1,6 @@
 "use server";
 
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Price, Product } from "@prisma/client";
@@ -26,7 +27,7 @@ export async function prismaGetProducts(): Promise<ActionResult<ProductWithPrice
     console.error("Error fetching products:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch products",
+      error: sanitizeError(error, ErrorMessages.PRODUCT_FETCH_FAILED),
     };
   }
 }

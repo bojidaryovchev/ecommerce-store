@@ -1,6 +1,7 @@
 "use server";
 
 import { extendCartExpiration, updateCartActivity } from "@/lib/cart-helpers";
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 
@@ -48,7 +49,7 @@ export async function prismaRemoveCartItem(cartItemId: string): Promise<ActionRe
     console.error("Error removing cart item:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to remove cart item",
+      error: sanitizeError(error, ErrorMessages.CART_REMOVE_FAILED),
     };
   }
 }

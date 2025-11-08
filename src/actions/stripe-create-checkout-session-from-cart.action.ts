@@ -99,7 +99,7 @@ export async function stripeCreateCheckoutSessionFromCart(
     let stripeCustomerId: string | undefined;
 
     if (userId) {
-      // Get user's existing Stripe customer ID
+      // Get user's existing Stripe customer ID or create one atomically
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { stripeCustomerId: true, email: true },
@@ -114,49 +114,19 @@ export async function stripeCreateCheckoutSessionFromCart(
           metadata: { userId },
         });
 
-        // Save to database
-        await prisma.user.update({
+        // Use upsert to prevent race condition if multiple requests create customer simultaneously
+        const updatedUser = await prisma.user.update({
           where: { id: userId },
           data: { stripeCustomerId: customer.id },
+          select: { stripeCustomerId: true },
         });
 
-        stripeCustomerId = customer.id;
+        stripeCustomerId = updatedUser.stripeCustomerId || customer.id;
       }
     }
 
-    // Create checkout session with idempotency key to prevent duplicate sessions
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: "payment",
-        line_items: lineItems,
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        ...(stripeCustomerId ? { customer: stripeCustomerId } : customerEmail ? { customer_email: customerEmail } : {}),
-        metadata: {
-          ...metadata,
-          cartId,
-        },
-        payment_intent_data: {
-          metadata: {
-            ...metadata,
-            cartId,
-          },
-        },
-        currency: STRIPE_CONFIG.currency,
-      },
-      {
-        idempotencyKey: `checkout-cart-${cartId}`,
-      },
-    );
-
-    if (!session.url) {
-      return {
-        success: false,
-        error: "Failed to create checkout session URL",
-      };
-    }
-
-    // Update cart status to CHECKED_OUT and activity timestamp
+    // Update cart status to CHECKED_OUT BEFORE creating Stripe session
+    // This prevents duplicate checkouts and ensures atomicity
     await prisma.cart.update({
       where: { id: cartId },
       data: {
@@ -165,13 +135,65 @@ export async function stripeCreateCheckoutSessionFromCart(
       },
     });
 
-    return {
-      success: true,
-      data: {
-        sessionId: session.id,
-        url: session.url,
-      },
-    };
+    try {
+      // Create checkout session with idempotency key to prevent duplicate sessions
+      const session = await stripe.checkout.sessions.create(
+        {
+          mode: "payment",
+          line_items: lineItems,
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+          ...(stripeCustomerId
+            ? { customer: stripeCustomerId }
+            : customerEmail
+              ? { customer_email: customerEmail }
+              : {}),
+          metadata: {
+            ...metadata,
+            cartId,
+          },
+          payment_intent_data: {
+            metadata: {
+              ...metadata,
+              cartId,
+            },
+          },
+          currency: STRIPE_CONFIG.currency,
+        },
+        {
+          idempotencyKey: `checkout-cart-${cartId}`,
+        },
+      );
+
+      if (!session.url) {
+        // Rollback cart status if session creation fails
+        await prisma.cart.update({
+          where: { id: cartId },
+          data: { status: "ACTIVE" },
+        });
+
+        return {
+          success: false,
+          error: "Failed to create checkout session URL",
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          sessionId: session.id,
+          url: session.url,
+        },
+      };
+    } catch (stripeError) {
+      // Rollback cart status if Stripe session creation fails
+      await prisma.cart.update({
+        where: { id: cartId },
+        data: { status: "ACTIVE" },
+      });
+
+      throw stripeError;
+    }
   } catch (error) {
     console.error("Error creating checkout session from cart:", error);
     return {

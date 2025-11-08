@@ -1,6 +1,7 @@
 "use server";
 
 import { extendCartExpiration, updateCartActivity } from "@/lib/cart-helpers";
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 
@@ -43,7 +44,7 @@ export async function prismaClearCart(cartId: string): Promise<ActionResult<{ su
     console.error("Error clearing cart:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to clear cart",
+      error: sanitizeError(error, ErrorMessages.CART_CLEAR_FAILED),
     };
   }
 }

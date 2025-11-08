@@ -1,5 +1,6 @@
 "use server";
 
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 import { cookies } from "next/headers";
@@ -74,29 +75,27 @@ export async function prismaMergeGuestCart(params: MergeGuestCartParams): Promis
           continue;
         }
 
-        const existingItem = userCart.items.find(
-          (item) => item.productId === guestItem.productId && item.priceId === guestItem.priceId,
-        );
-
-        if (existingItem) {
-          // Update quantity if item already exists
-          await tx.cartItem.update({
-            where: { id: existingItem.id },
-            data: {
-              quantity: existingItem.quantity + guestItem.quantity,
-            },
-          });
-        } else {
-          // Add new item to user cart
-          await tx.cartItem.create({
-            data: {
+        // Use upsert to handle race conditions atomically
+        await tx.cartItem.upsert({
+          where: {
+            cartId_productId_priceId: {
               cartId: userCart.id,
               productId: guestItem.productId,
               priceId: guestItem.priceId,
-              quantity: guestItem.quantity,
             },
-          });
-        }
+          },
+          update: {
+            quantity: {
+              increment: guestItem.quantity,
+            },
+          },
+          create: {
+            cartId: userCart.id,
+            productId: guestItem.productId,
+            priceId: guestItem.priceId,
+            quantity: guestItem.quantity,
+          },
+        });
       }
 
       // Update user cart activity and clear expiration (now authenticated)
@@ -126,7 +125,7 @@ export async function prismaMergeGuestCart(params: MergeGuestCartParams): Promis
     console.error("Error merging guest cart:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to merge guest cart",
+      error: sanitizeError(error, ErrorMessages.CART_MERGE_FAILED),
     };
   }
 }
