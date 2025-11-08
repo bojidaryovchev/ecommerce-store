@@ -1,5 +1,7 @@
+import { generateOrderNumber } from "@/lib/order-number";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { mapStripePaymentStatus } from "@/lib/stripe-mapping";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -69,6 +71,10 @@ export async function POST(request: NextRequest) {
         await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
         break;
 
+      case "charge.refunded":
+        await handleChargeRefunded(event.data.object as Stripe.Charge);
+        break;
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -116,7 +122,10 @@ async function handleAsyncPaymentFailed(session: Stripe.Checkout.Session) {
   // Update order status to failed
   await prisma.order.updateMany({
     where: { stripeCheckoutSessionId: session.id },
-    data: { status: "FAILED" },
+    data: {
+      status: "FAILED",
+      paymentStatus: "FAILED",
+    },
   });
 }
 
@@ -126,7 +135,10 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   // Update order status if exists
   await prisma.order.updateMany({
     where: { stripePaymentIntentId: paymentIntent.id },
-    data: { status: "COMPLETED" },
+    data: {
+      status: "COMPLETED",
+      paymentStatus: "PAID",
+    },
   });
 }
 
@@ -136,7 +148,37 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   // Update order status if exists
   await prisma.order.updateMany({
     where: { stripePaymentIntentId: paymentIntent.id },
-    data: { status: "FAILED" },
+    data: {
+      status: "FAILED",
+      paymentStatus: "FAILED",
+    },
+  });
+}
+
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  console.log(`Charge refunded: ${charge.id}`);
+
+  const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+
+  if (!paymentIntentId) {
+    console.warn(`No payment intent found for charge ${charge.id}`);
+    return;
+  }
+
+  // Determine if full or partial refund
+  const isFullRefund = charge.amount_refunded === charge.amount;
+  const paymentStatus = isFullRefund ? "REFUNDED" : "PARTIALLY_REFUNDED";
+
+  // Get refund reason from the latest refund
+  const refundReason = charge.refunds?.data[0]?.reason || null;
+
+  await prisma.order.updateMany({
+    where: { stripePaymentIntentId: paymentIntentId },
+    data: {
+      paymentStatus,
+      refundedAmount: charge.amount_refunded,
+      refundReason,
+    },
   });
 }
 
@@ -166,13 +208,25 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
 
   // Find user by email if provided
   const customerEmail = session.customer_details?.email || session.customer_email;
-  let userId: string | undefined;
+  let userId: string | null = null;
 
   if (customerEmail) {
     const user = await prisma.user.findUnique({
       where: { email: customerEmail },
     });
-    userId = user?.id;
+    userId = user?.id || null;
+
+    // Link Stripe customer to user if not already linked
+    if (user && session.customer) {
+      const customerId = typeof session.customer === "string" ? session.customer : session.customer.id;
+
+      if (!user.stripeCustomerId) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { stripeCustomerId: customerId },
+        });
+      }
+    }
   }
 
   // Check if order already exists
@@ -180,34 +234,48 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
     where: { stripeCheckoutSessionId: session.id },
   });
 
+  // Map Stripe payment status to our enum
+  const paymentStatus = mapStripePaymentStatus(session.payment_status || "unpaid");
+
   if (existingOrder) {
     // Update existing order
     await prisma.order.update({
       where: { id: existingOrder.id },
       data: {
-        userId,
+        ...(userId && { userId }),
         status: "COMPLETED",
-        stripePaymentIntentId: session.payment_intent as string,
+        paymentStatus,
+        stripePaymentIntentId: (session.payment_intent as string) || null,
         metadata: session.metadata ? JSON.parse(JSON.stringify(session.metadata)) : null,
       },
     });
     return;
   }
 
+  // Generate unique order number
+  const orderNumber = await generateOrderNumber();
+
   // Create new order with items
   await prisma.order.create({
     data: {
-      userId,
-      customerEmail,
+      orderNumber,
+      ...(userId && { userId }),
+      customerEmail: customerEmail || null,
+      customerName: session.customer_details?.name || null,
+      customerPhone: session.customer_details?.phone || null,
       stripeCheckoutSessionId: session.id,
-      stripePaymentIntentId: session.payment_intent as string,
+      stripePaymentIntentId: (session.payment_intent as string) || null,
       status: "COMPLETED",
+      paymentStatus,
+      fulfillmentStatus: "UNFULFILLED",
       currency: session.currency || "usd",
       subtotal,
       tax,
       total,
-      shippingAddress: session.shipping_cost ? JSON.parse(JSON.stringify(session.shipping_cost)) : null,
-      billingAddress: session.customer_details ? JSON.parse(JSON.stringify(session.customer_details)) : null,
+      shippingAddress: session.shipping_details ? JSON.parse(JSON.stringify(session.shipping_details)) : null,
+      billingAddress: session.customer_details?.address
+        ? JSON.parse(JSON.stringify(session.customer_details.address))
+        : null,
       metadata: session.metadata ? JSON.parse(JSON.stringify(session.metadata)) : null,
       items: {
         create: await Promise.all(

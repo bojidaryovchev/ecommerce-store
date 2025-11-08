@@ -1,17 +1,21 @@
 import { auth } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
+import { NextAuthRequest } from "next-auth";
 import { NextResponse } from "next/server";
+import { setSecurityHeaders } from "./lib/headers";
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl;
-  const session = req.auth;
+const setPathnameHeader = (res: NextResponse, pathname: string) => {
+  res.headers.set("x-pathname", pathname);
+};
 
-  // Protect admin routes
+const protectAdminRoutes = (req: NextAuthRequest, pathname: string) => {
   if (pathname.startsWith("/admin")) {
     // Allow access to unauthorized page
     if (pathname === "/admin/unauthorized") {
       return NextResponse.next();
     }
+
+    const session = req.auth;
 
     // Check if user is authenticated
     if (!session?.user) {
@@ -28,8 +32,16 @@ export default auth((req) => {
       return NextResponse.redirect(new URL("/admin/unauthorized", req.url));
     }
   }
+};
 
-  return NextResponse.next();
+export default auth((req) => {
+  const { pathname } = req.nextUrl;
+  const res = NextResponse.next();
+
+  setPathnameHeader(res, pathname);
+  setSecurityHeaders(res);
+
+  return protectAdminRoutes(req, pathname) ?? res;
 });
 
 export const config = {

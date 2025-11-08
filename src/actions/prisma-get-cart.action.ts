@@ -27,9 +27,19 @@ export async function prismaGetCart(params: GetCartParams): Promise<ActionResult
       };
     }
 
-    // Try to find cart by userId first, then sessionId
+    // Build where clause explicitly to avoid querying with undefined
+    const where = userId ? { userId } : sessionId ? { sessionId } : undefined;
+
+    if (!where) {
+      return {
+        success: false,
+        error: "Either userId or sessionId must be provided",
+      };
+    }
+
+    // Try to find cart by userId or sessionId
     const cart = await prisma.cart.findFirst({
-      where: userId ? { userId } : { sessionId },
+      where,
       include: {
         items: {
           include: {

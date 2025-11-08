@@ -33,15 +33,48 @@ export async function prismaMergeGuestCart(params: MergeGuestCartParams): Promis
     });
 
     if (!userCart) {
-      // Create user cart
+      // Create user cart (authenticated users don't have expiration)
       userCart = await prisma.cart.create({
-        data: { userId },
+        data: {
+          userId,
+          status: "ACTIVE",
+          expiresAt: null,
+          lastActivityAt: new Date(),
+        },
         include: { items: true },
       });
+    } else {
+      // Validate user cart status before merging
+      if (userCart.status === "CHECKED_OUT" || userCart.status === "EXPIRED") {
+        return {
+          success: false,
+          error: "Cannot merge into a checked out or expired cart",
+        };
+      }
     }
 
     // Merge items from guest cart to user cart
     for (const guestItem of guestCart.items) {
+      // Validate that the product and price are still available
+      const product = await prisma.product.findUnique({
+        where: { id: guestItem.productId },
+      });
+
+      const price = await prisma.price.findUnique({
+        where: { id: guestItem.priceId },
+      });
+
+      // Skip items that are no longer available (soft deleted or inactive)
+      if (!product || !product.active || product.deletedAt) {
+        console.log(`Skipping unavailable product ${guestItem.productId} during cart merge`);
+        continue;
+      }
+
+      if (!price || !price.active || price.deletedAt || !price.stripePriceId) {
+        console.log(`Skipping unavailable price ${guestItem.priceId} during cart merge`);
+        continue;
+      }
+
       const existingItem = userCart.items.find(
         (item) => item.productId === guestItem.productId && item.priceId === guestItem.priceId,
       );
@@ -66,6 +99,15 @@ export async function prismaMergeGuestCart(params: MergeGuestCartParams): Promis
         });
       }
     }
+
+    // Update user cart activity and clear expiration (now authenticated)
+    await prisma.cart.update({
+      where: { id: userCart.id },
+      data: {
+        lastActivityAt: new Date(),
+        expiresAt: null,
+      },
+    });
 
     // Delete guest cart after merging
     await prisma.cart.delete({

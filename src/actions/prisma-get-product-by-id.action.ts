@@ -12,12 +12,20 @@ export async function prismaGetProductById(id: string): Promise<ActionResult<Pro
       where: { id },
       include: {
         prices: {
-          where: { active: true },
+          where: { active: true, deletedAt: null },
         },
       },
     });
 
     if (!product) {
+      return {
+        success: false,
+        error: "Product not found",
+      };
+    }
+
+    // Check if product is soft deleted or inactive
+    if (product.deletedAt || !product.active) {
       return {
         success: false,
         error: "Product not found",

@@ -2,17 +2,20 @@
 
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
-import type { Order, OrderStatus } from "@prisma/client";
+import type { FulfillmentStatus, Order, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 interface UpdateOrderStatusParams {
   orderId: string;
-  status: OrderStatus;
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
+  fulfillmentStatus?: FulfillmentStatus;
+  trackingNumber?: string;
 }
 
 export async function prismaUpdateOrderStatus(params: UpdateOrderStatusParams): Promise<ActionResult<Order>> {
   try {
-    const { orderId, status } = params;
+    const { orderId, status, paymentStatus, fulfillmentStatus, trackingNumber } = params;
 
     // Get existing order
     const existingOrder = await prisma.order.findUnique({
@@ -26,10 +29,26 @@ export async function prismaUpdateOrderStatus(params: UpdateOrderStatusParams): 
       };
     }
 
+    // Build update data object
+    const updateData: Prisma.OrderUpdateInput = {};
+
+    if (status) updateData.status = status;
+    if (paymentStatus) updateData.paymentStatus = paymentStatus;
+    if (fulfillmentStatus) updateData.fulfillmentStatus = fulfillmentStatus;
+
+    // Add tracking number to metadata if provided
+    if (trackingNumber && fulfillmentStatus === "SHIPPED") {
+      const currentMetadata = (existingOrder.metadata as Record<string, unknown> | null) || {};
+      updateData.metadata = {
+        ...currentMetadata,
+        trackingNumber,
+      };
+    }
+
     // Update order status in database
     const order = await prisma.order.update({
       where: { id: orderId },
-      data: { status },
+      data: updateData,
       include: {
         items: {
           include: {

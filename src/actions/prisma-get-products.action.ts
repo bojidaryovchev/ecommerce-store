@@ -9,10 +9,10 @@ type ProductWithPrices = Product & { prices: Price[] };
 export async function prismaGetProducts(): Promise<ActionResult<ProductWithPrices[]>> {
   try {
     const products = await prisma.product.findMany({
-      where: { active: true },
+      where: { active: true, deletedAt: null },
       include: {
         prices: {
-          where: { active: true },
+          where: { active: true, deletedAt: null },
         },
       },
       orderBy: { createdAt: "desc" },

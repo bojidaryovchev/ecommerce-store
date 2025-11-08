@@ -15,10 +15,10 @@ export async function prismaGetAllProducts(params?: GetAllProductsParams): Promi
     const { includeInactive = false } = params || {};
 
     const products = await prisma.product.findMany({
-      where: includeInactive ? {} : { active: true },
+      where: includeInactive ? {} : { active: true, deletedAt: null },
       include: {
         prices: {
-          where: { active: true },
+          where: { active: true, deletedAt: null },
         },
       },
       orderBy: { createdAt: "desc" },

@@ -33,12 +33,24 @@ export async function prismaDeleteProduct(params: DeleteProductParams): Promise<
       });
     }
 
-    // Soft delete product in database
+    // Soft delete product in database with timestamp
     const product = await prisma.product.update({
       where: { id: productId },
-      data: { active: false },
+      data: {
+        active: false,
+        deletedAt: new Date(),
+      },
       include: {
         prices: true,
+      },
+    });
+
+    // Also mark associated prices as deleted
+    await prisma.price.updateMany({
+      where: { productId },
+      data: {
+        active: false,
+        deletedAt: new Date(),
       },
     });
 
