@@ -15,13 +15,17 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(auto()) @map("_id") @db.ObjectId
-  name          String?
-  email         String?    @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  roles         UserRole[] @default([USER])
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  name             String?
+  email            String?    @unique
+  emailVerified    DateTime?
+  image            String?
+  stripeCustomerId String?    @unique
+  accounts         Account[]
+  roles            UserRole[] @default([USER])
+
+  carts  Cart[]
+  orders Order[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,13 +60,14 @@ enum UserRole {
 }
 
 model Product {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
   name            String
   description     String?
   images          String[]
-  active          Boolean  @default(true)
-  stripeProductId String?  @unique
+  active          Boolean   @default(true)
+  stripeProductId String?   @unique
   metadata        Json?
+  deletedAt       DateTime?
 
   prices     Price[]
   orderItems OrderItem[]
@@ -71,6 +76,8 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([active])
+  @@index([deletedAt])
   @@map("products")
 }
 
@@ -86,6 +93,7 @@ model Price {
   trialPeriodDays Int?
   stripePriceId   String?   @unique
   metadata        Json?
+  deletedAt       DateTime?
 
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
@@ -94,6 +102,9 @@ model Price {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([productId])
+  @@index([active])
+  @@index([deletedAt])
   @@map("prices")
 }
 
@@ -102,16 +113,28 @@ enum PriceType {
   RECURRING
 }
 
-model Cart {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String? @db.ObjectId
-  sessionId String? @unique
+enum CartStatus {
+  ACTIVE
+  CHECKED_OUT
+  EXPIRED
+}
 
+model Cart {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String?    @db.ObjectId
+  sessionId      String?    @unique
+  status         CartStatus @default(ACTIVE)
+  expiresAt      DateTime? // For guest cart TTL
+  lastActivityAt DateTime   @default(now())
+
+  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   items CartItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([userId])
+  @@index([lastActivityAt])
   @@map("carts")
 }
 
@@ -129,29 +152,46 @@ model CartItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([cartId, productId, priceId])
+  @@index([cartId])
+  @@index([productId])
+  @@index([priceId])
   @@map("cart_items")
 }
 
 model Order {
-  id                      String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId                  String?     @db.ObjectId
+  id                      String            @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber             String            @unique
+  userId                  String?           @db.ObjectId
   customerEmail           String?
-  stripeCheckoutSessionId String?     @unique
-  stripePaymentIntentId   String?     @unique
-  status                  OrderStatus @default(PENDING)
-  currency                String      @default("usd")
+  customerName            String?
+  customerPhone           String?
+  stripeCheckoutSessionId String?           @unique
+  stripePaymentIntentId   String?           @unique
+  status                  OrderStatus       @default(PENDING)
+  paymentStatus           PaymentStatus     @default(PENDING)
+  fulfillmentStatus       FulfillmentStatus @default(UNFULFILLED)
+  currency                String            @default("usd")
   subtotal                Int // Amount in cents
   tax                     Int? // Amount in cents
   total                   Int // Amount in cents
+  refundedAmount          Int? // Amount in cents
+  refundReason            String?
   shippingAddress         Json?
   billingAddress          Json?
   metadata                Json?
 
+  user  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   items OrderItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([userId])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
   @@map("orders")
 }
 
@@ -164,12 +204,15 @@ model OrderItem {
   unitAmount Int // Amount in cents at time of purchase
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
-  price   Price   @relation(fields: [priceId], references: [id])
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  price   Price   @relation(fields: [priceId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([orderId])
+  @@index([productId])
+  @@index([priceId])
   @@map("order_items")
 }
 
@@ -180,6 +223,26 @@ enum OrderStatus {
   FAILED
   CANCELLED
   REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  REQUIRES_PAYMENT_METHOD
+  REQUIRES_CONFIRMATION
+  REQUIRES_ACTION
+  CANCELED
+}
+
+enum FulfillmentStatus {
+  UNFULFILLED
+  FULFILLED
+  SHIPPED
+  DELIVERED
+  RETURNED
 }
 
 model WebhookEvent {
@@ -193,5 +256,8 @@ model WebhookEvent {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([processed])
+  @@index([type])
+  @@index([createdAt])
   @@map("webhook_events")
 }
