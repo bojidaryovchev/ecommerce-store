@@ -16,7 +16,8 @@
     "deps:update:patch": "node scripts/update-dependencies.mjs patch",
     "deps:update:minor": "node scripts/update-dependencies.mjs minor",
     "deps:update:major": "node scripts/update-dependencies.mjs major",
-    "stripe:logs": "docker logs ecommerce-store-stripe-cli"
+    "stripe:logs": "docker logs ecommerce-store-stripe-cli",
+    "mongodb:indexes": "node scripts/setup-mongodb-indexes.mjs"
   },
   "lint-staged": {
     "*.{js,mjs,ts,tsx,css,md,json}": [

@@ -1,0 +1,16 @@
+{
+  "carts": [
+    {
+      "name": "carts_expiresAt_ttl",
+      "key": { "expiresAt": 1 },
+      "options": {
+        "expireAfterSeconds": 0
+      },
+      "description": "TTL index - automatically delete carts when expiresAt time is reached"
+    }
+  ],
+  "orders": [],
+  "products": [],
+  "users": [],
+  "webhook_events": []
+}
