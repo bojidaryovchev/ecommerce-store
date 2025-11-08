@@ -33,26 +33,28 @@ export async function prismaDeleteProduct(params: DeleteProductParams): Promise<
       });
     }
 
-    // Soft delete product in database with timestamp
-    const product = await prisma.product.update({
-      where: { id: productId },
-      data: {
-        active: false,
-        deletedAt: new Date(),
-      },
-      include: {
-        prices: true,
-      },
-    });
-
-    // Also mark associated prices as deleted
-    await prisma.price.updateMany({
-      where: { productId },
-      data: {
-        active: false,
-        deletedAt: new Date(),
-      },
-    });
+    // Use transaction to ensure atomic soft delete of product and prices
+    const [product] = await prisma.$transaction([
+      // Soft delete product in database with timestamp
+      prisma.product.update({
+        where: { id: productId },
+        data: {
+          active: false,
+          deletedAt: new Date(),
+        },
+        include: {
+          prices: true,
+        },
+      }),
+      // Also mark associated prices as deleted
+      prisma.price.updateMany({
+        where: { productId },
+        data: {
+          active: false,
+          deletedAt: new Date(),
+        },
+      }),
+    ]);
 
     // Revalidate admin products page
     revalidatePath("/admin/products");

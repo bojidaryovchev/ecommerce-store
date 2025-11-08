@@ -1,6 +1,7 @@
 "use server";
 
 import { isRuntimeEnv } from "@/lib/env";
+import { prisma } from "@/lib/prisma";
 import { stripe, STRIPE_CONFIG } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
 import { headers } from "next/headers";
@@ -32,24 +33,59 @@ export async function stripeCreateCheckoutSession(
       metadata,
     } = params;
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: [
-        {
-          price: priceId,
-          quantity,
-        },
-      ],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      customer_email: customerEmail,
-      metadata,
-      payment_intent_data: {
-        metadata,
-      },
-      currency: STRIPE_CONFIG.currency,
+    // Validate that the price exists in database and is active
+    const price = await prisma.price.findUnique({
+      where: { stripePriceId: priceId },
+      include: { product: true },
     });
+
+    if (!price) {
+      return {
+        success: false,
+        error: "Price not found",
+      };
+    }
+
+    if (!price.active || price.deletedAt) {
+      return {
+        success: false,
+        error: "Price is not available",
+      };
+    }
+
+    if (!price.product.active || price.product.deletedAt) {
+      return {
+        success: false,
+        error: "Product is not available",
+      };
+    }
+
+    // Create checkout session with idempotency key to prevent duplicate sessions
+    // Use combination of priceId and timestamp for uniqueness
+    const idempotencyKey = `checkout-direct-${priceId}-${metadata?.idempotencyToken || Date.now()}`;
+
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        line_items: [
+          {
+            price: priceId,
+            quantity,
+          },
+        ],
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        customer_email: customerEmail,
+        metadata,
+        payment_intent_data: {
+          metadata,
+        },
+        currency: STRIPE_CONFIG.currency,
+      },
+      {
+        idempotencyKey,
+      },
+    );
 
     if (!session.url) {
       return {

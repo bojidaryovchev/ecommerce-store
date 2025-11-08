@@ -8,11 +8,13 @@ type ProductWithPrices = Product & { prices: Price[] };
 
 interface GetAllProductsParams {
   includeInactive?: boolean;
+  skip?: number;
+  take?: number;
 }
 
 export async function prismaGetAllProducts(params?: GetAllProductsParams): Promise<ActionResult<ProductWithPrices[]>> {
   try {
-    const { includeInactive = false } = params || {};
+    const { includeInactive = false, skip, take } = params || {};
 
     const products = await prisma.product.findMany({
       where: includeInactive ? {} : { active: true, deletedAt: null },
@@ -22,6 +24,8 @@ export async function prismaGetAllProducts(params?: GetAllProductsParams): Promi
         },
       },
       orderBy: { createdAt: "desc" },
+      ...(skip !== undefined && { skip }),
+      ...(take !== undefined && { take }),
     });
 
     return {

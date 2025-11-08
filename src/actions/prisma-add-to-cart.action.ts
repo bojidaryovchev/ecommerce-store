@@ -1,6 +1,7 @@
 "use server";
 
-import { calculateCartExpiration, updateCartActivity } from "@/lib/cart-helpers";
+import { calculateCartExpiration, extendCartExpiration, updateCartActivity } from "@/lib/cart-helpers";
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Cart } from "@prisma/client";
@@ -116,34 +117,28 @@ export async function prismaAddToCart(params: AddToCartParams): Promise<ActionRe
       }
     }
 
-    // Check if item already exists in cart
-    const existingItem = await prisma.cartItem.findFirst({
+    // Use upsert to handle race conditions when adding items concurrently
+    // The unique constraint on [cartId, productId, priceId] ensures atomicity
+    await prisma.cartItem.upsert({
       where: {
-        cartId: cart.id,
-        productId,
-        priceId,
-      },
-    });
-
-    if (existingItem) {
-      // Update quantity
-      await prisma.cartItem.update({
-        where: { id: existingItem.id },
-        data: {
-          quantity: existingItem.quantity + quantity,
-        },
-      });
-    } else {
-      // Add new item
-      await prisma.cartItem.create({
-        data: {
+        cartId_productId_priceId: {
           cartId: cart.id,
           productId,
           priceId,
-          quantity,
         },
-      });
-    }
+      },
+      update: {
+        quantity: {
+          increment: quantity,
+        },
+      },
+      create: {
+        cartId: cart.id,
+        productId,
+        priceId,
+        quantity,
+      },
+    });
 
     // Fetch updated cart
     const updatedCart = await prisma.cart.findUnique({
@@ -165,8 +160,9 @@ export async function prismaAddToCart(params: AddToCartParams): Promise<ActionRe
       };
     }
 
-    // Update cart activity timestamp
+    // Update cart activity timestamp and extend expiration for guest carts
     await updateCartActivity(cart.id);
+    await extendCartExpiration(cart.id);
 
     return {
       success: true,
@@ -176,7 +172,7 @@ export async function prismaAddToCart(params: AddToCartParams): Promise<ActionRe
     console.error("Error adding to cart:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to add to cart",
+      error: sanitizeError(error, ErrorMessages.CART_ADD_FAILED),
     };
   }
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { updateCartActivity } from "@/lib/cart-helpers";
+import { extendCartExpiration, updateCartActivity } from "@/lib/cart-helpers";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 
@@ -36,8 +36,9 @@ export async function prismaRemoveCartItem(cartItemId: string): Promise<ActionRe
       where: { id: cartItemId },
     });
 
-    // Update cart activity timestamp
+    // Update cart activity timestamp and extend expiration for guest carts
     await updateCartActivity(cartItem.cartId);
+    await extendCartExpiration(cartItem.cartId);
 
     return {
       success: true,

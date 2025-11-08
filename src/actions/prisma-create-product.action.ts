@@ -1,5 +1,6 @@
 "use server";
 
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
@@ -15,6 +16,9 @@ interface CreateProductParams {
 }
 
 export async function prismaCreateProduct(params: CreateProductParams): Promise<ActionResult<Product>> {
+  let stripeProductId: string | undefined;
+  let stripePriceId: string | undefined;
+
   try {
     const { name, description, images, unitAmount, currency = "usd" } = params;
 
@@ -24,6 +28,7 @@ export async function prismaCreateProduct(params: CreateProductParams): Promise<
       description: description || undefined,
       images: images || undefined,
     });
+    stripeProductId = stripeProduct.id;
 
     // Create price in Stripe
     const stripePrice = await stripe.prices.create({
@@ -31,6 +36,7 @@ export async function prismaCreateProduct(params: CreateProductParams): Promise<
       unit_amount: unitAmount,
       currency,
     });
+    stripePriceId = stripePrice.id;
 
     // Create product in database
     const product = await prisma.product.create({
@@ -62,9 +68,18 @@ export async function prismaCreateProduct(params: CreateProductParams): Promise<
     };
   } catch (error) {
     console.error("Error creating product:", error);
+
+    // If database creation failed but Stripe resources were created, log for manual cleanup
+    if (stripeProductId) {
+      console.error(
+        `Orphaned Stripe product created - Product ID: ${stripeProductId}${stripePriceId ? `, Price ID: ${stripePriceId}` : ""}`,
+        "Manual cleanup or archival may be required.",
+      );
+    }
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create product",
+      error: sanitizeError(error, ErrorMessages.PRODUCT_CREATE_FAILED),
     };
   }
 }

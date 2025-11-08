@@ -1,6 +1,6 @@
 "use server";
 
-import { updateCartActivity } from "@/lib/cart-helpers";
+import { extendCartExpiration, updateCartActivity } from "@/lib/cart-helpers";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 import type { CartItem } from "@prisma/client";
@@ -68,8 +68,9 @@ export async function prismaUpdateCartItem(params: UpdateCartItemParams): Promis
       data: { quantity },
     });
 
-    // Update cart activity timestamp
+    // Update cart activity timestamp and extend expiration for guest carts
     await updateCartActivity(cartItem.cartId);
+    await extendCartExpiration(cartItem.cartId);
 
     return {
       success: true,

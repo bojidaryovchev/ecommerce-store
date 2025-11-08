@@ -13,12 +13,16 @@ type OrderWithItems = Order & {
 
 interface GetOrdersParams {
   userId?: string;
+  skip?: number;
+  take?: number;
 }
 
 export async function prismaGetOrders(params?: GetOrdersParams): Promise<ActionResult<OrderWithItems[]>> {
   try {
+    const { userId, skip, take } = params || {};
+
     const orders = await prisma.order.findMany({
-      where: params?.userId ? { userId: params.userId } : {},
+      where: userId ? { userId } : {},
       include: {
         items: {
           include: {
@@ -28,6 +32,8 @@ export async function prismaGetOrders(params?: GetOrdersParams): Promise<ActionR
         },
       },
       orderBy: { createdAt: "desc" },
+      ...(skip !== undefined && { skip }),
+      ...(take !== undefined && { take }),
     });
 
     return {

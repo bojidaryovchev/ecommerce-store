@@ -1,6 +1,7 @@
 "use server";
 
 import { isRuntimeEnv } from "@/lib/env";
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import { stripe, STRIPE_CONFIG } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
@@ -123,25 +124,30 @@ export async function stripeCreateCheckoutSessionFromCart(
       }
     }
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: lineItems,
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      ...(stripeCustomerId ? { customer: stripeCustomerId } : customerEmail ? { customer_email: customerEmail } : {}),
-      metadata: {
-        ...metadata,
-        cartId,
-      },
-      payment_intent_data: {
+    // Create checkout session with idempotency key to prevent duplicate sessions
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        line_items: lineItems,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        ...(stripeCustomerId ? { customer: stripeCustomerId } : customerEmail ? { customer_email: customerEmail } : {}),
         metadata: {
           ...metadata,
           cartId,
         },
+        payment_intent_data: {
+          metadata: {
+            ...metadata,
+            cartId,
+          },
+        },
+        currency: STRIPE_CONFIG.currency,
       },
-      currency: STRIPE_CONFIG.currency,
-    });
+      {
+        idempotencyKey: `checkout-cart-${cartId}`,
+      },
+    );
 
     if (!session.url) {
       return {
@@ -170,7 +176,7 @@ export async function stripeCreateCheckoutSessionFromCart(
     console.error("Error creating checkout session from cart:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create checkout session",
+      error: sanitizeError(error, ErrorMessages.CHECKOUT_FAILED),
     };
   }
 }
