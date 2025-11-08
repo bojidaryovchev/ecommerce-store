@@ -23,9 +23,14 @@ model User {
   stripeCustomerId String?    @unique
   accounts         Account[]
   roles            UserRole[] @default([USER])
+  // Customer contact information
+  phone            String? // Primary phone number
+  defaultShipping  Json? // Default shipping address
+  defaultBilling   Json? // Default billing address
 
-  carts  Cart[]
-  orders Order[]
+  carts   Cart[]
+  orders  Order[]
+  reviews Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -48,7 +53,7 @@ model Account {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) // Cascade: Delete accounts when user deleted
 
   @@unique([provider, providerAccountId])
 }
@@ -59,34 +64,65 @@ enum UserRole {
   SUPER_ADMIN
 }
 
+model Category {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String  @unique
+  description String?
+  image       String?
+  parentId    String? @db.ObjectId
+  sortOrder   Int     @default(0)
+  active      Boolean @default(true)
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction) // NoAction: Prevent deleting parent with children
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([active])
+  @@index([sortOrder])
+  @@map("categories")
+}
+
 model Product {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   name            String
   description     String?
   images          String[]
-  active          Boolean   @default(true)
   stripeProductId String?   @unique
   metadata        Json?
-  deletedAt       DateTime?
+  deletedAt       DateTime? // Soft delete: null = active, set = deleted
   lastModifiedBy  String?   @db.ObjectId // User ID of last modifier
+  // Inventory tracking
+  trackInventory  Boolean   @default(false) // Whether to track stock for this product
+  stockQuantity   Int?      @default(0) // Current stock level (null if not tracking)
+  lowStockAlert   Int?      @default(5) // Threshold for low stock alerts
+  // Category
+  categoryId      String?   @db.ObjectId
 
-  prices     Price[]
-  orderItems OrderItem[]
-  cartItems  CartItem[]
+  category              Category?              @relation(fields: [categoryId], references: [id], onDelete: SetNull) // SetNull: Keep product if category deleted
+  prices                Price[]
+  orderItems            OrderItem[]
+  cartItems             CartItem[]
+  inventoryTransactions InventoryTransaction[]
+  reviews               Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([active])
   @@index([deletedAt])
-  @@index([active, deletedAt])
+  @@index([deletedAt, createdAt])
+  @@index([categoryId])
+  @@index([deletedAt, categoryId, createdAt]) // Optimized for product listing queries
   @@map("products")
 }
 
 model Price {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   productId       String    @db.ObjectId
-  active          Boolean   @default(true)
   currency        String    @default("usd")
   unitAmount      Int // Amount in cents
   type            PriceType @default(ONE_TIME)
@@ -95,9 +131,11 @@ model Price {
   trialPeriodDays Int?
   stripePriceId   String?   @unique
   metadata        Json?
-  deletedAt       DateTime?
+  deletedAt       DateTime? // Soft delete: null = active, set = deleted
+  effectiveFrom   DateTime  @default(now()) // When this price becomes effective
+  effectiveTo     DateTime? // When this price expires (null = currently effective)
 
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade) // Cascade: Delete prices when product deleted
   orderItems OrderItem[]
   cartItems  CartItem[]
 
@@ -105,9 +143,10 @@ model Price {
   updatedAt DateTime @updatedAt
 
   @@index([productId])
-  @@index([active])
   @@index([deletedAt])
-  @@index([active, deletedAt])
+  @@index([productId, deletedAt])
+  @@index([productId, effectiveFrom]) // For price history queries
+  @@index([productId, effectiveTo]) // For finding current prices
   @@map("prices")
 }
 
@@ -130,7 +169,7 @@ model Cart {
   expiresAt      DateTime? // For guest cart TTL
   lastActivityAt DateTime   @default(now())
 
-  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade) // Cascade: Delete cart when user deleted
   items CartItem[]
 
   createdAt DateTime @default(now())
@@ -150,9 +189,9 @@ model CartItem {
   priceId   String @db.ObjectId
   quantity  Int    @default(1)
 
-  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  price   Price   @relation(fields: [priceId], references: [id], onDelete: Cascade)
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade) // Cascade: Delete items when cart deleted
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade) // Cascade: Delete items when product deleted
+  price   Price   @relation(fields: [priceId], references: [id], onDelete: Cascade) // Cascade: Delete items when price deleted
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -187,8 +226,9 @@ model Order {
   metadata                Json?
   lastModifiedBy          String?           @db.ObjectId // User ID of last modifier
 
-  user  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  items OrderItem[]
+  user    User?       @relation(fields: [userId], references: [id], onDelete: SetNull) // SetNull: Keep order history if user deleted
+  items   OrderItem[]
+  reviews Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -198,6 +238,7 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([status, createdAt])
+  @@index([createdAt, orderNumber]) // For chronological display with order numbers
   @@map("orders")
 }
 
@@ -209,9 +250,9 @@ model OrderItem {
   quantity   Int
   unitAmount Int // Amount in cents at time of purchase
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
-  price   Price   @relation(fields: [priceId], references: [id], onDelete: Restrict)
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade) // Cascade: Delete items when order deleted
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict) // Restrict: Prevent product deletion if in orders
+  price   Price   @relation(fields: [priceId], references: [id], onDelete: Restrict) // Restrict: Prevent price deletion if in orders
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -220,6 +261,37 @@ model OrderItem {
   @@index([productId])
   @@index([priceId])
   @@map("order_items")
+}
+
+model Review {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String  @db.ObjectId
+  userId      String  @db.ObjectId
+  orderId     String  @db.ObjectId
+  rating      Int // 1-5 star rating
+  title       String?
+  content     String?
+  verified    Boolean @default(false) // Verified purchase
+  helpful     Int     @default(0) // Number of helpful votes
+  reported    Boolean @default(false) // Flagged for moderation
+  published   Boolean @default(true) // Published status
+  moderatedBy String? @db.ObjectId // Admin who moderated
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade) // Cascade: Delete reviews when product deleted
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade) // Cascade: Delete reviews when user deleted
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade) // Cascade: Delete reviews when order deleted
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId, orderId]) // One review per user per product per order
+  @@index([productId])
+  @@index([productId, published, verified]) // For displaying verified reviews
+  @@index([userId])
+  @@index([orderId])
+  @@index([rating])
+  @@index([reported])
+  @@map("reviews")
 }
 
 enum OrderStatus {
@@ -248,6 +320,26 @@ enum FulfillmentStatus {
   returned // Order returned
 }
 
+model InventoryTransaction {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  productId String  @db.ObjectId
+  quantity  Int // Positive for addition, negative for sale/removal
+  type      String // SALE, RESTOCK, ADJUSTMENT, RETURN, INITIAL
+  orderId   String? @db.ObjectId
+  notes     String?
+  createdBy String? @db.ObjectId // User ID who created this transaction
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade) // Cascade: Delete transactions when product deleted
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([productId, createdAt])
+  @@index([type])
+  @@index([orderId])
+  @@map("inventory_transactions")
+}
+
 model WebhookEvent {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   stripeEventId   String    @unique
@@ -264,5 +356,7 @@ model WebhookEvent {
   @@index([processed])
   @@index([type])
   @@index([createdAt])
+  @@index([createdAt, processed]) // For cleanup queries
+  @@index([processed, retryCount]) // For retry processing
   @@map("webhook_events")
 }

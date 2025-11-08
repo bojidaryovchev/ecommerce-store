@@ -13,7 +13,7 @@ export async function prismaGetProductById(id: string): Promise<ActionResult<Pro
       where: { id },
       include: {
         prices: {
-          where: { active: true, deletedAt: null },
+          where: { deletedAt: null },
         },
       },
     });
@@ -25,8 +25,8 @@ export async function prismaGetProductById(id: string): Promise<ActionResult<Pro
       };
     }
 
-    // Check if product is soft deleted or inactive
-    if (product.deletedAt || !product.active) {
+    // Check if product is soft deleted
+    if (product.deletedAt) {
       return {
         success: false,
         error: "Product not found",

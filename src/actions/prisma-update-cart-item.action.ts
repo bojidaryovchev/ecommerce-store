@@ -49,15 +49,15 @@ export async function prismaUpdateCartItem(params: UpdateCartItemParams): Promis
       };
     }
 
-    // Validate product and price are still active
-    if (!existingCartItem.product.active || existingCartItem.product.deletedAt) {
+    // Validate product and price are still available
+    if (existingCartItem.product.deletedAt) {
       return {
         success: false,
         error: "Product is no longer available",
       };
     }
 
-    if (!existingCartItem.price.active || existingCartItem.price.deletedAt) {
+    if (existingCartItem.price.deletedAt) {
       return {
         success: false,
         error: "Price is no longer available",

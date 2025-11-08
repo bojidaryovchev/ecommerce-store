@@ -61,15 +61,15 @@ export async function stripeCreateCheckoutSessionFromCart(
       };
     }
 
-    // Validate all products and prices are active and available
+    // Validate all products and prices are available
     for (const item of cart.items) {
-      if (!item.product.active || item.product.deletedAt) {
+      if (item.product.deletedAt) {
         return {
           success: false,
           error: `Product "${item.product.name}" is no longer available`,
         };
       }
-      if (!item.price.active || item.price.deletedAt) {
+      if (item.price.deletedAt) {
         return {
           success: false,
           error: `Price for "${item.product.name}" is no longer available`,

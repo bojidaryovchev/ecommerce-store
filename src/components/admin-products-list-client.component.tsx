@@ -62,7 +62,7 @@ const AdminProductsListClient: React.FC<Props> = ({ products }) => {
                   </span>
                 ))}
               </div>
-              <p className="mt-1 text-sm text-gray-500">Status: {product.active ? "Active" : "Inactive"}</p>
+              <p className="mt-1 text-sm text-gray-500">Status: {product.deletedAt ? "Deleted" : "Active"}</p>
             </div>
             <div className="flex space-x-2">
               <ProductFormClient product={product} onSuccess={handleSuccess} />

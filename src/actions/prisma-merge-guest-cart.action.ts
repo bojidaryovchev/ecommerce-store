@@ -64,13 +64,13 @@ export async function prismaMergeGuestCart(params: MergeGuestCartParams): Promis
           where: { id: guestItem.priceId },
         });
 
-        // Skip items that are no longer available (soft deleted or inactive)
-        if (!product || !product.active || product.deletedAt) {
+        // Skip items that are no longer available (soft deleted)
+        if (!product || product.deletedAt) {
           console.log(`Skipping unavailable product ${guestItem.productId} during cart merge`);
           continue;
         }
 
-        if (!price || !price.active || price.deletedAt || !price.stripePriceId) {
+        if (!price || price.deletedAt || !price.stripePriceId) {
           console.log(`Skipping unavailable price ${guestItem.priceId} during cart merge`);
           continue;
         }

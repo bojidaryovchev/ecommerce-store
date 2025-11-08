@@ -25,7 +25,7 @@ export async function prismaAddToCart(params: AddToCartParams): Promise<ActionRe
       };
     }
 
-    // Validate product and price exist and are active
+    // Validate product and price exist and are not deleted
     const product = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -37,7 +37,7 @@ export async function prismaAddToCart(params: AddToCartParams): Promise<ActionRe
       };
     }
 
-    if (!product.active || product.deletedAt) {
+    if (product.deletedAt) {
       return {
         success: false,
         error: "Product is not available",
@@ -55,7 +55,7 @@ export async function prismaAddToCart(params: AddToCartParams): Promise<ActionRe
       };
     }
 
-    if (!price.active || price.deletedAt) {
+    if (price.deletedAt) {
       return {
         success: false,
         error: "Price is not available",
