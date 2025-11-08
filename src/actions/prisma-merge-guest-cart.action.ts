@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
+import { cookies } from "next/headers";
 
 interface MergeGuestCartParams {
   userId: string;
@@ -70,6 +71,10 @@ export async function prismaMergeGuestCart(params: MergeGuestCartParams): Promis
     await prisma.cart.delete({
       where: { id: guestCart.id },
     });
+
+    // Clear the guest cart cookie after merging
+    const cookieStore = await cookies();
+    cookieStore.delete("cart_session_id");
 
     return {
       success: true,

@@ -21,12 +21,7 @@ const AdminProductsPage: React.FC = async () => {
 
   return (
     <div className="container mx-auto py-8">
-      <AdminProductsListClient
-        products={productsResult.data}
-        onUpdate={() => {
-          // This will be handled by client component re-render
-        }}
-      />
+      <AdminProductsListClient products={productsResult.data} />
     </div>
   );
 };

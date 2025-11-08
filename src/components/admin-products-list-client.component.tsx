@@ -7,16 +7,18 @@ import { formatCurrency } from "@/lib/utils";
 import type { Price, Product } from "@prisma/client";
 import { Trash2Icon } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 type ProductWithPrices = Product & { prices: Price[] };
 
 interface Props {
   products: ProductWithPrices[];
-  onUpdate: () => void;
 }
 
-const AdminProductsListClient: React.FC<Props> = ({ products, onUpdate }) => {
+const AdminProductsListClient: React.FC<Props> = ({ products }) => {
+  const router = useRouter();
+
   const handleDelete = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this product?")) {
       return;
@@ -25,17 +27,21 @@ const AdminProductsListClient: React.FC<Props> = ({ products, onUpdate }) => {
     const result = await prismaDeleteProduct({ productId });
 
     if (result.success) {
-      onUpdate();
+      router.refresh();
     } else {
       alert(result.error);
     }
+  };
+
+  const handleSuccess = () => {
+    router.refresh();
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Products</h1>
-        <ProductFormClient onSuccess={onUpdate} />
+        <ProductFormClient onSuccess={handleSuccess} />
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -59,7 +65,7 @@ const AdminProductsListClient: React.FC<Props> = ({ products, onUpdate }) => {
               <p className="mt-1 text-sm text-gray-500">Status: {product.active ? "Active" : "Inactive"}</p>
             </div>
             <div className="flex space-x-2">
-              <ProductFormClient product={product} onSuccess={onUpdate} />
+              <ProductFormClient product={product} onSuccess={handleSuccess} />
               <Button variant="destructive" onClick={() => handleDelete(product.id)}>
                 <Trash2Icon className="mr-2 h-4 w-4" />
                 Delete

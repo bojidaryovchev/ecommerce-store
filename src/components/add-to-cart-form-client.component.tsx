@@ -1,5 +1,6 @@
 "use client";
 
+import { getOrCreateSession } from "@/actions/get-or-create-session.action";
 import { prismaAddToCart } from "@/actions/prisma-add-to-cart.action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,17 +12,38 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { Price, Product } from "@prisma/client";
 import { LoaderIcon, ShoppingCartIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import toast from "react-hot-toast";
 
 interface Props {
   product: Product & { prices: Price[] };
-  sessionId: string;
+  userId?: string;
+  existingSessionId?: string;
 }
 
-const AddToCartFormClient: React.FC<Props> = ({ product, sessionId }) => {
+const AddToCartFormClient: React.FC<Props> = ({ product, userId, existingSessionId }) => {
   const router = useRouter();
+  const [sessionId, setSessionId] = useState<string | null>(existingSessionId || null);
+  const sessionInitialized = useRef(false);
+
+  // Initialize or get session on client side (only for guest users)
+  useEffect(() => {
+    // If user is logged in, we don't need a session
+    if (userId) return;
+
+    if (sessionInitialized.current) return;
+    sessionInitialized.current = true;
+
+    const initSession = async () => {
+      const id = await getOrCreateSession();
+      setSessionId(id);
+    };
+
+    // Always call to ensure cookie is set
+    initSession();
+  }, [userId, existingSessionId]);
+
   const {
     register,
     handleSubmit,
@@ -39,12 +61,19 @@ const AddToCartFormClient: React.FC<Props> = ({ product, sessionId }) => {
   const selectedPriceId = useWatch({ control, name: "priceId" });
 
   const onSubmit = async (data: AddToCartFormInput) => {
+    // Check requirements based on user status
+    if (!userId && !sessionId) {
+      toast.error("Session not initialized. Please try again.");
+      return;
+    }
+
     try {
       const result = await prismaAddToCart({
         productId: product.id,
         priceId: data.priceId,
         quantity: data.quantity,
-        sessionId,
+        userId,
+        sessionId: userId ? undefined : sessionId || undefined,
       });
 
       if (!result.success) {

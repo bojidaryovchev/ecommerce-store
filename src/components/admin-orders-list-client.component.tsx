@@ -8,6 +8,7 @@ import type { Order, OrderItem, OrderStatus, Price, Product } from "@prisma/clie
 import { BanIcon, CheckCircleIcon, ClockIcon, PackageIcon, RefreshCcwIcon, XCircleIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 type OrderWithItems = Order & {
@@ -19,10 +20,10 @@ type OrderWithItems = Order & {
 
 interface Props {
   orders: OrderWithItems[];
-  onUpdate: () => void;
 }
 
-const AdminOrdersListClient: React.FC<Props> = ({ orders, onUpdate }) => {
+const AdminOrdersListClient: React.FC<Props> = ({ orders }) => {
+  const router = useRouter();
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   const handleStatusUpdate = async (orderId: string, status: OrderStatus) => {
@@ -31,7 +32,7 @@ const AdminOrdersListClient: React.FC<Props> = ({ orders, onUpdate }) => {
     const result = await prismaUpdateOrderStatus({ orderId, status });
 
     if (result.success) {
-      onUpdate();
+      router.refresh();
     } else {
       alert(result.error);
     }

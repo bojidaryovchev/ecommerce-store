@@ -1,6 +1,6 @@
 import { prismaGetCart } from "@/actions/prisma-get-cart.action";
-import { prismaMergeGuestCart } from "@/actions/prisma-merge-guest-cart.action";
 import CartClient from "@/components/cart-client.component";
+import CartMergeHandler from "@/components/cart-merge-handler.component";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { cookies } from "next/headers";
@@ -12,20 +12,11 @@ const CartPage: React.FC = async () => {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get("cart_session_id")?.value;
 
-  // If user is logged in and has a guest cart, merge them
-  if (session?.user?.id && sessionId) {
-    await prismaMergeGuestCart({
-      userId: session.user.id,
-      sessionId,
-    });
-    // Clear the guest cart cookie after merging
-    cookieStore.delete("cart_session_id");
-  }
-
-  // Get cart by userId (if logged in) or sessionId (if guest)
+  // Get cart by userId (if logged in), don't use sessionId after merge
   const userId = session?.user?.id;
+  const guestSessionId = userId ? undefined : sessionId;
 
-  if (!userId && !sessionId) {
+  if (!userId && !guestSessionId) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="py-12 text-center">
@@ -38,7 +29,7 @@ const CartPage: React.FC = async () => {
     );
   }
 
-  const result = await prismaGetCart({ userId, sessionId });
+  const result = await prismaGetCart({ userId, sessionId: guestSessionId });
 
   if (!result.success) {
     return (
@@ -68,6 +59,9 @@ const CartPage: React.FC = async () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Trigger cart merge on client side if user is logged in and has guest cart */}
+      {userId && sessionId && <CartMergeHandler userId={userId} sessionId={sessionId} />}
+
       <h1 className="mb-8 text-3xl font-bold text-gray-900">Your Cart</h1>
       <CartClient cart={result.data} />
     </div>

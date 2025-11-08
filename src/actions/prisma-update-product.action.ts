@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Product } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 
 interface UpdateProductParams {
   productId: string;
@@ -73,6 +74,9 @@ export async function prismaUpdateProduct(params: UpdateProductParams): Promise<
         prices: true,
       },
     });
+
+    // Revalidate admin products page
+    revalidatePath("/admin/products");
 
     return {
       success: true,

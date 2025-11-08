@@ -1,5 +1,6 @@
 import { prismaGetProductById } from "@/actions/prisma-get-product-by-id.action";
 import AddToCartFormClient from "@/components/add-to-cart-form-client.component";
+import { auth } from "@/lib/auth";
 import { formatCurrency } from "@/lib/utils";
 import { ArrowLeftIcon } from "lucide-react";
 import { cookies } from "next/headers";
@@ -24,19 +25,13 @@ const ProductDetailPage: React.FC<Props> = async ({ params }) => {
   const defaultPrice = product.prices[0];
   const imageUrl = product.images[0];
 
-  // Get or generate session ID for cart
-  const cookieStore = await cookies();
-  let sessionId = cookieStore.get("cart_session_id")?.value;
+  // Check if user is logged in
+  const session = await auth();
+  const userId = session?.user?.id;
 
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    cookieStore.set("cart_session_id", sessionId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
-  }
+  // Read existing session ID for guest users (read-only, no cookie modification)
+  const cookieStore = await cookies();
+  const existingSessionId = cookieStore.get("cart_session_id")?.value;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -76,7 +71,7 @@ const ProductDetailPage: React.FC<Props> = async ({ params }) => {
             </div>
           )}
 
-          <AddToCartFormClient product={product} sessionId={sessionId} />
+          <AddToCartFormClient product={product} userId={userId} existingSessionId={existingSessionId} />
         </div>
       </div>
     </div>

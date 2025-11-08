@@ -253,5 +253,19 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
     },
   });
 
+  // Clear the cart if cartId is in metadata
+  const cartId = session.metadata?.cartId;
+  if (cartId) {
+    try {
+      await prisma.cart.delete({
+        where: { id: cartId },
+      });
+      console.log(`Cart ${cartId} deleted after successful order`);
+    } catch (error) {
+      console.error(`Failed to delete cart ${cartId}:`, error);
+      // Don't fail the order creation if cart deletion fails
+    }
+  }
+
   console.log(`Order created for session: ${session.id}`);
 }

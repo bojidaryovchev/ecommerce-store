@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Order, OrderStatus } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 
 interface UpdateOrderStatusParams {
   orderId: string;
@@ -38,6 +39,9 @@ export async function prismaUpdateOrderStatus(params: UpdateOrderStatusParams): 
         },
       },
     });
+
+    // Revalidate admin orders page
+    revalidatePath("/admin/orders");
 
     return {
       success: true,
