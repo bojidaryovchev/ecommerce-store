@@ -110,10 +110,10 @@ export async function POST(request: NextRequest) {
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   console.log(`Checkout session completed: ${session.id}`);
 
-  // For immediate payments, create/update order
-  if (session.payment_status === "paid") {
-    await createOrUpdateOrder(session);
-  }
+  // Create or update order regardless of payment status
+  // For paid sessions, order will be marked as COMPLETED
+  // For unpaid/pending sessions, order will be marked as PENDING
+  await createOrUpdateOrder(session);
 }
 
 async function handleAsyncPaymentSucceeded(session: Stripe.Checkout.Session) {
@@ -125,39 +125,51 @@ async function handleAsyncPaymentFailed(session: Stripe.Checkout.Session) {
   console.log(`Async payment failed for session: ${session.id}`);
 
   // Update order status to failed
-  await prisma.order.updateMany({
+  const result = await prisma.order.updateMany({
     where: { stripeCheckoutSessionId: session.id },
     data: {
       status: "FAILED",
       paymentStatus: "FAILED",
     },
   });
+
+  if (result.count === 0) {
+    console.warn(`No order found for checkout session ${session.id} during async payment failure`);
+  }
 }
 
 async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   console.log(`PaymentIntent succeeded: ${paymentIntent.id}`);
 
   // Update order status if exists
-  await prisma.order.updateMany({
+  const result = await prisma.order.updateMany({
     where: { stripePaymentIntentId: paymentIntent.id },
     data: {
       status: "COMPLETED",
       paymentStatus: "PAID",
     },
   });
+
+  if (result.count === 0) {
+    console.warn(`No order found for payment intent ${paymentIntent.id} during success`);
+  }
 }
 
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   console.log(`PaymentIntent failed: ${paymentIntent.id}`);
 
   // Update order status if exists
-  await prisma.order.updateMany({
+  const result = await prisma.order.updateMany({
     where: { stripePaymentIntentId: paymentIntent.id },
     data: {
       status: "FAILED",
       paymentStatus: "FAILED",
     },
   });
+
+  if (result.count === 0) {
+    console.warn(`No order found for payment intent ${paymentIntent.id} during failure`);
+  }
 }
 
 async function handleChargeRefunded(charge: Stripe.Charge) {
@@ -173,18 +185,24 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   // Determine if full or partial refund
   const isFullRefund = charge.amount_refunded === charge.amount;
   const paymentStatus = isFullRefund ? "REFUNDED" : "PARTIALLY_REFUNDED";
+  const orderStatus = isFullRefund ? "REFUNDED" : undefined;
 
   // Get refund reason from the latest refund
   const refundReason = charge.refunds?.data[0]?.reason || null;
 
-  await prisma.order.updateMany({
+  const result = await prisma.order.updateMany({
     where: { stripePaymentIntentId: paymentIntentId },
     data: {
+      ...(orderStatus && { status: orderStatus }),
       paymentStatus,
       refundedAmount: charge.amount_refunded,
       refundReason,
     },
   });
+
+  if (result.count === 0) {
+    console.warn(`No order found for payment intent ${paymentIntentId} during refund`);
+  }
 }
 
 async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
@@ -246,6 +264,9 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
   // Map Stripe payment status to our enum
   const paymentStatus = mapStripePaymentStatus(session.payment_status || "unpaid");
 
+  // Determine order status based on payment status
+  const orderStatus = paymentStatus === "PAID" ? "COMPLETED" : "PENDING";
+
   // Generate unique order number (only used for new orders)
   const orderNumber = await generateOrderNumber();
 
@@ -299,7 +320,7 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
       update: {
         // Update existing order with latest payment information
         ...(userId && { userId }),
-        status: "COMPLETED",
+        status: orderStatus,
         paymentStatus,
         stripePaymentIntentId: (session.payment_intent as string) || null,
         metadata: session.metadata ? JSON.parse(JSON.stringify(session.metadata)) : null,
@@ -313,7 +334,7 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
         customerPhone: session.customer_details?.phone || null,
         stripeCheckoutSessionId: session.id,
         stripePaymentIntentId: (session.payment_intent as string) || null,
-        status: "COMPLETED",
+        status: orderStatus,
         paymentStatus,
         fulfillmentStatus: "UNFULFILLED",
         currency: session.currency || "usd",

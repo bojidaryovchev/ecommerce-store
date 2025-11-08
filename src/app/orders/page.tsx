@@ -3,13 +3,19 @@ import OrdersList from "@/components/orders-list.component";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import React from "react";
 
 const OrdersPage: React.FC = async () => {
   const session = await auth();
 
-  // Get orders filtered by userId if authenticated
-  const result = await prismaGetOrders(session?.user?.id ? { userId: session.user.id } : undefined);
+  // Require authentication to view orders
+  if (!session?.user?.id) {
+    redirect("/");
+  }
+
+  // Get orders filtered by userId
+  const result = await prismaGetOrders({ userId: session.user.id });
 
   if (!result.success) {
     return (
