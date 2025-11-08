@@ -40,12 +40,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    // If event already exists (duplicate webhook), return success
+    // If event already exists (duplicate webhook), return success immediately
     if (error instanceof Error && error.message.includes("Unique constraint")) {
-      console.log(`Duplicate webhook event ${event.id}, skipping`);
+      console.log(`Duplicate webhook event ${event.id}, skipping processing`);
       return NextResponse.json({ received: true });
     }
     console.error("Error logging webhook event:", error);
+    // Continue processing even if logging fails for other reasons
   }
 
   try {
@@ -89,11 +90,15 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error(`Error processing webhook event ${event.id}:`, error);
 
-    // Log the error
+    // Increment retry count and log the error
     await prisma.webhookEvent.update({
       where: { stripeEventId: event.id },
       data: {
         processingError: error instanceof Error ? error.message : "Unknown error",
+        retryCount: {
+          increment: 1,
+        },
+        lastAttemptAt: new Date(),
       },
     });
 
@@ -220,111 +225,142 @@ async function createOrUpdateOrder(session: Stripe.Checkout.Session) {
     if (user && session.customer) {
       const customerId = typeof session.customer === "string" ? session.customer : session.customer.id;
 
+      // Use updateMany with conditional where to prevent race conditions
+      // Only update if stripeCustomerId is still null (atomic operation)
       if (!user.stripeCustomerId) {
-        await prisma.user.update({
-          where: { id: user.id },
+        const result = await prisma.user.updateMany({
+          where: {
+            id: user.id,
+            stripeCustomerId: null, // Only update if still null
+          },
           data: { stripeCustomerId: customerId },
         });
+
+        if (result.count === 0) {
+          console.log(`stripeCustomerId already set for user ${user.id} by another webhook`);
+        }
       }
     }
   }
 
-  // Check if order already exists
-  const existingOrder = await prisma.order.findUnique({
-    where: { stripeCheckoutSessionId: session.id },
-  });
-
   // Map Stripe payment status to our enum
   const paymentStatus = mapStripePaymentStatus(session.payment_status || "unpaid");
 
-  if (existingOrder) {
-    // Update existing order
-    await prisma.order.update({
-      where: { id: existingOrder.id },
-      data: {
+  // Generate unique order number (only used for new orders)
+  const orderNumber = await generateOrderNumber();
+
+  // Wrap entire order creation in transaction for atomicity
+  await prisma.$transaction(async (tx) => {
+    // Prepare order items data
+    const orderItemsData = await Promise.all(
+      lineItems.map(async (item) => {
+        // Extract product and price information
+        const priceId = typeof item.price?.id === "string" ? item.price.id : "";
+
+        let productId = "";
+        if (typeof item.price?.product === "string") {
+          productId = item.price.product;
+        } else if (typeof item.price?.product === "object" && item.price.product !== null) {
+          const productObj = item.price.product as Stripe.Product;
+          productId = productObj.id;
+        }
+
+        // Find our database product by stripe product id
+        const product = await tx.product.findUnique({
+          where: {
+            stripeProductId: productId,
+          },
+        });
+
+        // Find our database price by stripe price id
+        const price = await tx.price.findUnique({
+          where: {
+            stripePriceId: priceId,
+          },
+        });
+
+        if (!product || !price) {
+          throw new Error(`Product or price not found for stripe IDs: ${productId}, ${priceId}`);
+        }
+
+        return {
+          productId: product.id,
+          priceId: price.id,
+          quantity: item.quantity || 1,
+          unitAmount: item.price?.unit_amount || 0,
+        };
+      }),
+    );
+
+    // Use upsert to handle race conditions from concurrent webhooks atomically
+    // Multiple webhooks (checkout.session.completed + payment_intent.succeeded) may fire simultaneously
+    await tx.order.upsert({
+      where: { stripeCheckoutSessionId: session.id },
+      update: {
+        // Update existing order with latest payment information
         ...(userId && { userId }),
         status: "COMPLETED",
         paymentStatus,
         stripePaymentIntentId: (session.payment_intent as string) || null,
         metadata: session.metadata ? JSON.parse(JSON.stringify(session.metadata)) : null,
       },
-    });
-    return;
-  }
-
-  // Generate unique order number
-  const orderNumber = await generateOrderNumber();
-
-  // Create new order with items
-  await prisma.order.create({
-    data: {
-      orderNumber,
-      ...(userId && { userId }),
-      customerEmail: customerEmail || null,
-      customerName: session.customer_details?.name || null,
-      customerPhone: session.customer_details?.phone || null,
-      stripeCheckoutSessionId: session.id,
-      stripePaymentIntentId: (session.payment_intent as string) || null,
-      status: "COMPLETED",
-      paymentStatus,
-      fulfillmentStatus: "UNFULFILLED",
-      currency: session.currency || "usd",
-      subtotal,
-      tax,
-      total,
-      shippingAddress: session.shipping_details ? JSON.parse(JSON.stringify(session.shipping_details)) : null,
-      billingAddress: session.customer_details?.address
-        ? JSON.parse(JSON.stringify(session.customer_details.address))
-        : null,
-      metadata: session.metadata ? JSON.parse(JSON.stringify(session.metadata)) : null,
-      items: {
-        create: await Promise.all(
-          lineItems.map(async (item) => {
-            // Extract product and price information
-            const priceId = typeof item.price?.id === "string" ? item.price.id : "";
-
-            let productId = "";
-            if (typeof item.price?.product === "string") {
-              productId = item.price.product;
-            } else if (typeof item.price?.product === "object" && item.price.product !== null) {
-              const productObj = item.price.product as Stripe.Product;
-              productId = productObj.id;
-            }
-
-            // Find our database product by stripe product id
-            const product = await prisma.product.findUnique({
-              where: {
-                stripeProductId: productId,
-              },
-            });
-
-            // Find our database price by stripe price id
-            const price = await prisma.price.findUnique({
-              where: {
-                stripePriceId: priceId,
-              },
-            });
-
-            if (!product || !price) {
-              throw new Error(`Product or price not found for stripe IDs: ${productId}, ${priceId}`);
-            }
-
-            return {
-              productId: product.id,
-              priceId: price.id,
-              quantity: item.quantity || 1,
-              unitAmount: item.price?.unit_amount || 0,
-            };
-          }),
-        ),
+      create: {
+        // Create new order with all details
+        orderNumber,
+        ...(userId && { userId }),
+        customerEmail: customerEmail || null,
+        customerName: session.customer_details?.name || null,
+        customerPhone: session.customer_details?.phone || null,
+        stripeCheckoutSessionId: session.id,
+        stripePaymentIntentId: (session.payment_intent as string) || null,
+        status: "COMPLETED",
+        paymentStatus,
+        fulfillmentStatus: "UNFULFILLED",
+        currency: session.currency || "usd",
+        subtotal,
+        tax,
+        total,
+        shippingAddress:
+          "shipping_details" in session && session.shipping_details
+            ? JSON.parse(JSON.stringify(session.shipping_details))
+            : null,
+        billingAddress: session.customer_details?.address
+          ? JSON.parse(JSON.stringify(session.customer_details.address))
+          : null,
+        metadata: session.metadata ? JSON.parse(JSON.stringify(session.metadata)) : null,
+        items: {
+          create: orderItemsData,
+        },
       },
-    },
+    });
   });
 
   // Clear the cart if cartId is in metadata
   const cartId = session.metadata?.cartId;
   if (cartId) {
     try {
+      // Validate cartId format (MongoDB ObjectId is 24 hex characters)
+      if (!/^[0-9a-fA-F]{24}$/.test(cartId)) {
+        console.warn(`Invalid cartId format in metadata: ${cartId}`);
+        return;
+      }
+
+      // Verify cart exists and is in CHECKED_OUT status before deletion
+      const cart = await prisma.cart.findUnique({
+        where: { id: cartId },
+        select: { id: true, status: true },
+      });
+
+      if (!cart) {
+        console.warn(`Cart ${cartId} not found, may have already been deleted`);
+        return;
+      }
+
+      if (cart.status !== "CHECKED_OUT") {
+        console.warn(`Cart ${cartId} status is ${cart.status}, expected CHECKED_OUT. Skipping deletion.`);
+        return;
+      }
+
       await prisma.cart.delete({
         where: { id: cartId },
       });

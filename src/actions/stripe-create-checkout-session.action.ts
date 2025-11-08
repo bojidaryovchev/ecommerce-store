@@ -1,6 +1,7 @@
 "use server";
 
 import { isRuntimeEnv } from "@/lib/env";
+import { ErrorMessages, sanitizeError } from "@/lib/error-handler";
 import { prisma } from "@/lib/prisma";
 import { stripe, STRIPE_CONFIG } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
@@ -105,7 +106,7 @@ export async function stripeCreateCheckoutSession(
     console.error("Error creating checkout session:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create checkout session",
+      error: sanitizeError(error, ErrorMessages.CHECKOUT_FAILED),
     };
   }
 }
