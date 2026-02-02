@@ -4,6 +4,7 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
+    "type-check": "tsc --noEmit",
     "up": "pulumi up",
     "preview": "pulumi preview",
     "destroy": "pulumi destroy"

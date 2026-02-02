@@ -12,6 +12,7 @@
     "prepare": "husky",
     "dev": "pnpm --filter @ecommerce/web dev",
     "build": "pnpm --filter @ecommerce/web build",
+    "type-check": "pnpm -r --parallel type-check",
     "lint": "eslint .",
     "prettier": "prettier --write \"**/*.{js,mjs,ts,tsx,css,md,json}\"",
     "db:generate": "pnpm --filter @ecommerce/database db:generate",
