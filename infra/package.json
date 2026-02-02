@@ -1,0 +1,19 @@
+{
+  "name": "@ecommerce/infra",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "up": "pulumi up",
+    "preview": "pulumi preview",
+    "destroy": "pulumi destroy"
+  },
+  "dependencies": {
+    "@pulumi/aws": "6.72.0",
+    "@pulumi/pulumi": "3.156.0"
+  },
+  "devDependencies": {
+    "@types/node": "25.2.0",
+    "typescript": "5.9.3"
+  }
+}

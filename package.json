@@ -2,62 +2,32 @@
   "name": "ecommerce-store",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "prepare": "husky",
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "lint": "eslint",
-    "lint-staged:eslint:fix": "eslint --fix **/*.{js,mjs,ts,tsx}",
-    "lint-staged:prettier:write": "prettier --write **/*.{js,mjs,ts,tsx,css,md,json}",
-    "prisma:push": "prisma db push",
-    "prisma:seed": "tsx prisma/seed.ts",
-    "prisma:studio": "prisma studio",
-    "browserslist:update": "npx update-browserslist-db@latest",
-    "deps:update:patch": "node scripts/update-dependencies.mjs patch",
-    "deps:update:minor": "node scripts/update-dependencies.mjs minor",
-    "deps:update:major": "node scripts/update-dependencies.mjs major"
-  },
-  "lint-staged": {
-    "*.{js,mjs,ts,tsx,css,md,json}": [
-      "npm run lint-staged:prettier:write"
-    ],
-    "*.{js,mjs,ts,tsx}": [
-      "npm run lint-staged:eslint:fix"
-    ]
-  },
-  "dependencies": {
-    "@auth/prisma-adapter": "2.11.1",
-    "@hookform/resolvers": "5.2.2",
-    "@prisma/client": "7.3.0",
-    "motion": "12.30.0",
-    "next": "16.1.6",
-    "next-auth": "5.0.0-beta.30",
-    "prisma": "7.3.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-hook-form": "7.71.1",
-    "react-hot-toast": "2.6.0",
-    "swiper": "12.1.0",
-    "swr": "2.4.0",
-    "zod": "4.3.6"
+    "dev": "pnpm --filter @ecommerce/web dev",
+    "build": "pnpm --filter @ecommerce/web build",
+    "lint": "pnpm -r lint",
+    "db:generate": "pnpm --filter @ecommerce/database db:generate",
+    "db:push": "pnpm --filter @ecommerce/database db:push",
+    "db:migrate": "pnpm --filter @ecommerce/database db:migrate",
+    "db:studio": "pnpm --filter @ecommerce/database db:studio",
+    "infra:up": "pnpm --filter @ecommerce/infra up",
+    "infra:preview": "pnpm --filter @ecommerce/infra preview"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "3.3.3",
-    "@tailwindcss/postcss": "4.1.18",
-    "@types/node": "25.2.0",
-    "@types/react": "19.2.10",
-    "@types/react-dom": "19.2.3",
-    "eslint": "9.39.2",
-    "eslint-config-next": "16.1.6",
     "husky": "9.1.7",
     "lint-staged": "16.2.7",
     "prettier": "3.8.1",
     "prettier-plugin-organize-imports": "4.3.0",
-    "prettier-plugin-tailwindcss": "0.7.2",
-    "tailwindcss": "4.1.18",
-    "typescript": "5.9.3"
+    "prettier-plugin-tailwindcss": "0.7.2"
   },
-  "overrides": {
-    "@auth/core": "0.41.1"
+  "lint-staged": {
+    "*.{js,mjs,ts,tsx,css,md,json}": [
+      "prettier --write"
+    ],
+    "*.{js,mjs,ts,tsx}": [
+      "eslint --fix"
+    ]
   }
 }
