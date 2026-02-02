@@ -15,288 +15,353 @@ erDiagram
     Customer ||--o{ CheckoutSession : "initiates"
     Customer ||--o{ Dispute : "disputes"
     Customer {
-        string id PK
-        string object
-        string email
-        string name
-        string phone
-        string description
-        object address
-        object shipping
-        object tax
-        object metadata
-        integer balance
-        string currency
-        string default_source FK
-        boolean delinquent
-        object invoice_settings
-        boolean livemode
-        timestamp created
-        string customer_account
-        string business_name
-        object cash_balance
-        object discount
-        string individual_name
-        object invoice_credit_balance
-        string invoice_prefix
-        integer next_invoice_sequence
-        array preferred_locales
-        object sources
-        object subscriptions
-        enum tax_exempt
-        array tax_ids
-        string test_clock FK
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        string email "NULLABLE"
+        string name "NULLABLE, max 256 chars"
+        string phone "NULLABLE, max 20 chars"
+        string description "NULLABLE"
+        object address "NULLABLE"
+        object shipping "NULLABLE"
+        object tax "NOT NULL, Expandable"
+        object metadata "NOT NULL"
+        integer balance "NOT NULL"
+        string currency "NULLABLE"
+        string default_source "NULLABLE, FK, Expandable"
+        boolean delinquent "NULLABLE"
+        object invoice_settings "NOT NULL"
+        boolean livemode "NOT NULL"
+        timestamp created "NOT NULL"
+        string customer_account "NULLABLE"
+        string business_name "NULLABLE"
+        object cash_balance "NULLABLE, Expandable"
+        object discount "NULLABLE"
+        string individual_name "NULLABLE"
+        object invoice_credit_balance "NOT NULL, Expandable"
+        string invoice_prefix "NULLABLE"
+        integer next_invoice_sequence "NULLABLE"
+        array preferred_locales "NULLABLE"
+        object sources "NULLABLE, Expandable"
+        object subscriptions "NULLABLE, Expandable"
+        enum tax_exempt "NULLABLE"
+        array tax_ids "NULLABLE, Expandable"
+        string test_clock "NULLABLE, FK, Expandable"
     }
 
     %% Products & Pricing
     Product ||--o{ Price : "has"
     Product {
-        string id PK
-        string object
-        boolean active
-        string name
-        string description
-        object metadata
-        array images
-        string default_price FK
-        string tax_code
-        boolean shippable
-        string statement_descriptor
-        timestamp created
-        timestamp updated
-        boolean livemode
-        array marketing_features
-        object package_dimensions
-        string unit_label
-        string url
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        boolean active "NOT NULL"
+        string name "NOT NULL"
+        string description "NULLABLE"
+        object metadata "NOT NULL"
+        array images "NOT NULL"
+        string default_price "NULLABLE, FK, Expandable"
+        string tax_code "NULLABLE, Expandable"
+        boolean shippable "NULLABLE"
+        string statement_descriptor "NULLABLE"
+        timestamp created "NOT NULL"
+        timestamp updated "NOT NULL"
+        boolean livemode "NOT NULL"
+        array marketing_features "NOT NULL"
+        object package_dimensions "NULLABLE"
+        string unit_label "NULLABLE"
+        string url "NULLABLE"
     }
 
     Price ||--o{ SubscriptionItem : "used_in"
     Price ||--o{ InvoiceLineItem : "priced_by"
     Price {
-        string id PK
-        string object
-        boolean active
-        enum currency
-        object metadata
-        string nickname
-        string product FK
-        object recurring
-        enum tax_behavior
-        enum type
-        integer unit_amount
-        string unit_amount_decimal
-        enum billing_scheme
-        object tiers
-        enum tiers_mode
-        timestamp created
-        boolean livemode
-        object currency_options
-        object custom_unit_amount
-        string lookup_key
-        object transform_quantity
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        boolean active "NOT NULL"
+        enum currency "NOT NULL"
+        object metadata "NOT NULL"
+        string nickname "NULLABLE"
+        string product "NOT NULL, FK, Expandable"
+        object recurring "NULLABLE"
+        enum tax_behavior "NULLABLE"
+        enum type "NOT NULL"
+        integer unit_amount "NULLABLE"
+        string unit_amount_decimal "NULLABLE"
+        enum billing_scheme "NOT NULL"
+        object tiers "NULLABLE, Expandable"
+        enum tiers_mode "NULLABLE"
+        timestamp created "NOT NULL"
+        boolean livemode "NOT NULL"
+        object currency_options "NULLABLE, Expandable"
+        object custom_unit_amount "NULLABLE"
+        string lookup_key "NULLABLE"
+        object transform_quantity "NULLABLE"
     }
 
     %% Payment Processing
     PaymentIntent ||--o| Charge : "creates"
     PaymentIntent ||--o| Invoice : "attached_to"
     PaymentIntent {
-        string id PK
-        string object
-        integer amount
-        integer amount_capturable
-        integer amount_received
-        object automatic_payment_methods
-        enum currency
-        string customer FK
-        string description
-        string latest_charge FK
-        object metadata
-        string payment_method FK
-        string receipt_email
-        object shipping
-        enum status
-        enum setup_future_usage
-        enum capture_method
-        enum confirmation_method
-        timestamp created
-        string client_secret
-        string customer_account
-        object last_payment_error
-        object next_action
-        boolean livemode
-        string statement_descriptor
-        string statement_descriptor_suffix
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        integer amount "NOT NULL"
+        integer amount_capturable "NOT NULL"
+        object amount_details "NULLABLE"
+        integer amount_received "NOT NULL"
+        object automatic_payment_methods "NULLABLE"
+        string application "NULLABLE, FK, Expandable, Connect only"
+        integer application_fee_amount "NULLABLE, Connect only"
+        enum currency "NOT NULL"
+        string customer "NULLABLE, FK, Expandable"
+        string customer_account "NULLABLE"
+        string description "NULLABLE"
+        string latest_charge "NULLABLE, FK, Expandable"
+        object metadata "NOT NULL"
+        string payment_method "NULLABLE, FK, Expandable"
+        string receipt_email "NULLABLE"
+        object shipping "NULLABLE"
+        enum status "NOT NULL"
+        enum setup_future_usage "NULLABLE"
+        enum capture_method "NOT NULL"
+        enum confirmation_method "NOT NULL"
+        timestamp created "NOT NULL"
+        timestamp canceled_at "NULLABLE"
+        enum cancellation_reason "NULLABLE"
+        string client_secret "NULLABLE"
+        array excluded_payment_method_types "NULLABLE"
+        object hooks "NULLABLE"
+        object last_payment_error "NULLABLE"
+        object next_action "NULLABLE"
+        boolean livemode "NOT NULL"
+        string on_behalf_of "NULLABLE, FK, Expandable, Connect only"
+        object payment_details "NULLABLE"
+        object payment_method_configuration_details "NULLABLE"
+        object payment_method_options "NULLABLE"
+        array payment_method_types "NOT NULL"
+        object presentment_details "NULLABLE"
+        object processing "NULLABLE"
+        string review "NULLABLE, FK, Expandable"
+        string statement_descriptor "NULLABLE"
+        string statement_descriptor_suffix "NULLABLE"
+        object transfer_data "NULLABLE, Connect only"
+        string transfer_group "NULLABLE, Connect only"
     }
 
     Charge ||--o| Refund : "refunded_by"
     Charge ||--o| BalanceTransaction : "creates"
     Charge ||--o| Dispute : "disputed"
     Charge {
-        string id PK
-        string object
-        integer amount
-        integer amount_captured
-        integer amount_refunded
-        object billing_details
-        enum currency
-        string customer FK
-        string description
-        boolean disputed
-        string payment_intent FK
-        object payment_method_details
-        string receipt_email
-        boolean refunded
-        object shipping
-        string statement_descriptor
-        string statement_descriptor_suffix
-        enum status
-        boolean paid
-        timestamp created
-        string balance_transaction FK
-        boolean captured
-        string failure_code
-        string failure_message
-        object outcome
-        boolean livemode
-        string receipt_url
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        integer amount "NOT NULL"
+        integer amount_captured "NOT NULL"
+        integer amount_refunded "NOT NULL"
+        string application "NULLABLE, FK, Expandable, Connect only"
+        string application_fee "NULLABLE, FK, Expandable, Connect only"
+        integer application_fee_amount "NULLABLE, Connect only"
+        string balance_transaction "NULLABLE, FK, Expandable"
+        object billing_details "NOT NULL"
+        string calculated_statement_descriptor "NULLABLE"
+        boolean captured "NOT NULL"
+        timestamp created "NOT NULL"
+        enum currency "NOT NULL"
+        string customer "NULLABLE, FK, Expandable"
+        string description "NULLABLE"
+        boolean disputed "NOT NULL"
+        string failure_balance_transaction "NULLABLE, FK, Expandable"
+        string failure_code "NULLABLE"
+        string failure_message "NULLABLE"
+        object fraud_details "NULLABLE"
+        boolean livemode "NOT NULL"
+        object metadata "NOT NULL"
+        string on_behalf_of "NULLABLE, FK, Expandable, Connect only"
+        object outcome "NULLABLE"
+        boolean paid "NOT NULL"
+        string payment_intent "NULLABLE, FK, Expandable"
+        string payment_method "NULLABLE"
+        object payment_method_details "NULLABLE"
+        object presentment_details "NULLABLE"
+        object radar_options "NULLABLE"
+        string receipt_email "NULLABLE"
+        string receipt_number "NULLABLE"
+        string receipt_url "NULLABLE"
+        boolean refunded "NOT NULL"
+        object refunds "NULLABLE, Expandable"
+        string review "NULLABLE, FK, Expandable"
+        object shipping "NULLABLE"
+        string source_transfer "NULLABLE, FK, Expandable, Connect only"
+        string statement_descriptor "NULLABLE"
+        string statement_descriptor_suffix "NULLABLE"
+        enum status "NOT NULL"
+        string transfer "NULLABLE, FK, Expandable, Connect only"
+        object transfer_data "NULLABLE, Connect only"
+        string transfer_group "NULLABLE, Connect only"
     }
 
     PaymentMethod ||--o{ PaymentIntent : "used_in"
     PaymentMethod {
-        string id PK
-        string object
-        object billing_details
-        string customer FK
-        object metadata
-        enum type
-        object card
-        object us_bank_account
-        object sepa_debit
-        enum allow_redisplay
-        timestamp created
-        boolean livemode
-        object acss_debit
-        object affirm
-        object afterpay_clearpay
-        object alipay
-        object alma
-        object amazon_pay
-        object au_becs_debit
-        object bacs_debit
-        object bancontact
-        object billie
-        object blik
-        object boleto
-        object cashapp
-        object crypto
-        object customer_balance
-        object eps
-        object fpx
-        object giropay
-        object grabpay
-        object ideal
-        object interac_present
-        object kakao_pay
-        object klarna
-        object konbini
-        object kr_card
-        object link
-        object mb_way
-        object mobilepay
-        object multibanco
-        object naver_pay
-        object nz_bank_account
-        object oxxo
-        object p24
-        object pay_by_bank
-        object payco
-        object paynow
-        object paypal
-        object paypay
-        object payto
-        object pix
-        object promptpay
-        object revolut_pay
-        object samsung_pay
-        object satispay
-        object sofort
-        object swish
-        object twint
-        object wechat_pay
-        object zip
-        object radar_options
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        object billing_details "NOT NULL"
+        string customer "NULLABLE, FK, Expandable"
+        object metadata "NULLABLE"
+        enum type "NOT NULL"
+        timestamp created "NOT NULL"
+        boolean livemode "NOT NULL"
+        enum allow_redisplay "NULLABLE"
+        object acss_debit "NULLABLE"
+        object affirm "NULLABLE"
+        object afterpay_clearpay "NULLABLE"
+        object alipay "NULLABLE"
+        object alma "NULLABLE"
+        object amazon_pay "NULLABLE"
+        object au_becs_debit "NULLABLE"
+        object bacs_debit "NULLABLE"
+        object bancontact "NULLABLE"
+        object billie "NULLABLE"
+        object blik "NULLABLE"
+        object boleto "NULLABLE"
+        object card "NULLABLE"
+        object card_present "NULLABLE"
+        object cashapp "NULLABLE"
+        object crypto "NULLABLE"
+        object custom "NULLABLE"
+        object customer_balance "NULLABLE"
+        object eps "NULLABLE"
+        object fpx "NULLABLE"
+        object giropay "NULLABLE"
+        object grabpay "NULLABLE"
+        object ideal "NULLABLE"
+        object interac_present "NULLABLE"
+        object kakao_pay "NULLABLE"
+        object klarna "NULLABLE"
+        object konbini "NULLABLE"
+        object kr_card "NULLABLE"
+        object link "NULLABLE"
+        object mb_way "NULLABLE"
+        object mobilepay "NULLABLE"
+        object multibanco "NULLABLE"
+        object naver_pay "NULLABLE"
+        object nz_bank_account "NULLABLE"
+        object oxxo "NULLABLE"
+        object p24 "NULLABLE"
+        object pay_by_bank "NULLABLE"
+        object payco "NULLABLE"
+        object paynow "NULLABLE"
+        object paypal "NULLABLE"
+        object paypay "NULLABLE"
+        object payto "NULLABLE"
+        object pix "NULLABLE"
+        object promptpay "NULLABLE"
+        object radar_options "NULLABLE"
+        object revolut_pay "NULLABLE"
+        object samsung_pay "NULLABLE"
+        object satispay "NULLABLE"
+        object sepa_debit "NULLABLE"
+        object sofort "NULLABLE"
+        object swish "NULLABLE"
+        object twint "NULLABLE"
+        object us_bank_account "NULLABLE"
+        object wechat_pay "NULLABLE"
+        object zip "NULLABLE"
     }
 
     %% Refunds & Disputes
     Refund {
-        string id PK
-        string object
-        integer amount
-        string charge FK
-        enum currency
-        string description
-        object metadata
-        string payment_intent FK
-        enum reason
-        enum status
-        string balance_transaction FK
-        timestamp created
-        boolean livemode
-        string failure_reason
-        object next_action
-        string receipt_number
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        integer amount "NOT NULL"
+        string balance_transaction "NULLABLE, FK, Expandable"
+        string charge "NULLABLE, FK, Expandable"
+        timestamp created "NOT NULL"
+        enum currency "NOT NULL"
+        string description "NULLABLE"
+        object destination_details "NULLABLE"
+        string failure_balance_transaction "NULLABLE, FK, Expandable"
+        string failure_reason "NULLABLE"
+        string instructions_email "NULLABLE"
+        object metadata "NULLABLE"
+        object next_action "NULLABLE"
+        string payment_intent "NULLABLE, FK, Expandable"
+        enum pending_reason "NULLABLE"
+        enum reason "NULLABLE"
+        string receipt_number "NULLABLE"
+        string source_transfer_reversal "NULLABLE, FK, Expandable, Connect only"
+        enum status "NULLABLE"
+        string transfer_reversal "NULLABLE, FK, Expandable, Connect only"
     }
 
     Dispute {
-        string id PK
-        string object
-        integer amount
-        string charge FK
-        enum currency
-        object evidence
-        object metadata
-        string payment_intent FK
-        enum reason
-        enum status
-        array balance_transactions
-        timestamp created
-        boolean livemode
-        object evidence_details
-        boolean is_charge_refundable
-        object payment_method_details
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        integer amount "NOT NULL"
+        array balance_transactions "NOT NULL"
+        string charge "NOT NULL, FK, Expandable"
+        timestamp created "NOT NULL"
+        enum currency "NOT NULL"
+        array enhanced_eligibility_types "NOT NULL"
+        object evidence "NOT NULL"
+        object evidence_details "NOT NULL"
+        boolean is_charge_refundable "NOT NULL"
+        boolean livemode "NOT NULL"
+        object metadata "NOT NULL"
+        string payment_intent "NULLABLE, FK, Expandable"
+        object payment_method_details "NULLABLE"
+        enum reason "NOT NULL"
+        enum status "NOT NULL"
     }
 
     %% Subscriptions & Billing
     Subscription ||--o{ SubscriptionItem : "contains"
     Subscription ||--o{ Invoice : "generates"
     Subscription {
-        string id PK
-        string object
-        object automatic_tax
-        enum currency
-        string customer FK
-        string description
-        object items
-        string latest_invoice FK
-        object metadata
-        string pending_setup_intent FK
-        object pending_update
-        enum status
-        object billing_mode
-        integer billing_cycle_anchor
-        enum collection_method
-        timestamp trial_end
-        timestamp trial_start
-        timestamp created
-        string customer_account
-        string default_payment_method FK
-        boolean cancel_at_period_end
-        timestamp canceled_at
-        array discounts
-        boolean livemode
-        object cancellation_details
-        integer days_until_due
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        string application "NULLABLE, FK, Expandable, Connect-only"
+        float application_fee_percent "NULLABLE, Connect-only"
+        object automatic_tax "NOT NULL"
+        timestamp billing_cycle_anchor "NOT NULL"
+        object billing_cycle_anchor_config "NULLABLE"
+        object billing_mode "NOT NULL"
+        object billing_thresholds "NULLABLE"
+        timestamp cancel_at "NULLABLE"
+        boolean cancel_at_period_end "NOT NULL"
+        timestamp canceled_at "NULLABLE"
+        object cancellation_details "NULLABLE"
+        enum collection_method "NOT NULL"
+        timestamp created "NOT NULL"
+        enum currency "NOT NULL"
+        timestamp current_period_end "NOT NULL"
+        timestamp current_period_start "NOT NULL"
+        string customer "NOT NULL, FK, Expandable"
+        string customer_account "NULLABLE"
+        integer days_until_due "NULLABLE"
+        string default_payment_method "NULLABLE, FK, Expandable"
+        string default_source "NULLABLE, FK, Expandable"
+        array default_tax_rates "NULLABLE"
+        string description "NULLABLE"
+        array discounts "NOT NULL, Expandable"
+        timestamp ended_at "NULLABLE"
+        object invoice_settings "NOT NULL"
+        object items "NOT NULL"
+        string latest_invoice "NULLABLE, FK, Expandable"
+        boolean livemode "NOT NULL"
+        object metadata "NOT NULL"
+        timestamp next_pending_invoice_item_invoice "NULLABLE"
+        string on_behalf_of "NULLABLE, FK, Expandable, Connect-only"
+        object pause_collection "NULLABLE"
+        object payment_settings "NULLABLE"
+        object pending_invoice_item_interval "NULLABLE"
+        string pending_setup_intent "NULLABLE, FK, Expandable"
+        object pending_update "NULLABLE"
+        object presentment_details "NULLABLE, Preview-feature"
+        string schedule "NULLABLE, FK, Expandable"
+        timestamp start_date "NOT NULL"
+        enum status "NOT NULL"
+        string test_clock "NULLABLE, FK, Expandable"
+        object transfer_data "NULLABLE, Connect-only"
+        timestamp trial_end "NULLABLE"
+        object trial_settings "NULLABLE"
+        timestamp trial_start "NULLABLE"
     }
 
     SubscriptionItem {
@@ -318,211 +383,299 @@ erDiagram
     Invoice ||--o{ InvoiceLineItem : "contains"
     Invoice ||--o| PaymentIntent : "has"
     Invoice {
-        string id PK
-        string object
-        boolean auto_advance
-        object automatic_tax
-        enum collection_method
-        enum currency
-        string customer FK
-        string description
-        string hosted_invoice_url
-        object lines
-        object metadata
-        integer period_end
-        integer period_start
-        enum status
-        integer total
-        integer amount_due
-        integer amount_paid
-        integer amount_remaining
-        integer subtotal
-        string default_payment_method FK
-        timestamp created
-        string customer_account
-        string subscription FK
-        string payment_intent FK
-        string invoice_pdf
-        string number
-        enum billing_reason
-        timestamp due_date
-        timestamp next_payment_attempt
-        boolean livemode
-        object confirmation_secret
-        boolean attempted
-        array discounts
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        string account_country "NULLABLE"
+        string account_name "NULLABLE"
+        array account_tax_ids "NULLABLE, Expandable"
+        integer amount_due "NOT NULL"
+        integer amount_overpaid "NOT NULL"
+        integer amount_paid "NOT NULL"
+        integer amount_remaining "NOT NULL"
+        integer amount_shipping "NOT NULL"
+        string application "NULLABLE, FK, Expandable, Connect-only"
+        integer attempt_count "NOT NULL"
+        boolean attempted "NOT NULL"
+        boolean auto_advance "NOT NULL"
+        object automatic_tax "NOT NULL"
+        timestamp automatically_finalizes_at "NULLABLE"
+        enum billing_reason "NULLABLE"
+        enum collection_method "NOT NULL"
+        object confirmation_secret "NULLABLE, Expandable"
+        timestamp created "NOT NULL"
+        enum currency "NOT NULL"
+        array custom_fields "NULLABLE"
+        string customer "NOT NULL, FK, Expandable"
+        string customer_account "NULLABLE"
+        object customer_address "NULLABLE"
+        string customer_email "NULLABLE"
+        string customer_name "NULLABLE"
+        string customer_phone "NULLABLE"
+        object customer_shipping "NULLABLE"
+        enum customer_tax_exempt "NULLABLE"
+        array customer_tax_ids "NULLABLE"
+        string default_payment_method "NULLABLE, FK, Expandable"
+        string default_source "NULLABLE, FK, Expandable"
+        array default_tax_rates "NOT NULL"
+        string description "NULLABLE"
+        array discounts "NOT NULL, Expandable"
+        timestamp due_date "NULLABLE"
+        timestamp effective_at "NULLABLE"
+        integer ending_balance "NULLABLE"
+        string footer "NULLABLE"
+        object from_invoice "NULLABLE"
+        string hosted_invoice_url "NULLABLE"
+        string invoice_pdf "NULLABLE"
+        object issuer "NOT NULL, Connect-only"
+        object last_finalization_error "NULLABLE"
+        string latest_revision "NULLABLE, FK, Expandable"
+        object lines "NOT NULL"
+        boolean livemode "NOT NULL"
+        object metadata "NULLABLE"
+        timestamp next_payment_attempt "NULLABLE"
+        string number "NULLABLE"
+        string on_behalf_of "NULLABLE, FK, Expandable, Connect-only"
+        object parent "NULLABLE"
+        object payment_settings "NOT NULL"
+        object payments "NOT NULL, Expandable"
+        timestamp period_end "NOT NULL"
+        timestamp period_start "NOT NULL"
+        integer post_payment_credit_notes_amount "NOT NULL"
+        integer pre_payment_credit_notes_amount "NOT NULL"
+        string receipt_number "NULLABLE"
+        object rendering "NULLABLE"
+        object shipping_cost "NULLABLE"
+        object shipping_details "NULLABLE"
+        integer starting_balance "NOT NULL"
+        string statement_descriptor "NULLABLE"
+        enum status "NULLABLE"
+        object status_transitions "NOT NULL"
+        integer subtotal "NOT NULL"
+        integer subtotal_excluding_tax "NULLABLE"
+        string test_clock "NULLABLE, FK, Expandable"
+        object threshold_reason "NULLABLE"
+        integer total "NOT NULL"
+        array total_discount_amounts "NULLABLE"
+        integer total_excluding_tax "NULLABLE"
+        array total_pretax_credit_amounts "NULLABLE"
+        array total_taxes "NULLABLE"
+        timestamp webhooks_delivered_at "NULLABLE"
     }
 
     InvoiceLineItem {
-        string id PK
-        string object
-        integer amount
-        enum currency
-        string description
-        string invoice FK
-        object metadata
-        object period
-        object pricing
-        integer quantity
-        boolean proration
-        boolean discountable
-        array discounts
-        string subscription_item FK
-        array tax_rates
-        enum type
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        integer amount "NOT NULL"
+        enum currency "NOT NULL"
+        string description "NULLABLE"
+        array discount_amounts "NULLABLE"
+        boolean discountable "NOT NULL"
+        array discounts "NOT NULL, Expandable"
+        string invoice "NULLABLE"
+        boolean livemode "NOT NULL"
+        object metadata "NOT NULL"
+        object parent "NULLABLE"
+        object period "NOT NULL"
+        object pricing "NULLABLE"
+        array pretax_credit_amounts "NULLABLE"
+        integer quantity "NULLABLE"
+        integer subtotal "NOT NULL"
+        array taxes "NULLABLE"
     }
 
     InvoiceItem ||--o| InvoiceLineItem : "becomes"
     InvoiceItem {
-        string id PK
-        string object
-        integer amount
-        enum currency
-        string customer FK
-        string description
-        string invoice FK
-        object metadata
-        object period
-        object pricing
-        integer quantity
-        boolean proration
-        timestamp date
-        string customer_account
-        boolean discountable
-        array discounts
-        boolean livemode
-        array tax_rates
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        integer amount "NOT NULL"
+        enum currency "NOT NULL"
+        string customer "NOT NULL, FK, Expandable"
+        string customer_account "NULLABLE"
+        timestamp date "NOT NULL"
+        string description "NULLABLE"
+        boolean discountable "NOT NULL"
+        array discounts "NULLABLE, Expandable"
+        string invoice "NULLABLE, FK, Expandable"
+        boolean livemode "NOT NULL"
+        object metadata "NULLABLE"
+        integer net_amount "NULLABLE"
+        object parent "NULLABLE"
+        object period "NOT NULL"
+        object pricing "NULLABLE"
+        boolean proration "NOT NULL"
+        object proration_details "NULLABLE"
+        integer quantity "NOT NULL"
+        array tax_rates "NULLABLE"
+        string test_clock "NULLABLE, FK, Expandable"
     }
 
     %% Discounts & Coupons
     Coupon ||--o{ PromotionCode : "used_in"
     Coupon ||--o{ Subscription : "applied_to"
     Coupon {
-        string id PK
-        string object
-        integer amount_off
-        enum currency
-        enum duration
-        integer duration_in_months
-        object metadata
-        string name
-        float percent_off
-        timestamp redeem_by
-        integer times_redeemed
-        boolean valid
-        timestamp created
-        object applies_to
-        object currency_options
-        boolean livemode
-        integer max_redemptions
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        integer amount_off "NULLABLE"
+        object applies_to "NULLABLE, Expandable"
+        timestamp created "NOT NULL"
+        enum currency "NULLABLE"
+        object currency_options "NULLABLE, Expandable"
+        enum duration "NOT NULL"
+        integer duration_in_months "NULLABLE"
+        boolean livemode "NOT NULL"
+        integer max_redemptions "NULLABLE"
+        object metadata "NULLABLE"
+        string name "NULLABLE"
+        float percent_off "NULLABLE"
+        timestamp redeem_by "NULLABLE"
+        integer times_redeemed "NOT NULL"
+        boolean valid "NOT NULL"
     }
 
     PromotionCode {
-        string id PK
-        string object
-        string code
-        object metadata
-        object promotion
-        boolean active
-        string customer FK
-        timestamp expires_at
-        integer max_redemptions
-        integer times_redeemed
-        timestamp created
-        string customer_account
-        boolean livemode
-        object restrictions
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        boolean active "NOT NULL"
+        string code "NOT NULL"
+        timestamp created "NOT NULL"
+        string customer "NULLABLE, FK, Expandable"
+        string customer_account "NULLABLE"
+        timestamp expires_at "NULLABLE"
+        boolean livemode "NOT NULL"
+        integer max_redemptions "NULLABLE"
+        object metadata "NULLABLE"
+        object promotion "NOT NULL"
+        object restrictions "NOT NULL"
+        integer times_redeemed "NOT NULL"
     }
 
     %% Checkout & Sessions
     CheckoutSession ||--o| PaymentIntent : "has"
     CheckoutSession ||--o| Subscription : "creates"
     CheckoutSession {
-        string id PK
-        string object
-        object automatic_tax
-        string client_reference_id
-        enum currency
-        string customer FK
-        string customer_email
-        object line_items
-        object metadata
-        enum mode
-        string payment_intent FK
-        enum payment_status
-        string return_url
-        enum status
-        string success_url
-        enum ui_mode
-        string url
-        string subscription FK
-        timestamp expires_at
-        timestamp created
-        string customer_account
-        string client_secret
-        string cancel_url
-        string invoice FK
-        string setup_intent FK
-        string payment_link FK
-        boolean livemode
-        array payment_method_types
-        object shipping_options
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        object adaptive_pricing "NULLABLE"
+        object after_expiration "NULLABLE"
+        boolean allow_promotion_codes "NULLABLE"
+        integer amount_subtotal "NULLABLE"
+        integer amount_total "NULLABLE"
+        object automatic_tax "NOT NULL"
+        enum billing_address_collection "NULLABLE"
+        object branding_settings "NULLABLE"
+        string cancel_url "NULLABLE"
+        string client_reference_id "NULLABLE"
+        string client_secret "NULLABLE"
+        object collected_information "NULLABLE"
+        object consent "NULLABLE"
+        object consent_collection "NULLABLE"
+        timestamp created "NOT NULL"
+        enum currency "NULLABLE"
+        object currency_conversion "NULLABLE"
+        array custom_fields "NOT NULL"
+        object custom_text "NOT NULL"
+        string customer "NULLABLE, FK, Expandable"
+        string customer_account "NULLABLE"
+        enum customer_creation "NULLABLE"
+        object customer_details "NULLABLE"
+        string customer_email "NULLABLE"
+        array discounts "NULLABLE"
+        array excluded_payment_method_types "NULLABLE"
+        timestamp expires_at "NOT NULL"
+        string invoice "NULLABLE, FK, Expandable"
+        object invoice_creation "NULLABLE"
+        object line_items "NULLABLE, Expandable"
+        boolean livemode "NOT NULL"
+        enum locale "NULLABLE"
+        object metadata "NULLABLE"
+        enum mode "NOT NULL"
+        object name_collection "NULLABLE"
+        array optional_items "NULLABLE, Expandable"
+        enum origin_context "NULLABLE"
+        string payment_intent "NULLABLE, FK, Expandable"
+        string payment_link "NULLABLE, FK, Expandable"
+        enum payment_method_collection "NULLABLE"
+        object payment_method_configuration_details "NULLABLE"
+        object payment_method_options "NULLABLE"
+        array payment_method_types "NOT NULL"
+        enum payment_status "NOT NULL"
+        object permissions "NULLABLE"
+        object phone_number_collection "NULLABLE"
+        object presentment_details "NULLABLE"
+        string recovered_from "NULLABLE"
+        enum redirect_on_completion "NULLABLE"
+        string return_url "NULLABLE"
+        object saved_payment_method_options "NULLABLE"
+        string setup_intent "NULLABLE, FK, Expandable"
+        object shipping_address_collection "NULLABLE"
+        object shipping_cost "NULLABLE"
+        array shipping_options "NOT NULL"
+        enum status "NULLABLE"
+        enum submit_type "NULLABLE"
+        string subscription "NULLABLE, FK, Expandable"
+        string success_url "NULLABLE"
+        object tax_id_collection "NULLABLE"
+        object total_details "NULLABLE"
+        enum ui_mode "NULLABLE"
+        string url "NULLABLE"
+        object wallet_options "NULLABLE"
     }
 
     %% Shipping
     ShippingRate {
-        string id PK
-        string object
-        boolean active
-        string display_name
-        object fixed_amount
-        object metadata
-        enum tax_behavior
-        string tax_code
-        enum type
-        object delivery_estimate
-        timestamp created
-        boolean livemode
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        boolean active "NOT NULL"
+        timestamp created "NOT NULL"
+        object delivery_estimate "NULLABLE"
+        string display_name "NULLABLE"
+        object fixed_amount "NULLABLE"
+        boolean livemode "NOT NULL"
+        object metadata "NOT NULL"
+        enum tax_behavior "NULLABLE"
+        string tax_code "NULLABLE, FK, Expandable"
+        enum type "NOT NULL"
     }
 
     TaxRate {
-        string id PK
-        string object
-        boolean active
-        string country
-        string description
-        string display_name
-        boolean inclusive
-        string jurisdiction
-        object metadata
-        float percentage
-        string state
-        enum tax_type
-        timestamp created
-        float effective_percentage
-        boolean livemode
-        enum jurisdiction_level
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        boolean active "NOT NULL"
+        string country "NULLABLE"
+        timestamp created "NOT NULL"
+        string description "NULLABLE"
+        string display_name "NOT NULL"
+        float effective_percentage "NULLABLE"
+        object flat_amount "NULLABLE"
+        boolean inclusive "NOT NULL"
+        string jurisdiction "NULLABLE"
+        enum jurisdiction_level "NULLABLE"
+        boolean livemode "NOT NULL"
+        object metadata "NULLABLE"
+        float percentage "NOT NULL"
+        enum rate_type "NULLABLE"
+        string state "NULLABLE"
+        enum tax_type "NULLABLE"
     }
 
     %% Balance & Transactions
     BalanceTransaction {
-        string id PK
-        string object
-        integer amount
-        enum currency
-        string description
-        integer fee
-        array fee_details
-        integer net
-        string source FK
-        enum status
-        enum type
-        timestamp available_on
-        timestamp created
-        enum balance_type
-        float exchange_rate
-        boolean livemode
-        string reporting_category
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        integer amount "NOT NULL"
+        timestamp available_on "NOT NULL"
+        enum balance_type "NOT NULL"
+        timestamp created "NOT NULL"
+        enum currency "NOT NULL"
+        string description "NULLABLE"
+        float exchange_rate "NULLABLE"
+        integer fee "NOT NULL"
+        array fee_details "NOT NULL"
+        integer net "NOT NULL"
+        string reporting_category "NOT NULL"
+        string source "NULLABLE, FK, Expandable"
+        string status "NOT NULL"
+        enum type "NOT NULL"
     }
 
     %% Relationships
@@ -570,18 +723,26 @@ erDiagram
   - **Field Constraints**: email (max 512 chars), name (max 256 chars), phone (max 20 chars)
   - **Multi-party Support**: Use `customer_account` field for representing customers in multi-party scenarios
   - **Tax Handling**: `tax_exempt` enum values: `none`, `exempt`, `reverse`
+  - **Non-Nullable Fields**: `id`, `object`, `tax`, `metadata`, `balance`, `invoice_settings`, `invoice_credit_balance`, `livemode`, `created`
+  - **Expandable Fields**: `tax`, `cash_balance`, `default_source`, `invoice_credit_balance`, `sources`, `subscriptions`, `tax_ids`, `test_clock`
 - **Address**: Physical address for billing and shipping
 - **TaxId**: Tax identification for compliance
+- **InvoiceSettings**: Invoice-related settings for the customer (default_payment_method, custom_fields, footer, rendering_options)
 
 ### Product Catalog
 
 - **Product**: Goods or services offered (e.g., "Premium Plan", "T-Shirt")
   - **Deletion Constraint**: Can only be deleted if no prices are associated
   - **Images**: Array of image URLs for product display
+  - **Non-Nullable Fields**: `id`, `object`, `active`, `name`, `metadata`, `images`, `created`, `updated`, `livemode`, `marketing_features`
+  - **Expandable Fields**: `default_price`, `tax_code`
 - **Price**: Pricing structure for products (one-time or recurring)
   - **Types**: `one_time` or `recurring`
   - **Billing Schemes**: `per_unit` (simple) or `tiered` (volume-based)
   - **Currency Support**: Multi-currency pricing via `currency_options`
+  - **Non-Nullable Fields**: `id`, `object`, `active`, `currency`, `metadata`, `product`, `type`, `billing_scheme`, `created`, `livemode`
+  - **Expandable Fields**: `product`, `currency_options`, `tiers`
+  - **Conditional Fields**: `unit_amount` only set if `billing_scheme=per_unit`; `tiers` required if `billing_scheme=tiered`
 - **TaxRate**: Tax rates applied to transactions
 
 ### Payment Processing
@@ -590,12 +751,18 @@ erDiagram
   - **Recommended**: Use this instead of direct Charge creation
   - **Client Secret**: Use for client-side payment confirmation
   - **Automatic Tax**: Supports automatic tax calculation
+  - **Non-Nullable Fields**: `id`, `object`, `amount`, `amount_capturable`, `amount_received`, `currency`, `metadata`, `status`, `capture_method`, `confirmation_method`, `created`, `livemode`, `payment_method_types`
+  - **Expandable Fields**: `application`, `customer`, `latest_charge`, `on_behalf_of`, `payment_method`, `review`
+  - **Connect-Only Fields**: `application`, `application_fee_amount`, `on_behalf_of`, `transfer_data`, `transfer_group`
 - **PaymentMethod**: Stored payment instrument (card, bank account, etc.)
   - **50+ Payment Types**: Supports global payment methods including cards, wallets, bank transfers, and buy-now-pay-later
   - **Type-specific Objects**: Each payment method type has its own object (e.g., `card`, `us_bank_account`, `sepa_debit`)
 - **Charge**: Actual movement of funds
   - ⚠️ **DEPRECATED**: The Charge create endpoint is deprecated. Use PaymentIntents API instead
   - Still returned when PaymentIntent succeeds, but don't create directly
+  - **Non-Nullable Fields**: `id`, `object`, `amount`, `amount_captured`, `amount_refunded`, `billing_details`, `captured`, `created`, `currency`, `disputed`, `livemode`, `metadata`, `paid`, `refunded`, `status`
+  - **Expandable Fields**: `application`, `application_fee`, `balance_transaction`, `customer`, `failure_balance_transaction`, `on_behalf_of`, `payment_intent`, `refunds`, `review`, `source_transfer`, `transfer`
+  - **Connect-Only Fields**: `application`, `application_fee`, `application_fee_amount`, `on_behalf_of`, `source_transfer`, `transfer`, `transfer_data`, `transfer_group`
 - **Refund**: Money returned to customer
   - Supports partial refunds
   - Can be created on Charge or PaymentIntent
