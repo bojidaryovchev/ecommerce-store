@@ -3,6 +3,7 @@ import { checkoutSessions } from "../tables/checkout-sessions";
 import { customers } from "../tables/customers";
 import { invoices } from "../tables/invoices";
 import { paymentIntents } from "../tables/payment-intents";
+import { setupIntents } from "../tables/setup-intents";
 import { subscriptions } from "../tables/subscriptions";
 
 export const checkoutSessionsRelations = relations(checkoutSessions, ({ one }) => ({
@@ -21,5 +22,9 @@ export const checkoutSessionsRelations = relations(checkoutSessions, ({ one }) =
   invoice: one(invoices, {
     fields: [checkoutSessions.invoiceId],
     references: [invoices.id],
+  }),
+  setupIntent: one(setupIntents, {
+    fields: [checkoutSessions.setupIntentId],
+    references: [setupIntents.id],
   }),
 }));

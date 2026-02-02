@@ -14,6 +14,7 @@ export const disputes = pgTable("dispute", {
     .notNull()
     .references(() => charges.id, { onDelete: "cascade" }),
   currency: text("currency").notNull(),
+  enhancedEligibilityTypes: text("enhanced_eligibility_types").array().notNull(),
   evidence: jsonb("evidence").$type<{
     accessActivityLog?: string;
     billingAddress?: string;

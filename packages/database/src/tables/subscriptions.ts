@@ -40,6 +40,7 @@ export const subscriptions = pgTable("subscription", {
   canceledAt: timestamp("canceled_at", { mode: "date" }),
   cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
   cancelAt: timestamp("cancel_at", { mode: "date" }),
+  endedAt: timestamp("ended_at", { mode: "date" }),
   latestInvoiceId: text("latest_invoice_id"),
   metadata: jsonb("metadata").$type<Record<string, string>>(),
   pendingSetupIntentId: text("pending_setup_intent_id"),

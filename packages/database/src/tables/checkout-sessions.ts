@@ -8,6 +8,7 @@ import {
 import { customers } from "./customers";
 import { invoices } from "./invoices";
 import { paymentIntents } from "./payment-intents";
+import { setupIntents } from "./setup-intents";
 import { subscriptions } from "./subscriptions";
 
 export const checkoutSessions = pgTable("checkout_session", {
@@ -32,7 +33,7 @@ export const checkoutSessions = pgTable("checkout_session", {
   url: text("url"),
   subscriptionId: text("subscription_id").references(() => subscriptions.id, { onDelete: "set null" }),
   invoiceId: text("invoice_id").references(() => invoices.id, { onDelete: "set null" }),
-  setupIntentId: text("setup_intent_id"),
+  setupIntentId: text("setup_intent_id").references(() => setupIntents.id, { onDelete: "set null" }),
   paymentLinkId: text("payment_link_id"),
   expiresAt: timestamp("expires_at", { mode: "date" }),
   automaticTax: jsonb("automatic_tax").$type<{
