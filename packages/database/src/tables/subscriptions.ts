@@ -64,6 +64,58 @@ export const subscriptions = pgTable("subscription", {
     feedback?: string;
     reason?: string;
   }>(),
+  // Connect Platform fields
+  application: text("application"),
+  applicationFeePercent: text("application_fee_percent"),
+  onBehalfOf: text("on_behalf_of"),
+  transferData: jsonb("transfer_data").$type<{
+    amountPercent?: number;
+    destination?: string;
+  }>(),
+  // Additional fields
+  billingCycleAnchorConfig: jsonb("billing_cycle_anchor_config").$type<{
+    dayOfMonth?: number;
+    hour?: number;
+    minute?: number;
+    month?: number;
+    second?: number;
+  }>(),
+  billingThresholds: jsonb("billing_thresholds").$type<{
+    amountGte?: number;
+    resetBillingCycleAnchor?: boolean;
+  }>(),
+  defaultSource: text("default_source"),
+  defaultTaxRates: text("default_tax_rates").array(),
+  invoiceSettings: jsonb("invoice_settings").$type<{
+    accountTaxIds?: string[];
+    issuer?: {
+      account?: string;
+      type?: string;
+    };
+  }>(),
+  nextPendingInvoiceItemInvoice: timestamp("next_pending_invoice_item_invoice"),
+  pauseCollection: jsonb("pause_collection").$type<{
+    behavior?: string;
+    resumesAt?: number;
+  }>(),
+  paymentSettings: jsonb("payment_settings").$type<{
+    paymentMethodOptions?: Record<string, unknown>;
+    paymentMethodTypes?: string[];
+    saveDefaultPaymentMethod?: string;
+  }>(),
+  pendingInvoiceItemInterval: jsonb("pending_invoice_item_interval").$type<{
+    interval?: string;
+    intervalCount?: number;
+  }>(),
+  presentmentDetails: jsonb("presentment_details").$type<Record<string, unknown>>(),
+  schedule: text("schedule"),
+  startDate: timestamp("start_date").notNull(),
+  testClock: text("test_clock"),
+  trialSettings: jsonb("trial_settings").$type<{
+    endBehavior?: {
+      missingPaymentMethod?: string;
+    };
+  }>(),
   livemode: boolean("livemode").default(false).notNull(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),

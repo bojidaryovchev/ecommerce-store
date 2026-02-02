@@ -31,15 +31,18 @@ export const customers = pgTable("customer", {
       country?: string;
     };
   }>(),
-  tax: jsonb("tax").$type<{
-    automaticTax?: string;
-    ipAddress?: string;
-    location?: {
-      country?: string;
-      state?: string;
-      source?: string;
-    };
-  }>(),
+  tax: jsonb("tax")
+    .$type<{
+      automaticTax?: string;
+      ipAddress?: string;
+      location?: {
+        country?: string;
+        state?: string;
+        source?: string;
+      };
+    }>()
+    .notNull()
+    .default({}),
   metadata: jsonb("metadata").$type<Record<string, string>>(),
   balance: integer("balance").default(0),
   currency: text("currency"),
@@ -86,6 +89,16 @@ export const customers = pgTable("customer", {
   }>(),
   taxExempt: customerTaxExemptEnum("tax_exempt").default("none"),
   testClockId: text("test_clock_id"),
+  // Connect Platform fields
+  application: text("application"),
+  applicationFeePercent: text("application_fee_percent"),
+  onBehalfOf: text("on_behalf_of"),
+  // Multi-party fields
+  accountCountry: text("account_country"),
+  accountName: text("account_name"),
+  // Additional fields
+  defaultTaxRates: text("default_tax_rates").array(),
+  taxIds: text("tax_ids").array(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

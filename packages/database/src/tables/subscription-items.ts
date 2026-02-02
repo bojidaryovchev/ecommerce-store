@@ -7,7 +7,7 @@ export const subscriptionItems = pgTable("subscription_item", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   stripeSubscriptionItemId: text("stripe_subscription_item_id").unique().notNull(),
-  object: text("object").default("subscription_item"),
+  object: text("object").default("subscription_item").notNull(),
   subscriptionId: text("subscription_id")
     .notNull()
     .references(() => subscriptions.id, { onDelete: "cascade" }),

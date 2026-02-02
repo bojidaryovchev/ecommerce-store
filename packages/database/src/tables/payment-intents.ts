@@ -80,6 +80,25 @@ export const paymentIntents = pgTable("payment_intent", {
   paymentMethodTypes: text("payment_method_types").array(),
   paymentMethodOptions: jsonb("payment_method_options").$type<Record<string, unknown>>(),
   processing: jsonb("processing").$type<Record<string, unknown>>(),
+  // Connect Platform fields
+  application: text("application"),
+  applicationFeeAmount: integer("application_fee_amount"),
+  onBehalfOf: text("on_behalf_of"),
+  transferData: jsonb("transfer_data").$type<{
+    amount?: number;
+    destination?: string;
+  }>(),
+  transferGroup: text("transfer_group"),
+  // Additional fields
+  review: text("review"),
+  excludedPaymentMethodTypes: text("excluded_payment_method_types").array(),
+  hooks: jsonb("hooks").$type<Record<string, unknown>>(),
+  paymentDetails: jsonb("payment_details").$type<Record<string, unknown>>(),
+  paymentMethodConfigurationDetails: jsonb("payment_method_configuration_details").$type<{
+    id?: string;
+    parent?: string;
+  }>(),
+  presentmentDetails: jsonb("presentment_details").$type<Record<string, unknown>>(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

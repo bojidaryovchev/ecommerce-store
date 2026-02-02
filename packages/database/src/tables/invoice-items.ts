@@ -42,6 +42,19 @@ export const invoiceItems = pgTable("invoice_item", {
   discounts: text("discounts").array(),
   livemode: boolean("livemode").default(false).notNull(),
   taxRates: text("tax_rates").array(),
+  // Missing fields
+  netAmount: integer("net_amount"),
+  parent: jsonb("parent").$type<{
+    id?: string;
+    object?: string;
+  }>(),
+  prorationDetails: jsonb("proration_details").$type<{
+    creditedItems?: {
+      invoice?: string;
+      invoiceLineItems?: string[];
+    };
+  }>(),
+  testClock: text("test_clock"),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

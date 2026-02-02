@@ -100,6 +100,20 @@ export const charges = pgTable("charge", {
   radarOptions: jsonb("radar_options").$type<{
     session?: string;
   }>(),
+  // Connect Platform fields
+  application: text("application"),
+  applicationFee: text("application_fee"),
+  applicationFeeAmount: integer("application_fee_amount"),
+  onBehalfOf: text("on_behalf_of"),
+  sourceTransfer: text("source_transfer"),
+  transfer: text("transfer"),
+  transferData: jsonb("transfer_data").$type<{
+    amount?: number;
+    destination?: string;
+  }>(),
+  transferGroup: text("transfer_group"),
+  // Additional field
+  review: text("review"),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

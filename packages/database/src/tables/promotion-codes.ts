@@ -1,6 +1,6 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { coupons } from "./coupons";
-import { users } from "./users";
+import { customers } from "./customers";
 
 export const promotionCodes = pgTable("promotion_code", {
   id: text("id")
@@ -21,7 +21,7 @@ export const promotionCodes = pgTable("promotion_code", {
     minimumAmount?: number;
     minimumAmountCurrency?: string;
   }>(),
-  customerId: text("customer_id").references(() => users.id, {
+  customerId: text("customer_id").references(() => customers.id, {
     onDelete: "set null",
   }),
   metadata: jsonb("metadata").$type<Record<string, string>>(),

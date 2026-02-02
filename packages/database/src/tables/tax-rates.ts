@@ -17,6 +17,11 @@ export const taxRates = pgTable("tax_rate", {
   state: text("state"),
   taxType: text("tax_type"),
   effectivePercentage: numeric("effective_percentage", { precision: 10, scale: 4 }),
+  flatAmount: jsonb("flat_amount").$type<{
+    amount?: number;
+    currency?: string;
+  }>(),
+  rateType: text("rate_type"),
   livemode: boolean("livemode").default(false).notNull(),
   jurisdictionLevel: text("jurisdiction_level"),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),

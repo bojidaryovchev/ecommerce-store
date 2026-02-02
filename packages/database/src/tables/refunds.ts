@@ -26,6 +26,10 @@ export const refunds = pgTable("refund", {
   nextAction: jsonb("next_action").$type<Record<string, unknown>>(),
   destinationDetails: jsonb("destination_details").$type<Record<string, unknown>>(),
   metadata: jsonb("metadata").$type<Record<string, string>>(),
+  // Missing fields
+  pendingReason: text("pending_reason"),
+  sourceTransferReversal: text("source_transfer_reversal"),
+  transferReversal: text("transfer_reversal"),
   livemode: boolean("livemode").default(false).notNull(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),

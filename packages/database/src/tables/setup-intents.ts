@@ -60,6 +60,7 @@ export const setupIntents = pgTable("setup_intent", {
   customerAccount: text("customer_account"),
   flowDirections: text("flow_directions").array(),
   attachToSelf: boolean("attach_to_self").default(false),
+  hooks: jsonb("hooks").$type<Record<string, unknown>>(),
   livemode: boolean("livemode").default(false).notNull(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),

@@ -39,6 +39,32 @@ export const invoiceLineItems = pgTable("invoice_line_item", {
   discounts: text("discounts").array(),
   taxRates: text("tax_rates").array(),
   type: invoiceLineItemTypeEnum("type"),
+  // Missing fields
+  discountAmounts: jsonb("discount_amounts").$type<
+    Array<{
+      amount?: number;
+      discount?: string;
+    }>
+  >(),
+  livemode: boolean("livemode").default(false).notNull(),
+  parent: jsonb("parent").$type<{
+    id?: string;
+    object?: string;
+  }>(),
+  pretaxCreditAmounts: jsonb("pretax_credit_amounts").$type<
+    Array<{
+      amount?: number;
+      creditNote?: string;
+    }>
+  >(),
+  subtotal: integer("subtotal"),
+  taxes: jsonb("taxes").$type<
+    Array<{
+      amount?: number;
+      rate?: string;
+      taxabilityReason?: string;
+    }>
+  >(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
