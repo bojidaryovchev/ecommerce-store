@@ -7,6 +7,7 @@ export const prices = pgTable("price", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   stripePriceId: text("stripe_price_id").unique(),
+  object: text("object").default("price"),
   productId: text("product_id")
     .notNull()
     .references(() => products.id, { onDelete: "cascade" }),
@@ -41,6 +42,28 @@ export const prices = pgTable("price", {
   lookupKey: text("lookup_key"),
   nickname: text("nickname"),
   metadata: jsonb("metadata").$type<Record<string, string>>(),
+  currencyOptions: jsonb("currency_options").$type<
+    Record<
+      string,
+      {
+        unitAmount?: number;
+        unitAmountDecimal?: string;
+        taxBehavior?: string;
+        tiers?: Array<{
+          upTo?: number | "inf";
+          unitAmount?: number;
+          flatAmount?: number;
+        }>;
+      }
+    >
+  >(),
+  customUnitAmount: jsonb("custom_unit_amount").$type<{
+    maximum?: number;
+    minimum?: number;
+    preset?: number;
+  }>(),
+  livemode: boolean("livemode").default(false).notNull(),
+  created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });

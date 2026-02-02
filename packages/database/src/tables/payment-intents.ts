@@ -1,0 +1,78 @@
+import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  paymentIntentCaptureMethodEnum,
+  paymentIntentConfirmationMethodEnum,
+  paymentIntentSetupFutureUsageEnum,
+  paymentIntentStatusEnum,
+} from "../enums";
+import { customers } from "./customers";
+
+export const paymentIntents = pgTable("payment_intent", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  stripePaymentIntentId: text("stripe_payment_intent_id").unique().notNull(),
+  object: text("object").default("payment_intent"),
+  amount: integer("amount").notNull(),
+  amountCapturable: integer("amount_capturable").default(0),
+  amountReceived: integer("amount_received").default(0),
+  automaticPaymentMethods: jsonb("automatic_payment_methods").$type<{
+    allowRedirects?: string;
+    enabled?: boolean;
+  }>(),
+  currency: text("currency").notNull(),
+  customerId: text("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  description: text("description"),
+  latestChargeId: text("latest_charge_id"),
+  metadata: jsonb("metadata").$type<Record<string, string>>(),
+  paymentMethodId: text("payment_method_id"),
+  receiptEmail: text("receipt_email"),
+  shipping: jsonb("shipping").$type<{
+    name?: string;
+    phone?: string;
+    address?: {
+      line1?: string;
+      line2?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country?: string;
+    };
+    carrier?: string;
+    trackingNumber?: string;
+  }>(),
+  status: paymentIntentStatusEnum("status").notNull(),
+  setupFutureUsage: paymentIntentSetupFutureUsageEnum("setup_future_usage"),
+  captureMethod: paymentIntentCaptureMethodEnum("capture_method").default("automatic"),
+  confirmationMethod: paymentIntentConfirmationMethodEnum("confirmation_method").default("automatic"),
+  clientSecret: text("client_secret"),
+  customerAccount: text("customer_account"),
+  lastPaymentError: jsonb("last_payment_error").$type<{
+    charge?: string;
+    code?: string;
+    declineCode?: string;
+    docUrl?: string;
+    message?: string;
+    param?: string;
+    paymentMethod?: {
+      id?: string;
+      type?: string;
+    };
+    type?: string;
+  }>(),
+  nextAction: jsonb("next_action").$type<{
+    type?: string;
+    redirectToUrl?: {
+      returnUrl?: string;
+      url?: string;
+    };
+    useStripeSdk?: Record<string, unknown>;
+  }>(),
+  livemode: boolean("livemode").default(false).notNull(),
+  statementDescriptor: text("statement_descriptor"),
+  statementDescriptorSuffix: text("statement_descriptor_suffix"),
+  invoiceId: text("invoice_id"),
+  created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+});

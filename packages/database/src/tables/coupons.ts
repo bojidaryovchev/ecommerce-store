@@ -6,6 +6,7 @@ export const coupons = pgTable("coupon", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   stripeCouponId: text("stripe_coupon_id").unique(),
+  object: text("object").default("coupon"),
   percentOff: integer("percent_off"),
   amountOff: integer("amount_off"),
   currency: text("currency"),
@@ -20,6 +21,15 @@ export const coupons = pgTable("coupon", {
   valid: boolean("valid").default(true).notNull(),
   name: text("name"),
   metadata: jsonb("metadata").$type<Record<string, string>>(),
+  livemode: boolean("livemode").default(false).notNull(),
+  currencyOptions: jsonb("currency_options").$type<
+    Record<
+      string,
+      {
+        amountOff?: number;
+      }
+    >
+  >(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });

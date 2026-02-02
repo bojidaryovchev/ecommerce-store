@@ -6,6 +6,7 @@ export const shippingRates = pgTable("shipping_rate", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   stripeShippingRateId: text("stripe_shipping_rate_id").unique(),
+  object: text("object").default("shipping_rate"),
   displayName: text("display_name").notNull(),
   type: text("type").notNull().default("fixed_amount"),
   fixedAmount: jsonb("fixed_amount")
@@ -22,6 +23,8 @@ export const shippingRates = pgTable("shipping_rate", {
   }>(),
   active: boolean("active").default(true).notNull(),
   metadata: jsonb("metadata").$type<Record<string, string>>(),
+  livemode: boolean("livemode").default(false).notNull(),
+  created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });

@@ -7,6 +7,7 @@ export const promotionCodes = pgTable("promotion_code", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   stripePromotionCodeId: text("stripe_promotion_code_id").unique(),
+  object: text("object").default("promotion_code"),
   code: text("code").notNull().unique(),
   couponId: text("coupon_id")
     .notNull()
@@ -24,6 +25,9 @@ export const promotionCodes = pgTable("promotion_code", {
     onDelete: "set null",
   }),
   metadata: jsonb("metadata").$type<Record<string, string>>(),
+  livemode: boolean("livemode").default(false).notNull(),
+  customerAccount: text("customer_account"),
+  created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });
