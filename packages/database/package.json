@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./schema": "./src/schema.ts"
+    "./schema": "./src/schema.ts",
+    "./validators": "./src/validators.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
@@ -19,7 +20,9 @@
   "dependencies": {
     "dotenv": "17.2.3",
     "drizzle-orm": "0.45.1",
-    "postgres": "3.4.8"
+    "drizzle-zod": "0.8.3",
+    "postgres": "3.4.8",
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "@types/node": "25.2.0",
