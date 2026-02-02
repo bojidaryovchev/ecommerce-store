@@ -19,7 +19,7 @@ new aws.s3.BucketPublicAccessBlock("uploads-public-access-block", {
 });
 
 // CORS configuration for the bucket
-new aws.s3.BucketCorsConfigurationV2("uploads-cors", {
+new aws.s3.BucketCorsConfiguration("uploads-cors", {
   bucket: uploadsBucket.id,
   corsRules: [
     {
