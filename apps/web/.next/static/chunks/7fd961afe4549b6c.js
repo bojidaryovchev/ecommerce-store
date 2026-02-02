@@ -1,1 +1,0 @@
-(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,37276,t=>{"use strict";var e=t.i(85390),i=t.i(35315);t.s(["default",0,()=>(0,e.jsx)(e.Fragment,{children:(0,e.jsx)("button",{type:"button",onClick:()=>(0,i.signOut)(),className:"flex items-center gap-2 text-sm",children:"Sign out"})})])}]);
