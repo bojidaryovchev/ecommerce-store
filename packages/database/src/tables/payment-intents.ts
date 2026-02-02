@@ -72,6 +72,14 @@ export const paymentIntents = pgTable("payment_intent", {
   statementDescriptor: text("statement_descriptor"),
   statementDescriptorSuffix: text("statement_descriptor_suffix"),
   invoiceId: text("invoice_id"),
+  canceledAt: timestamp("canceled_at", { mode: "date" }),
+  cancellationReason: text("cancellation_reason"),
+  amountDetails: jsonb("amount_details").$type<{
+    tip?: { amount?: number };
+  }>(),
+  paymentMethodTypes: text("payment_method_types").array(),
+  paymentMethodOptions: jsonb("payment_method_options").$type<Record<string, unknown>>(),
+  processing: jsonb("processing").$type<Record<string, unknown>>(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

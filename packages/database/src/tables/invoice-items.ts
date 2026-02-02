@@ -22,6 +22,18 @@ export const invoiceItems = pgTable("invoice_item", {
     start?: number;
     end?: number;
   }>(),
+  pricing: jsonb("pricing").$type<{
+    price?: {
+      id?: string;
+      product?: string;
+      currency?: string;
+      unitAmount?: number;
+      recurring?: {
+        interval?: string;
+        intervalCount?: number;
+      };
+    };
+  }>(),
   quantity: integer("quantity").default(1),
   proration: boolean("proration").default(false),
   date: timestamp("date", { mode: "date" }),

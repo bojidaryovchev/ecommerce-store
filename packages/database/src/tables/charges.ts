@@ -82,6 +82,24 @@ export const charges = pgTable("charge", {
   }>(),
   livemode: boolean("livemode").default(false).notNull(),
   receiptUrl: text("receipt_url"),
+  receiptNumber: text("receipt_number"),
+  calculatedStatementDescriptor: text("calculated_statement_descriptor"),
+  failureBalanceTransactionId: text("failure_balance_transaction_id"),
+  fraudDetails: jsonb("fraud_details").$type<{
+    stripeReport?: string;
+    userReport?: string;
+  }>(),
+  paymentMethod: text("payment_method"),
+  metadata: jsonb("metadata").$type<Record<string, string>>(),
+  refunds: jsonb("refunds").$type<{
+    data?: Array<{ id?: string; amount?: number }>;
+    hasMore?: boolean;
+    totalCount?: number;
+  }>(),
+  presentmentDetails: jsonb("presentment_details").$type<Record<string, unknown>>(),
+  radarOptions: jsonb("radar_options").$type<{
+    session?: string;
+  }>(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

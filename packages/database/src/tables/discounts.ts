@@ -18,5 +18,6 @@ export const discounts = pgTable("discount", {
   subscriptionId: text("subscription_id").references(() => subscriptions.id, { onDelete: "cascade" }),
   start: timestamp("start", { mode: "date" }).notNull(),
   end: timestamp("end", { mode: "date" }),
+  created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
