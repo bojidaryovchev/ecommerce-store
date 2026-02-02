@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@plugin "../../hero.ts";
+@config "../../hero.ts";
+@source "../../node_modules/@heroui/react/dist/**/*.{js,ts,jsx,tsx}";
 
 @theme {
   --color-google-text-gray: #3c4043;

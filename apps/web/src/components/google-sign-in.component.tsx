@@ -1,16 +1,8 @@
-import { signIn } from "@/lib/auth";
+import { signInWithGoogle } from "@/actions/auth.action";
 
 const GoogleSignIn: React.FC = () => {
   return (
-    <form
-      action={async () => {
-        "use server";
-        await signIn("google", {
-          redirectTo: "/",
-        });
-      }}
-      className="w-full"
-    >
+    <form action={signInWithGoogle} className="w-full">
       <button
         aria-label="Sign in with Google"
         type="submit"

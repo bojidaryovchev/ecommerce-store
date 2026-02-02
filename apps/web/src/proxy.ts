@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { UserRole } from "@ecommerce/database";
+import { UserRole } from "@ecommerce/database/schema";
 import { NextAuthRequest } from "next-auth";
 import { NextResponse } from "next/server";
 import { setSecurityHeaders } from "./lib/headers";

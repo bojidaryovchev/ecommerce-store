@@ -14,7 +14,7 @@
     "build": "pnpm --filter @ecommerce/web build",
     "type-check": "pnpm -r --parallel type-check",
     "lint": "eslint .",
-    "prettier": "prettier --write \"**/*.{js,mjs,ts,tsx,css,md,json}\"",
+    "format": "prettier --write \"**/*.{js,mjs,ts,tsx,css,md,json}\"",
     "db:generate": "pnpm --filter @ecommerce/database db:generate",
     "db:push": "pnpm --filter @ecommerce/database db:push",
     "db:migrate": "pnpm --filter @ecommerce/database db:migrate",
