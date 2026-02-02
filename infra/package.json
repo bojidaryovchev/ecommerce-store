@@ -9,8 +9,8 @@
     "destroy": "pulumi destroy"
   },
   "dependencies": {
-    "@pulumi/aws": "6.72.0",
-    "@pulumi/pulumi": "3.156.0"
+    "@pulumi/aws": "7.16.0",
+    "@pulumi/pulumi": "3.218.0"
   },
   "devDependencies": {
     "@types/node": "25.2.0",

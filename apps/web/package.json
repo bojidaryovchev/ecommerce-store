@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@auth/drizzle-adapter": "^1.7.4",
+    "@auth/drizzle-adapter": "1.11.1",
     "@ecommerce/database": "workspace:*",
     "@hookform/resolvers": "5.2.2",
     "motion": "12.30.0",
