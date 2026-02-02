@@ -10,16 +10,6 @@ services:
       - data:/data/db
       - config:/data/configdb
 
-  stripe-cli:
-    image: stripe/stripe-cli:latest
-    container_name: ecommerce-store-stripe-cli
-    command: listen --forward-to host.docker.internal:3000/api/webhooks/stripe --skip-verify
-    environment:
-      - STRIPE_API_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_DEVICE_NAME=devsrc-docker
-    network_mode: host
-    restart: unless-stopped
-
 volumes:
   data:
   config:

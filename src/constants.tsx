@@ -1,17 +1,12 @@
 // Support email
-export const CONTACT_EMAIL = "support@pinref.com";
+export const CONTACT_EMAIL = "support@example.com";
 
 // Site metadata
-export const SITE_TITLE = "Next.js SST Starter";
-export const SITE_DESCRIPTION = "A modern Next.js starter with SST, AWS SES, and TypeScript";
+export const SITE_TITLE = "Ecommerce Store";
+export const SITE_DESCRIPTION = "A modern ecommerce store built with Next.js";
 
 // Toaster config
 export const TOASTER_DURATION_MS = 6000;
-
-// Product defaults
-export const DEFAULT_LOW_STOCK_THRESHOLD = 10;
-export const DEFAULT_PRODUCT_SKU_PREFIX = "PRD";
-export const DEFAULT_CURRENCY = "USD";
 
 // Security headers
 export const SECURITY_HEADERS = {

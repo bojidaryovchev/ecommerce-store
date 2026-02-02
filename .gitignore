@@ -40,10 +40,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# SST
-.sst
-
-# open-next
-.open-next
-
 /generated/prisma
