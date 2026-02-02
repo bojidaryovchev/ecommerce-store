@@ -1,13 +1,4 @@
-import {
-  boolean,
-  integer,
-  pgEnum,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { boolean, integer, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 // Custom enum for user roles
 export const userRoleEnum = pgEnum("user_role", ["USER", "ADMIN", "SUPER_ADMIN"]);
@@ -46,7 +37,7 @@ export const accounts = pgTable(
     primaryKey({
       columns: [account.provider, account.providerAccountId],
     }),
-  ]
+  ],
 );
 
 // Sessions table - for database session strategy (optional)
@@ -70,7 +61,7 @@ export const verificationTokens = pgTable(
     primaryKey({
       columns: [verificationToken.identifier, verificationToken.token],
     }),
-  ]
+  ],
 );
 
 // Authenticators table - for WebAuthn (optional)
@@ -92,11 +83,19 @@ export const authenticators = pgTable(
     primaryKey({
       columns: [authenticator.userId, authenticator.credentialID],
     }),
-  ]
+  ],
 );
 
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+// Enum type exports
+export type UserRole = (typeof userRoleEnum.enumValues)[number];
+export const UserRole = {
+  USER: "USER",
+  ADMIN: "ADMIN",
+  SUPER_ADMIN: "SUPER_ADMIN",
+} as const;
 export type Account = typeof accounts.$inferSelect;
 export type Session = typeof sessions.$inferSelect;

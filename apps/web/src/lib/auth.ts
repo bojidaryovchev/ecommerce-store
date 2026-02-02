@@ -1,5 +1,5 @@
-import { db, accounts, sessions, users, verificationTokens } from "@ecommerce/database";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { accounts, db, sessions, users, verificationTokens } from "@ecommerce/database";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
@@ -34,7 +34,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Initial sign in
       if (user) {
         token.id = user.id;
-        // @ts-expect-error - role is a custom field
         token.role = user.role;
       }
       // Add access_token to the token if available

@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@ecommerce/database";
 import { NextAuthRequest } from "next-auth";
 import { NextResponse } from "next/server";
 import { setSecurityHeaders } from "./lib/headers";
@@ -25,8 +25,8 @@ const protectAdminRoutes = (req: NextAuthRequest, pathname: string) => {
     }
 
     // Check if user has admin role
-    const userRoles = session.user.roles as UserRole[];
-    const isAdmin = userRoles.includes(UserRole.ADMIN) || userRoles.includes(UserRole.SUPER_ADMIN);
+    const userRole = session.user.role;
+    const isAdmin = userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
 
     if (!isAdmin) {
       return NextResponse.redirect(new URL("/admin/unauthorized", req.url));
