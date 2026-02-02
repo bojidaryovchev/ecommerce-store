@@ -10,7 +10,7 @@ const uploadsBucket = new aws.s3.Bucket("uploads", {
 });
 
 // Enable public access block settings (secure by default)
-const uploadsBucketPublicAccessBlock = new aws.s3.BucketPublicAccessBlock("uploads-public-access-block", {
+new aws.s3.BucketPublicAccessBlock("uploads-public-access-block", {
   bucket: uploadsBucket.id,
   blockPublicAcls: true,
   blockPublicPolicy: true,
@@ -19,7 +19,7 @@ const uploadsBucketPublicAccessBlock = new aws.s3.BucketPublicAccessBlock("uploa
 });
 
 // CORS configuration for the bucket
-const uploadsBucketCors = new aws.s3.BucketCorsConfigurationV2("uploads-cors", {
+new aws.s3.BucketCorsConfigurationV2("uploads-cors", {
   bucket: uploadsBucket.id,
   corsRules: [
     {
@@ -53,7 +53,7 @@ const uploadsPolicy = new aws.iam.Policy("uploads-policy", {
 });
 
 // Attach policy to user
-const uploadsPolicyAttachment = new aws.iam.UserPolicyAttachment("uploads-policy-attachment", {
+new aws.iam.UserPolicyAttachment("uploads-policy-attachment", {
   user: uploadsUser.name,
   policyArn: uploadsPolicy.arn,
 });
