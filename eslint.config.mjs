@@ -5,5 +5,5 @@ import tseslint from "typescript-eslint";
 export default defineConfig([
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  globalIgnores(["node_modules/**", "**/dist/**", "scripts/**"]),
+  globalIgnores(["node_modules/**", "**/dist/**", "**/.next/**", "scripts/**"]),
 ]);
