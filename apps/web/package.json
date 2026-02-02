@@ -12,7 +12,11 @@
   "dependencies": {
     "@auth/drizzle-adapter": "1.11.1",
     "@ecommerce/database": "workspace:*",
+    "@heroui/react": "2.8.8",
     "@hookform/resolvers": "5.2.2",
+    "@stripe/stripe-js": "8.7.0",
+    "drizzle-orm": "0.45.1",
+    "framer-motion": "12.30.0",
     "motion": "12.30.0",
     "next": "16.1.6",
     "next-auth": "5.0.0-beta.30",
@@ -20,6 +24,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "7.71.1",
     "react-hot-toast": "2.6.0",
+    "stripe": "20.3.0",
     "swiper": "12.1.0",
     "swr": "2.4.0",
     "zod": "4.3.6"

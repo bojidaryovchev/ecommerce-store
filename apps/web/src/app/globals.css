@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "../../hero.ts";
 
 @theme {
   --color-google-text-gray: #3c4043;

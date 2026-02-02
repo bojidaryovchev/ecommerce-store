@@ -8,8 +8,8 @@ const poppins = Poppins({
 
 const HtmlProviders: React.FC<PropsWithChildren> = ({ children }) => {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${poppins.className} antialiased`}>{children}</body>
+    <html lang="en" className="light" suppressHydrationWarning>
+      <body className={`${poppins.className} bg-background text-foreground antialiased`}>{children}</body>
     </html>
   );
 };
