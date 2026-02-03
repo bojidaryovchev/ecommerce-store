@@ -59,6 +59,9 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                 <Link href="/" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
                   Home
                 </Link>
+                <Link href="/products" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+                  Products
+                </Link>
                 <Separator />
                 <Link href="/categories" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
                   All Categories
@@ -95,6 +98,9 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
         <nav className="hidden items-center gap-6 sm:flex">
           <Link href="/" className="hover:text-primary text-sm font-medium transition-colors">
             Home
+          </Link>
+          <Link href="/products" className="hover:text-primary text-sm font-medium transition-colors">
+            Products
           </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

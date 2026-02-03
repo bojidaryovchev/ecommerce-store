@@ -5,11 +5,28 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { cache } from "react";
 
 /**
- * Get all active products
+ * Get all active products (for storefront)
  */
 export const getProducts = cache(async () => {
   const products = await db.query.products.findMany({
     where: eq(schema.products.active, true),
+    orderBy: [desc(schema.products.createdAt)],
+    with: {
+      prices: {
+        where: eq(schema.prices.active, true),
+      },
+      category: true,
+    },
+  });
+
+  return products;
+});
+
+/**
+ * Get all products including inactive (for admin)
+ */
+export const getAllProducts = cache(async () => {
+  const products = await db.query.products.findMany({
     orderBy: [desc(schema.products.createdAt)],
     with: {
       prices: {
