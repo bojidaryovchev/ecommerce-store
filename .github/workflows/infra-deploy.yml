@@ -55,6 +55,9 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Login to Pulumi S3 Backend
+        run: pulumi login ${{ secrets.PULUMI_BACKEND_URL }}
+
       - name: Pulumi Up (Dev)
         uses: pulumi/actions@v5
         with:
@@ -63,7 +66,6 @@ jobs:
           work-dir: infra
         env:
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
-          PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
 
   deploy-prod:
     name: Deploy to Prod
@@ -94,6 +96,9 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Login to Pulumi S3 Backend
+        run: pulumi login ${{ secrets.PULUMI_BACKEND_URL }}
+
       - name: Pulumi Up (Prod)
         uses: pulumi/actions@v5
         with:
@@ -102,4 +107,3 @@ jobs:
           work-dir: infra
         env:
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
-          PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}

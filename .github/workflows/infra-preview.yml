@@ -43,6 +43,9 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Login to Pulumi S3 Backend
+        run: pulumi login ${{ secrets.PULUMI_BACKEND_URL }}
+
       - name: Pulumi Preview
         uses: pulumi/actions@v5
         with:
@@ -53,4 +56,3 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
-          PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
