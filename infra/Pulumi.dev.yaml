@@ -1,3 +1,5 @@
 config:
   aws:region: eu-central-1
+  ecommerce-infra:uploadCleanupSecret:
+    secure: v1:5qNRNw7irR31Z9so:3/B/O76xAyrE6qxa/G3sfOiulnZ6P8LA1NSblNL4ldN1/xeK
 encryptionsalt: v1:K2ope7YzuyY=:v1:gr9IBJqn7HkuRfk7:Ty44gWzDCTP0AQkMe2ghuY+Rsreu7Q==
