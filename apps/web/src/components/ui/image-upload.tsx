@@ -115,7 +115,21 @@ const ImageUpload: React.FC<Props> = ({ value, onChange, folder = "categories", 
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    // Delete from S3 if there's a current value
+    if (value) {
+      try {
+        await fetch("/api/upload/delete", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ publicUrl: value }),
+        });
+      } catch (error) {
+        console.error("Failed to delete upload:", error);
+        // Continue with removal even if delete fails
+      }
+    }
+
     onChange(null);
     if (inputRef.current) {
       inputRef.current.value = "";

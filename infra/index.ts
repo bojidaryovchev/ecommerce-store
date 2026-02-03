@@ -88,8 +88,80 @@ const uploadsAccessKey = new aws.iam.AccessKey("uploads-access-key", {
   user: uploadsUser.name,
 });
 
+// ============================================================================
+// UPLOAD CLEANUP LAMBDA
+// ============================================================================
+
+// Get config values
+const config = new pulumi.Config();
+const appUrl = config.get("appUrl") ?? (stack === "prod" ? "https://yourdomain.com" : "http://localhost:3000");
+const cleanupSecret = config.requireSecret("uploadCleanupSecret");
+
+// IAM role for Lambda
+const cleanupLambdaRole = new aws.iam.Role("cleanup-lambda-role", {
+  name: `ecommerce-cleanup-lambda-${stack}`,
+  assumeRolePolicy: JSON.stringify({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Action: "sts:AssumeRole",
+        Principal: { Service: "lambda.amazonaws.com" },
+        Effect: "Allow",
+      },
+    ],
+  }),
+});
+
+// Attach basic Lambda execution policy
+new aws.iam.RolePolicyAttachment("cleanup-lambda-basic-execution", {
+  role: cleanupLambdaRole.name,
+  policyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+});
+
+// Lambda function for cleanup
+const cleanupLambda = new aws.lambda.Function("cleanup-lambda", {
+  name: `ecommerce-upload-cleanup-${stack}`,
+  runtime: "nodejs20.x",
+  handler: "upload-cleanup.handler",
+  role: cleanupLambdaRole.arn,
+  timeout: 60, // 1 minute timeout
+  memorySize: 256,
+  environment: {
+    variables: {
+      APP_URL: appUrl,
+      CLEANUP_SECRET: cleanupSecret,
+    },
+  },
+  code: new pulumi.asset.AssetArchive({
+    "upload-cleanup.mjs": new pulumi.asset.FileAsset("./lambdas/upload-cleanup.mjs"),
+  }),
+});
+
+// EventBridge rule to trigger cleanup daily at 3 AM UTC
+const cleanupSchedule = new aws.cloudwatch.EventRule("cleanup-schedule", {
+  name: `ecommerce-upload-cleanup-${stack}`,
+  description: "Trigger upload cleanup Lambda daily",
+  scheduleExpression: "cron(0 3 * * ? *)", // Every day at 3 AM UTC
+});
+
+// Permission for EventBridge to invoke Lambda
+new aws.lambda.Permission("cleanup-lambda-permission", {
+  action: "lambda:InvokeFunction",
+  function: cleanupLambda.name,
+  principal: "events.amazonaws.com",
+  sourceArn: cleanupSchedule.arn,
+});
+
+// EventBridge target to invoke Lambda
+new aws.cloudwatch.EventTarget("cleanup-target", {
+  rule: cleanupSchedule.name,
+  arn: cleanupLambda.arn,
+});
+
 // Exports
 export const bucketName = uploadsBucket.bucket;
 export const bucketArn = uploadsBucket.arn;
 export const accessKeyId = uploadsAccessKey.id;
 export const secretAccessKey = uploadsAccessKey.secret;
+export const cleanupLambdaArn = cleanupLambda.arn;
+export const cleanupScheduleArn = cleanupSchedule.arn;

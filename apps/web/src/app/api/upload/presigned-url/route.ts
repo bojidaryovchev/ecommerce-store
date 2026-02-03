@@ -1,4 +1,5 @@
 import { generateUploadKey, getS3ObjectUrl, getUploadPresignedUrl, S3_BUCKET_NAME } from "@/lib/s3";
+import { db, schema } from "@ecommerce/database";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -23,15 +24,26 @@ export async function POST(request: NextRequest) {
 
     // Generate unique key
     const key = generateUploadKey(folder, filename);
+    const publicUrl = getS3ObjectUrl(key);
 
     // Get presigned URL
     const uploadUrl = await getUploadPresignedUrl(key, contentType);
+
+    // Record the upload in the database as pending
+    await db.insert(schema.uploads).values({
+      key,
+      publicUrl,
+      filename,
+      contentType,
+      folder,
+      status: "pending",
+    });
 
     // Return the presigned URL and the final public URL
     return NextResponse.json({
       uploadUrl,
       key,
-      publicUrl: getS3ObjectUrl(key),
+      publicUrl,
     });
   } catch (error) {
     console.error("Error generating presigned URL:", error);

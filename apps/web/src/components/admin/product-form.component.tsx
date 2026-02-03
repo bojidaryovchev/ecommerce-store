@@ -76,7 +76,23 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
     }
   };
 
-  const handleRemoveImage = (index: number) => {
+  const handleRemoveImage = async (index: number) => {
+    const imageUrl = images[index];
+
+    // Delete from S3
+    if (imageUrl) {
+      try {
+        await fetch("/api/upload/delete", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ publicUrl: imageUrl }),
+        });
+      } catch (error) {
+        console.error("Failed to delete upload:", error);
+        // Continue with removal even if delete fails
+      }
+    }
+
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 

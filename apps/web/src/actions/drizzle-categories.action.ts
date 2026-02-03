@@ -5,6 +5,7 @@ import type { Category } from "@ecommerce/database";
 import { db, insertCategorySchema, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { linkUpload } from "./uploads.action";
 
 /**
  * Create a new category
@@ -16,6 +17,11 @@ export async function createCategory(
     const validated = insertCategorySchema.parse(data);
 
     const [category] = await db.insert(schema.categories).values(validated).returning();
+
+    // Link the uploaded image if present
+    if (category.image) {
+      await linkUpload(category.image, category.id, "category");
+    }
 
     revalidatePath("/categories");
     revalidatePath("/");
@@ -55,6 +61,11 @@ export async function updateCategory(
         success: false,
         error: "Category not found",
       };
+    }
+
+    // Link the uploaded image if present (handles new image on update)
+    if (data.image) {
+      await linkUpload(data.image, category.id, "category");
     }
 
     revalidatePath("/categories");

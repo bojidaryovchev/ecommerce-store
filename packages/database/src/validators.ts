@@ -146,6 +146,10 @@ export const selectReviewSchema = createSelectSchema(tables.reviews);
 export const insertWishlistSchema = createInsertSchema(tables.wishlists);
 export const selectWishlistSchema = createSelectSchema(tables.wishlists);
 
+export const insertUploadSchema = createInsertSchema(tables.uploads);
+export const selectUploadSchema = createSelectSchema(tables.uploads);
+export const updateUploadSchema = insertUploadSchema.partial().required({ id: true });
+
 // ============================================================================
 // AUTH SCHEMAS (Next-Auth)
 // ============================================================================

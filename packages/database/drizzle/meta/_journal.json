@@ -15,6 +15,13 @@
       "when": 1770082889623,
       "tag": "0001_thick_unus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770122984145,
+      "tag": "0002_pretty_mystique",
+      "breakpoints": true
     }
   ]
 }

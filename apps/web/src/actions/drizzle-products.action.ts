@@ -5,6 +5,7 @@ import type { Price, Product } from "@ecommerce/database";
 import { db, insertProductSchema, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { linkUploads } from "./uploads.action";
 
 /**
  * Create a new product
@@ -16,6 +17,11 @@ export async function createProduct(
     const validated = insertProductSchema.parse(data);
 
     const [product] = await db.insert(schema.products).values(validated).returning();
+
+    // Link the uploaded images if present
+    if (product.images && product.images.length > 0) {
+      await linkUploads(product.images, product.id, "product");
+    }
 
     revalidatePath("/products");
     revalidatePath("/admin/products");
@@ -56,6 +62,11 @@ export async function updateProduct(
         success: false,
         error: "Product not found",
       };
+    }
+
+    // Link the uploaded images if present (handles new images on update)
+    if (data.images && data.images.length > 0) {
+      await linkUploads(data.images, product.id, "product");
     }
 
     revalidatePath("/products");

@@ -32,5 +32,6 @@ export * from "./subscription-items";
 export * from "./subscriptions";
 export * from "./tax-ids";
 export * from "./tax-rates";
+export * from "./uploads";
 export * from "./users";
 export * from "./wishlists";
