@@ -61,7 +61,8 @@ const ImageUpload: React.FC<Props> = ({ value, onChange, folder = "categories", 
 
         const { uploadUrl, publicUrl } = (await presignedResponse.json()) as PresignedUrlResponse;
 
-        // Upload to S3
+        // Upload to S3 using presigned URL
+        // Note: Content-Type is already signed in the presigned URL
         const uploadResponse = await fetch(uploadUrl, {
           method: "PUT",
           body: file,
