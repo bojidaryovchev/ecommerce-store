@@ -10,7 +10,7 @@ export const TOASTER_DURATION_MS = 6000;
 
 // Security headers
 export const SECURITY_HEADERS = {
-  CSP: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self';",
+  CSP: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self';",
   HSTS: "max-age=31536000; includeSubDomains",
   X_FRAME_OPTIONS: "DENY",
   X_CONTENT_TYPE_OPTIONS: "nosniff",

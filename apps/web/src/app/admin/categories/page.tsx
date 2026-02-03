@@ -22,7 +22,7 @@ const TableSkeleton: React.FC = () => {
   return (
     <div className="space-y-3">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="bg-default-100 h-16 animate-pulse rounded" />
+        <div key={i} className="bg-muted h-16 animate-pulse rounded" />
       ))}
     </div>
   );

@@ -41,7 +41,7 @@ const FormSkeleton: React.FC = () => {
   return (
     <div className="max-w-xl space-y-4">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="bg-default-100 h-12 animate-pulse rounded" />
+        <div key={i} className="bg-muted h-12 animate-pulse rounded" />
       ))}
     </div>
   );

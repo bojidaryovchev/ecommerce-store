@@ -1,25 +1,23 @@
 "use client";
 
-import type { Category } from "@ecommerce/database/schema";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
-  Avatar,
-  Button,
-  Dropdown,
-  DropdownItem,
   DropdownMenu,
-  DropdownTrigger,
-  Navbar as HeroNavbar,
-  Link,
-  NavbarBrand,
-  NavbarContent,
-  NavbarItem,
-  NavbarMenu,
-  NavbarMenuItem,
-  NavbarMenuToggle,
-} from "@heroui/react";
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import type { Category } from "@ecommerce/database/schema";
+import { Menu } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
-import React from "react";
+import Link from "next/link";
+import React, { useState } from "react";
 
 interface Props {
   categories: Category[];
@@ -27,124 +25,133 @@ interface Props {
 }
 
 const Navbar: React.FC<Props> = ({ categories, session }) => {
-  const dropdownItems = [
-    <DropdownItem key="all" href="/categories">
-      All Categories
-    </DropdownItem>,
-    ...categories.map((category) => (
-      <DropdownItem key={category.id} href={`/categories/${category.slug}`}>
-        {category.name}
-      </DropdownItem>
-    )),
-  ];
-
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
 
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
-    <HeroNavbar maxWidth="xl" isBordered>
-      <NavbarContent>
-        <NavbarMenuToggle className="sm:hidden" />
-        <NavbarBrand>
-          <Link href="/" className="font-bold text-inherit">
+    <header className="border-border bg-background sticky top-0 z-50 w-full border-b">
+      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+        {/* Left side - Logo and Mobile menu toggle */}
+        <div className="flex items-center gap-4">
+          {/* Mobile menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild className="sm:hidden">
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <SheetHeader>
+                <SheetTitle>Navigation</SheetTitle>
+              </SheetHeader>
+              <nav className="mt-6 flex flex-col gap-4">
+                <Link href="/" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+                  Home
+                </Link>
+                <Separator />
+                <Link href="/categories" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+                  All Categories
+                </Link>
+                {categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    href={`/categories/${category.slug}`}
+                    className="text-muted-foreground pl-4"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+                {session && isAdmin && (
+                  <>
+                    <Separator />
+                    <Link href="/admin" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+                      Admin Panel
+                    </Link>
+                  </>
+                )}
+              </nav>
+            </SheetContent>
+          </Sheet>
+
+          {/* Logo */}
+          <Link href="/" className="text-xl font-bold">
             Ecommerce Store
           </Link>
-        </NavbarBrand>
-      </NavbarContent>
+        </div>
 
-      <NavbarContent className="hidden gap-4 sm:flex" justify="center">
-        <NavbarItem>
-          <Link color="foreground" href="/">
+        {/* Center - Desktop navigation */}
+        <nav className="hidden items-center gap-6 sm:flex">
+          <Link href="/" className="hover:text-primary text-sm font-medium transition-colors">
             Home
           </Link>
-        </NavbarItem>
-        <Dropdown>
-          <NavbarItem>
-            <DropdownTrigger>
-              <Button
-                disableRipple
-                className="bg-transparent p-0 data-[hover=true]:bg-transparent"
-                radius="sm"
-                variant="light"
-              >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="text-sm font-medium">
                 Categories
               </Button>
-            </DropdownTrigger>
-          </NavbarItem>
-          <DropdownMenu
-            aria-label="Categories"
-            items={categories}
-            itemClasses={{
-              base: "gap-4",
-            }}
-          >
-            {dropdownItems}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center">
+              <DropdownMenuItem asChild>
+                <Link href="/categories">All Categories</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {categories.map((category) => (
+                <DropdownMenuItem key={category.id} asChild>
+                  <Link href={`/categories/${category.slug}`}>{category.name}</Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
           </DropdownMenu>
-        </Dropdown>
-      </NavbarContent>
+        </nav>
 
-      <NavbarContent justify="end">
-        {session ? (
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <Avatar
-                as="button"
-                className="transition-transform"
-                name={session.user?.name ?? "User"}
-                size="sm"
-                src={session.user?.image ?? undefined}
-              />
-            </DropdownTrigger>
-            <DropdownMenu aria-label="User menu">
-              <DropdownItem key="profile" className="h-14 gap-2" textValue="Profile">
-                <p className="font-semibold">Signed in as</p>
-                <p className="font-semibold">{session.user?.email}</p>
-              </DropdownItem>
-              {isAdmin ? (
-                <DropdownItem key="admin" href="/admin">
-                  Admin Panel
-                </DropdownItem>
-              ) : null}
-              <DropdownItem key="signout" color="danger" onPress={() => signOut()}>
-                Sign Out
-              </DropdownItem>
+        {/* Right side - User menu */}
+        <div className="flex items-center gap-4">
+          {session ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={session.user?.image ?? undefined} alt={session.user?.name ?? "User"} />
+                    <AvatarFallback>{getInitials(session.user?.name)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                  <p className="text-sm font-medium">Signed in as</p>
+                  <p className="text-muted-foreground text-xs">{session.user?.email}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">Admin Panel</Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => signOut()}>
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenu>
-          </Dropdown>
-        ) : (
-          <NavbarItem>
-            <Button as={Link} href="/login" color="primary" variant="flat">
-              Sign In
+          ) : (
+            <Button asChild variant="secondary">
+              <Link href="/login">Sign In</Link>
             </Button>
-          </NavbarItem>
-        )}
-      </NavbarContent>
-
-      <NavbarMenu>
-        <NavbarMenuItem>
-          <Link className="w-full" href="/" size="lg">
-            Home
-          </Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem>
-          <Link className="w-full" href="/categories" size="lg">
-            All Categories
-          </Link>
-        </NavbarMenuItem>
-        {categories.map((category) => (
-          <NavbarMenuItem key={category.id}>
-            <Link className="w-full" href={`/categories/${category.slug}`} size="lg">
-              {category.name}
-            </Link>
-          </NavbarMenuItem>
-        ))}
-        {session && isAdmin && (
-          <NavbarMenuItem>
-            <Link className="w-full" href="/admin" size="lg">
-              Admin Panel
-            </Link>
-          </NavbarMenuItem>
-        )}
-      </NavbarMenu>
-    </HeroNavbar>
+          )}
+        </div>
+      </div>
+    </header>
   );
 };
 

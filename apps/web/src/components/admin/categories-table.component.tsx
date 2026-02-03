@@ -1,24 +1,20 @@
 "use client";
 
 import { deleteCategory } from "@/actions/drizzle-categories.action";
-import type { Category } from "@ecommerce/database/schema";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Button,
-  Chip,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-  Tooltip,
-  useDisclosure,
-} from "@heroui/react";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useDisclosure } from "@/hooks/use-disclosure";
+import type { Category } from "@ecommerce/database/schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -63,24 +59,26 @@ const CategoriesTable: React.FC<Props> = ({ categories }) => {
 
   if (categories.length === 0) {
     return (
-      <div className="border-default-300 rounded-lg border border-dashed py-12 text-center">
-        <p className="text-default-500 mb-4">No categories found</p>
-        <Button as={Link} href="/admin/categories/new" color="primary">
-          Create your first category
+      <div className="border-border rounded-lg border border-dashed py-12 text-center">
+        <p className="text-muted-foreground mb-4">No categories found</p>
+        <Button asChild>
+          <Link href="/admin/categories/new">Create your first category</Link>
         </Button>
       </div>
     );
   }
 
   return (
-    <>
-      <Table aria-label="Categories table">
+    <TooltipProvider>
+      <Table>
         <TableHeader>
-          <TableColumn>NAME</TableColumn>
-          <TableColumn>SLUG</TableColumn>
-          <TableColumn>PARENT</TableColumn>
-          <TableColumn>ORDER</TableColumn>
-          <TableColumn>ACTIONS</TableColumn>
+          <TableRow>
+            <TableHead>NAME</TableHead>
+            <TableHead>SLUG</TableHead>
+            <TableHead>PARENT</TableHead>
+            <TableHead>ORDER</TableHead>
+            <TableHead>ACTIONS</TableHead>
+          </TableRow>
         </TableHeader>
         <TableBody>
           {categories.map((category) => {
@@ -92,41 +90,53 @@ const CategoriesTable: React.FC<Props> = ({ categories }) => {
                   <div className="flex flex-col">
                     <span className="font-medium">{category.name}</span>
                     {category.description && (
-                      <span className="text-default-400 max-w-xs truncate text-sm">{category.description}</span>
+                      <span className="text-muted-foreground max-w-xs truncate text-sm">{category.description}</span>
                     )}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Chip size="sm" variant="flat">
-                    {category.slug}
-                  </Chip>
+                  <Badge variant="secondary">{category.slug}</Badge>
                 </TableCell>
                 <TableCell>
                   {parent ? (
-                    <Chip size="sm" variant="flat" color="secondary">
-                      {parent.name}
-                    </Chip>
+                    <Badge variant="outline">{parent.name}</Badge>
                   ) : (
-                    <span className="text-default-400">—</span>
+                    <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
                 <TableCell>{category.sortOrder}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    <Tooltip content="Edit">
-                      <Button as={Link} href={`/admin/categories/${category.id}`} size="sm" variant="light">
-                        Edit
-                      </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button asChild size="sm" variant="ghost">
+                          <Link href={`/admin/categories/${category.id}`}>Edit</Link>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit</TooltipContent>
                     </Tooltip>
-                    <Tooltip content="View">
-                      <Button as={Link} href={`/categories/${category.slug}`} size="sm" variant="light" target="_blank">
-                        View
-                      </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button asChild size="sm" variant="ghost">
+                          <Link href={`/categories/${category.slug}`} target="_blank">
+                            View
+                          </Link>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>View</TooltipContent>
                     </Tooltip>
-                    <Tooltip content="Delete" color="danger">
-                      <Button size="sm" variant="light" color="danger" onPress={() => handleDeleteClick(category)}>
-                        Delete
-                      </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteClick(category)}
+                        >
+                          Delete
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete</TooltipContent>
                     </Tooltip>
                   </div>
                 </TableCell>
@@ -136,25 +146,25 @@ const CategoriesTable: React.FC<Props> = ({ categories }) => {
         </TableBody>
       </Table>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalContent>
-          <ModalHeader>Delete Category</ModalHeader>
-          <ModalBody>
-            <p>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Category</DialogTitle>
+            <DialogDescription>
               Are you sure you want to delete <strong>{selectedCategory?.name}</strong>? This action cannot be undone.
-            </p>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={onClose} isDisabled={isDeleting}>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={onClose} disabled={isDeleting}>
               Cancel
             </Button>
-            <Button color="danger" onPress={handleConfirmDelete} isLoading={isDeleting}>
-              Delete
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={isDeleting}>
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </TooltipProvider>
   );
 };
 

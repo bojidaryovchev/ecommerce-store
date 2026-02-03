@@ -1,8 +1,7 @@
-"use client";
-
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import type { ProductWithPrices } from "@/types/category.type";
-import { Card, CardBody, CardFooter, Chip } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -15,7 +14,7 @@ const ProductsGrid: React.FC<Props> = ({ products }) => {
   if (products.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-default-500">No products found in this category</p>
+        <p className="text-muted-foreground">No products found in this category</p>
       </div>
     );
   }
@@ -40,7 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Link href={`/products/${product.id}`}>
       <Card className="h-full cursor-pointer transition-transform hover:scale-105">
-        <CardBody className="relative overflow-hidden p-0">
+        <CardContent className="relative overflow-hidden p-0">
           {productImage ? (
             <Image
               src={productImage}
@@ -50,19 +49,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               className="aspect-square w-full object-cover"
             />
           ) : (
-            <div className="bg-default-100 flex aspect-square w-full items-center justify-center">
-              <span className="text-default-400 text-4xl">{product.name.charAt(0).toUpperCase()}</span>
+            <div className="bg-muted flex aspect-square w-full items-center justify-center">
+              <span className="text-muted-foreground text-4xl">{product.name.charAt(0).toUpperCase()}</span>
             </div>
           )}
           {!product.active && (
-            <Chip color="danger" size="sm" className="absolute top-2 right-2">
+            <Badge variant="destructive" className="absolute top-2 right-2">
               Unavailable
-            </Chip>
+            </Badge>
           )}
-        </CardBody>
+        </CardContent>
         <CardFooter className="flex flex-col items-start gap-2">
           <h3 className="line-clamp-1 font-semibold">{product.name}</h3>
-          {product.description && <p className="text-default-500 line-clamp-2 text-sm">{product.description}</p>}
+          {product.description && <p className="text-muted-foreground line-clamp-2 text-sm">{product.description}</p>}
           {defaultPrice && defaultPrice.unitAmount !== null && (
             <p className="text-primary text-lg font-bold">
               {formatCurrency(defaultPrice.unitAmount, defaultPrice.currency)}

@@ -1,9 +1,13 @@
 "use client";
 
 import { createCategory, updateCategory } from "@/actions/drizzle-categories.action";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import type { Category } from "@ecommerce/database/schema";
 import { insertCategorySchema } from "@ecommerce/database/validators";
-import { Button, Input, Select, SelectItem, Textarea } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -88,116 +92,123 @@ const CategoryForm: React.FC<Props> = ({ category, parentCategories }) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-xl space-y-6">
-      <Controller
-        name="name"
-        control={control}
-        render={({ field }) => (
-          <Input
-            {...field}
-            label="Name"
-            placeholder="Enter category name"
-            isInvalid={!!errors.name}
-            errorMessage={errors.name?.message}
-            isRequired
-          />
-        )}
-      />
-
-      <div className="flex items-end gap-2">
+      <div className="space-y-2">
+        <Label htmlFor="name">
+          Name <span className="text-destructive">*</span>
+        </Label>
         <Controller
-          name="slug"
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <Input {...field} id="name" placeholder="Enter category name" aria-invalid={!!errors.name} />
+          )}
+        />
+        {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="slug">
+          Slug <span className="text-destructive">*</span>
+        </Label>
+        <div className="flex items-center gap-2">
+          <Controller
+            name="slug"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} id="slug" placeholder="category-slug" className="flex-1" aria-invalid={!!errors.slug} />
+            )}
+          />
+          <Button type="button" variant="secondary" onClick={generateSlug}>
+            Generate
+          </Button>
+        </div>
+        {errors.slug && <p className="text-destructive text-sm">{errors.slug.message}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Controller
+          name="description"
+          control={control}
+          render={({ field }) => (
+            <Textarea
+              {...field}
+              id="description"
+              value={field.value ?? ""}
+              placeholder="Enter category description"
+              aria-invalid={!!errors.description}
+            />
+          )}
+        />
+        {errors.description && <p className="text-destructive text-sm">{errors.description.message}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="image">Image URL</Label>
+        <Controller
+          name="image"
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              label="Slug"
-              placeholder="category-slug"
-              isInvalid={!!errors.slug}
-              errorMessage={errors.slug?.message}
-              isRequired
-              className="flex-1"
+              id="image"
+              value={field.value ?? ""}
+              placeholder="https://example.com/image.jpg"
+              aria-invalid={!!errors.image}
             />
           )}
         />
-        <Button type="button" variant="flat" onPress={generateSlug} className="mb-1">
-          Generate
-        </Button>
+        {errors.image && <p className="text-destructive text-sm">{errors.image.message}</p>}
       </div>
 
-      <Controller
-        name="description"
-        control={control}
-        render={({ field }) => (
-          <Textarea
-            {...field}
-            value={field.value ?? ""}
-            label="Description"
-            placeholder="Enter category description"
-            isInvalid={!!errors.description}
-            errorMessage={errors.description?.message}
-          />
-        )}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="parentId">Parent Category</Label>
+        <Controller
+          name="parentId"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value ?? ""} onValueChange={(value) => field.onChange(value === "" ? null : value)}>
+              <SelectTrigger id="parentId">
+                <SelectValue placeholder="Select a parent category (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {parentCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.parentId && <p className="text-destructive text-sm">{errors.parentId.message}</p>}
+      </div>
 
-      <Controller
-        name="image"
-        control={control}
-        render={({ field }) => (
-          <Input
-            {...field}
-            value={field.value ?? ""}
-            label="Image URL"
-            placeholder="https://example.com/image.jpg"
-            isInvalid={!!errors.image}
-            errorMessage={errors.image?.message}
-          />
-        )}
-      />
-
-      <Controller
-        name="parentId"
-        control={control}
-        render={({ field }) => (
-          <Select
-            label="Parent Category"
-            placeholder="Select a parent category (optional)"
-            selectedKeys={field.value ? [field.value] : []}
-            onSelectionChange={(keys) => {
-              const selected = Array.from(keys)[0] as string | undefined;
-              field.onChange(selected ?? null);
-            }}
-            isInvalid={!!errors.parentId}
-            errorMessage={errors.parentId?.message}
-          >
-            {parentCategories.map((cat) => (
-              <SelectItem key={cat.id}>{cat.name}</SelectItem>
-            ))}
-          </Select>
-        )}
-      />
-
-      <Controller
-        name="sortOrder"
-        control={control}
-        render={({ field }) => (
-          <Input
-            {...field}
-            type="number"
-            value={String(field.value ?? 0)}
-            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-            label="Sort Order"
-            placeholder="0"
-            isInvalid={!!errors.sortOrder}
-            errorMessage={errors.sortOrder?.message}
-          />
-        )}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="sortOrder">Sort Order</Label>
+        <Controller
+          name="sortOrder"
+          control={control}
+          render={({ field }) => (
+            <Input
+              {...field}
+              id="sortOrder"
+              type="number"
+              value={String(field.value ?? 0)}
+              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+              placeholder="0"
+              aria-invalid={!!errors.sortOrder}
+            />
+          )}
+        />
+        {errors.sortOrder && <p className="text-destructive text-sm">{errors.sortOrder.message}</p>}
+      </div>
 
       <div className="flex gap-3">
-        <Button type="submit" color="primary" isLoading={isSubmitting}>
-          {isEditing ? "Update Category" : "Create Category"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : isEditing ? "Update Category" : "Create Category"}
         </Button>
-        <Button type="button" variant="light" onPress={() => router.back()} isDisabled={isSubmitting}>
+        <Button type="button" variant="ghost" onClick={() => router.back()} disabled={isSubmitting}>
           Cancel
         </Button>
       </div>

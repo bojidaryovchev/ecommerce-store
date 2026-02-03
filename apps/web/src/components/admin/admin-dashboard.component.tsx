@@ -1,6 +1,4 @@
-"use client";
-
-import { Card, CardBody } from "@heroui/react";
+import { Card, CardContent } from "@/components/ui/card";
 
 const AdminDashboardContent: React.FC = () => {
   return (
@@ -8,22 +6,22 @@ const AdminDashboardContent: React.FC = () => {
       <h1 className="text-3xl font-bold">Dashboard</h1>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card>
-          <CardBody>
-            <p className="text-default-500">Categories</p>
+          <CardContent className="pt-6">
+            <p className="text-muted-foreground">Categories</p>
             <p className="text-2xl font-bold">Manage your categories</p>
-          </CardBody>
+          </CardContent>
         </Card>
         <Card>
-          <CardBody>
-            <p className="text-default-500">Products</p>
+          <CardContent className="pt-6">
+            <p className="text-muted-foreground">Products</p>
             <p className="text-2xl font-bold">Manage your products</p>
-          </CardBody>
+          </CardContent>
         </Card>
         <Card>
-          <CardBody>
-            <p className="text-default-500">Orders</p>
+          <CardContent className="pt-6">
+            <p className="text-muted-foreground">Orders</p>
             <p className="text-2xl font-bold">View orders</p>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     </div>

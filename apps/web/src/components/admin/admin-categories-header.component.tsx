@@ -1,6 +1,4 @@
-"use client";
-
-import { Button } from "@heroui/react";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 interface Props {
@@ -12,8 +10,8 @@ const AdminCategoriesHeader: React.FC<Props> = ({ children }) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Categories</h1>
-        <Button as={Link} href="/admin/categories/new" color="primary">
-          Add Category
+        <Button asChild>
+          <Link href="/admin/categories/new">Add Category</Link>
         </Button>
       </div>
       {children}

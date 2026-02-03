@@ -1,5 +1,4 @@
 import AuthProviders from "@/components/providers/auth-providers";
-import HeroUIProviders from "@/components/providers/heroui-providers";
 import HtmlProviders from "@/components/providers/html-providers";
 import NavbarProviders from "@/components/providers/navbar-providers";
 import ToasterProviders from "@/components/providers/toaster-providers";
@@ -10,11 +9,9 @@ const Providers: React.FC<PropsWithChildren> = ({ children }) => {
     <>
       <HtmlProviders>
         <AuthProviders>
-          <HeroUIProviders>
-            <ToasterProviders>
-              <NavbarProviders>{children}</NavbarProviders>
-            </ToasterProviders>
-          </HeroUIProviders>
+          <ToasterProviders>
+            <NavbarProviders>{children}</NavbarProviders>
+          </ToasterProviders>
         </AuthProviders>
       </HtmlProviders>
     </>
