@@ -69,21 +69,44 @@ AUTH_GOOGLE_SECRET=your-google-client-secret
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# AWS S3 (for file uploads)
+AWS_REGION=eu-central-1
+AWS_S3_BUCKET_NAME=ecommerce-uploads-<account-id>-dev
+AWS_PROFILE=dev-sso  # For local dev with SSO
+# AWS_S3_ACCESS_KEY_ID=     # Only needed in production (from Pulumi outputs)
+# AWS_S3_SECRET_ACCESS_KEY= # Only needed in production (from Pulumi outputs)
+```
+
+### Running with AWS SSO (Local Development)
+
+For S3 uploads to work locally:
+
+```bash
+# Ensure you're logged in to SSO
+aws sso login --profile dev-sso
+
+# Run dev server (auto-checks SSO session)
+pnpm dev:sso
+
+# Or from root
+pnpm --filter @ecommerce/web dev:sso
 ```
 
 ## Available Scripts
 
-| Script               | Description                             |
-| -------------------- | --------------------------------------- |
-| `pnpm dev`           | Start Next.js dev server with Turbopack |
-| `pnpm build`         | Build for production                    |
-| `pnpm lint`          | Run ESLint across all packages          |
-| `pnpm db:generate`   | Generate Drizzle migrations             |
-| `pnpm db:push`       | Push schema to database                 |
-| `pnpm db:migrate`    | Run migrations                          |
-| `pnpm db:studio`     | Open Drizzle Studio                     |
-| `pnpm infra:preview` | Preview infrastructure changes          |
-| `pnpm infra:up`      | Deploy infrastructure                   |
+| Script               | Description                              |
+| -------------------- | ---------------------------------------- |
+| `pnpm dev`           | Start Next.js dev server with Turbopack  |
+| `pnpm dev:sso`       | Start dev server with AWS SSO auth check |
+| `pnpm build`         | Build for production                     |
+| `pnpm lint`          | Run ESLint across all packages           |
+| `pnpm db:generate`   | Generate Drizzle migrations              |
+| `pnpm db:push`       | Push schema to database                  |
+| `pnpm db:migrate`    | Run migrations                           |
+| `pnpm db:studio`     | Open Drizzle Studio                      |
+| `pnpm infra:preview` | Preview infrastructure changes           |
+| `pnpm infra:up`      | Deploy infrastructure                    |
 
 ## Infrastructure
 

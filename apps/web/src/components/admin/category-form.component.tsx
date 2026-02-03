@@ -2,6 +2,7 @@
 
 import { createCategory, updateCategory } from "@/actions/drizzle-categories.action";
 import { Button } from "@/components/ui/button";
+import ImageUpload from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -144,18 +145,12 @@ const CategoryForm: React.FC<Props> = ({ category, parentCategories }) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="image">Image URL</Label>
+        <Label htmlFor="image">Image</Label>
         <Controller
           name="image"
           control={control}
           render={({ field }) => (
-            <Input
-              {...field}
-              id="image"
-              value={field.value ?? ""}
-              placeholder="https://example.com/image.jpg"
-              aria-invalid={!!errors.image}
-            />
+            <ImageUpload value={field.value} onChange={field.onChange} folder="categories" disabled={isSubmitting} />
           )}
         />
         {errors.image && <p className="text-destructive text-sm">{errors.image.message}</p>}

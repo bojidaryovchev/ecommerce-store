@@ -1,0 +1,40 @@
+import { generateUploadKey, getS3ObjectUrl, getUploadPresignedUrl, S3_BUCKET_NAME } from "@/lib/s3";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(request: NextRequest) {
+  try {
+    // Validate bucket is configured
+    if (!S3_BUCKET_NAME) {
+      return NextResponse.json({ error: "S3 bucket not configured" }, { status: 500 });
+    }
+
+    const body = await request.json();
+    const { filename, contentType, folder = "uploads" } = body;
+
+    if (!filename || !contentType) {
+      return NextResponse.json({ error: "filename and contentType are required" }, { status: 400 });
+    }
+
+    // Validate content type (only allow images)
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
+    if (!allowedTypes.includes(contentType)) {
+      return NextResponse.json({ error: `Invalid content type. Allowed: ${allowedTypes.join(", ")}` }, { status: 400 });
+    }
+
+    // Generate unique key
+    const key = generateUploadKey(folder, filename);
+
+    // Get presigned URL
+    const uploadUrl = await getUploadPresignedUrl(key, contentType);
+
+    // Return the presigned URL and the final public URL
+    return NextResponse.json({
+      uploadUrl,
+      key,
+      publicUrl: getS3ObjectUrl(key),
+    });
+  } catch (error) {
+    console.error("Error generating presigned URL:", error);
+    return NextResponse.json({ error: "Failed to generate upload URL" }, { status: 500 });
+  }
+}
