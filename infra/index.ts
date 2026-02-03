@@ -13,14 +13,35 @@ const uploadsBucket = new aws.s3.Bucket("uploads", {
   forceDestroy: stack !== "prod", // Allow deletion in non-prod environments
 });
 
-// Enable public access block settings (secure by default)
-new aws.s3.BucketPublicAccessBlock("uploads-public-access-block", {
+// Allow public read access for images (but not uploads/writes)
+const publicAccessBlock = new aws.s3.BucketPublicAccessBlock("uploads-public-access-block", {
   bucket: uploadsBucket.id,
-  blockPublicAcls: true,
-  blockPublicPolicy: true,
-  ignorePublicAcls: true,
-  restrictPublicBuckets: true,
+  blockPublicAcls: false,
+  blockPublicPolicy: false,
+  ignorePublicAcls: false,
+  restrictPublicBuckets: false,
 });
+
+// Bucket policy to allow public read access
+new aws.s3.BucketPolicy(
+  "uploads-public-read-policy",
+  {
+    bucket: uploadsBucket.id,
+    policy: pulumi.jsonStringify({
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Sid: "PublicReadGetObject",
+          Effect: "Allow",
+          Principal: "*",
+          Action: "s3:GetObject",
+          Resource: pulumi.interpolate`${uploadsBucket.arn}/*`,
+        },
+      ],
+    }),
+  },
+  { dependsOn: [publicAccessBlock] },
+);
 
 // CORS configuration for the bucket
 new aws.s3.BucketCorsConfiguration("uploads-cors", {
