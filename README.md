@@ -87,26 +87,26 @@ For S3 uploads to work locally:
 aws sso login --profile dev-sso
 
 # Run dev server (auto-checks SSO session)
-pnpm dev:sso
-
-# Or from root
-pnpm --filter @ecommerce/web dev:sso
+pnpm dev
 ```
+
+> **Note:** The `dev` script automatically validates your SSO session before starting. If your session has expired, it will prompt you to re-authenticate.
 
 ## Available Scripts
 
-| Script               | Description                              |
-| -------------------- | ---------------------------------------- |
-| `pnpm dev`           | Start Next.js dev server with Turbopack  |
-| `pnpm dev:sso`       | Start dev server with AWS SSO auth check |
-| `pnpm build`         | Build for production                     |
-| `pnpm lint`          | Run ESLint across all packages           |
-| `pnpm db:generate`   | Generate Drizzle migrations              |
-| `pnpm db:push`       | Push schema to database                  |
-| `pnpm db:migrate`    | Run migrations                           |
-| `pnpm db:studio`     | Open Drizzle Studio                      |
-| `pnpm infra:preview` | Preview infrastructure changes           |
-| `pnpm infra:up`      | Deploy infrastructure                    |
+| Script               | Description                                   |
+| -------------------- | --------------------------------------------- |
+| `pnpm dev`           | Start Next.js dev server (includes SSO check) |
+| `pnpm build`         | Build for production                          |
+| `pnpm lint`          | Run ESLint across all packages                |
+| `pnpm type-check`    | Run TypeScript type checking                  |
+| `pnpm format`        | Format code with Prettier                     |
+| `pnpm db:generate`   | Generate Drizzle migrations                   |
+| `pnpm db:push`       | Push schema to database                       |
+| `pnpm db:migrate`    | Run migrations                                |
+| `pnpm db:studio`     | Open Drizzle Studio                           |
+| `pnpm infra:preview` | Preview infrastructure changes                |
+| `pnpm infra:up`      | Deploy infrastructure                         |
 
 ## Infrastructure
 
@@ -211,7 +211,7 @@ pulumi up
 
 ### GitHub Actions Setup (CI/CD)
 
-The repo includes workflows for automated infrastructure deployment.
+The repo includes workflows for automated infrastructure deployment using GitHub OIDC (passwordless AWS auth).
 
 1. **Run the GitHub OIDC bootstrap script:**
 
@@ -220,13 +220,17 @@ cd infra
 .\bootstrap-github-oidc.ps1 -GitHubOrg "<your-username>" -GitHubRepo "ecommerce-store" -Profile "AdministratorAccess-<account-id>"
 ```
 
-2. **Add secrets to GitHub** (Settings → Secrets → Actions):
+2. **Create GitHub Environments** (Settings → Environments):
+
+Create two environments: `dev` and `prod`. Add the following secrets to **each environment**:
 
 | Secret                     | Value                                                  |
 | -------------------------- | ------------------------------------------------------ |
 | `AWS_ROLE_ARN`             | `arn:aws:iam::<account-id>:role/github-actions-pulumi` |
 | `PULUMI_CONFIG_PASSPHRASE` | The passphrase from stack init                         |
 | `PULUMI_BACKEND_URL`       | `s3://pulumi-state-<account-id>?region=eu-central-1`   |
+
+> **Tip:** You can add protection rules to the `prod` environment (e.g., required reviewers).
 
 3. **Workflow triggers:**
 
@@ -235,6 +239,89 @@ cd infra
 | `infra-preview.yml` | PR to `main`    | `pulumi preview`       |
 | `infra-deploy.yml`  | Push to `main`  | `pulumi up` (dev)      |
 | `infra-deploy.yml`  | Manual dispatch | `pulumi up` (dev/prod) |
+
+### Vercel Deployment
+
+The Next.js app is deployed to Vercel. After running `pulumi up`, get the S3 credentials:
+
+```bash
+cd infra
+pulumi stack output --show-secrets
+```
+
+Add these environment variables in Vercel (Settings → Environment Variables):
+
+| Variable                   | Value                                     | Environments |
+| -------------------------- | ----------------------------------------- | ------------ |
+| `DATABASE_URL`             | Neon connection string                    | Per env      |
+| `AUTH_SECRET`              | Random secret (`openssl rand -base64 32`) | Per env      |
+| `AUTH_GOOGLE_ID`           | Google OAuth client ID                    | All          |
+| `AUTH_GOOGLE_SECRET`       | Google OAuth client secret                | All          |
+| `AWS_REGION`               | `eu-central-1`                            | All          |
+| `AWS_S3_BUCKET_NAME`       | From `bucketName` output                  | Per env      |
+| `AWS_S3_ACCESS_KEY_ID`     | From `accessKeyId` output                 | Per env      |
+| `AWS_S3_SECRET_ACCESS_KEY` | From `secretAccessKey` output             | Per env      |
+
+> **Note:** Use different Pulumi stacks (`dev`, `prod`) to get credentials for each Vercel environment.
+
+## Environment Variables Reference
+
+### Where Each Variable Goes
+
+| Variable                   | Local (`.env.local`) | GitHub Environments | Vercel |
+| -------------------------- | -------------------- | ------------------- | ------ |
+| **Database**               |                      |                     |        |
+| `DATABASE_URL`             | ✅                   | ❌                  | ✅     |
+| **Auth**                   |                      |                     |        |
+| `AUTH_SECRET`              | ✅                   | ❌                  | ✅     |
+| `AUTH_GOOGLE_ID`           | ✅                   | ❌                  | ✅     |
+| `AUTH_GOOGLE_SECRET`       | ✅                   | ❌                  | ✅     |
+| **AWS S3 (Web App)**       |                      |                     |        |
+| `AWS_REGION`               | ✅                   | ❌                  | ✅     |
+| `AWS_S3_BUCKET_NAME`       | ✅                   | ❌                  | ✅     |
+| `AWS_PROFILE`              | ✅ (SSO)             | ❌                  | ❌     |
+| `AWS_S3_ACCESS_KEY_ID`     | ❌                   | ❌                  | ✅     |
+| `AWS_S3_SECRET_ACCESS_KEY` | ❌                   | ❌                  | ✅     |
+| **Pulumi (Infra CI/CD)**   |                      |                     |        |
+| `AWS_ROLE_ARN`             | ❌                   | ✅ (both envs)      | ❌     |
+| `PULUMI_CONFIG_PASSPHRASE` | ❌                   | ✅ (both envs)      | ❌     |
+| `PULUMI_BACKEND_URL`       | ❌                   | ✅ (both envs)      | ❌     |
+
+### CI/CD Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         GitHub Repository                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Push to main (infra/**)     Push to main (apps/**)             │
+│         │                            │                           │
+│         ▼                            ▼                           │
+│  ┌─────────────────┐          ┌─────────────────┐               │
+│  │ GitHub Actions  │          │  Vercel CI/CD   │               │
+│  │ (infra-deploy)  │          │  (auto-deploy)  │               │
+│  └────────┬────────┘          └────────┬────────┘               │
+│           │                            │                         │
+│           │ Uses:                      │ Uses:                   │
+│           │ • AWS_ROLE_ARN             │ • DATABASE_URL          │
+│           │ • PULUMI_CONFIG_PASSPHRASE │ • AUTH_*                │
+│           │ • PULUMI_BACKEND_URL       │ • AWS_S3_*              │
+│           │                            │                         │
+│           ▼                            ▼                         │
+│  ┌─────────────────┐          ┌─────────────────┐               │
+│  │   AWS (Pulumi)  │          │  Vercel (Web)   │               │
+│  │   • S3 Bucket   │─────────▶│  • Next.js App  │               │
+│  │   • IAM User    │ outputs  │                 │               │
+│  └─────────────────┘          └─────────────────┘               │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Workflow
+
+1. **Infrastructure changes** (`infra/**`) → GitHub Actions → Pulumi deploys to AWS
+2. **Web app changes** (`apps/web/**`) → Vercel CI/CD → Deploys to Vercel
+3. **After infra deploy**, copy S3 credentials from Pulumi outputs to Vercel env vars
 
 ## Roadmap
 
