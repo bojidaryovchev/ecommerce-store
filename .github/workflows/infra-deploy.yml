@@ -24,7 +24,6 @@ permissions:
 
 env:
   AWS_REGION: eu-central-1
-  PULUMI_BACKEND_URL: s3://pulumi-state-560875410618?region=eu-central-1
 
 jobs:
   deploy-dev:
@@ -64,6 +63,7 @@ jobs:
           work-dir: infra
         env:
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+          PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
 
   deploy-prod:
     name: Deploy to Prod
@@ -102,3 +102,4 @@ jobs:
           work-dir: infra
         env:
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+          PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}

@@ -3,9 +3,13 @@ import * as pulumi from "@pulumi/pulumi";
 
 const stack = pulumi.getStack();
 
-// S3 bucket for file uploads
+// Get current AWS account ID dynamically
+const callerIdentity = aws.getCallerIdentity({});
+const accountId = callerIdentity.then((id) => id.accountId);
+
+// S3 bucket for file uploads (account ID in name ensures global uniqueness)
 const uploadsBucket = new aws.s3.Bucket("uploads", {
-  bucket: `ecommerce-uploads-${stack}`,
+  bucket: pulumi.interpolate`ecommerce-uploads-${accountId}-${stack}`,
   forceDestroy: stack !== "prod", // Allow deletion in non-prod environments
 });
 
