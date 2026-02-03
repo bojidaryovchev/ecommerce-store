@@ -92,16 +92,126 @@ AWS resources managed with Pulumi:
 - **S3 Bucket** - Product images and file uploads
 - **IAM User** - Application access credentials
 
-### AWS Configuration
+### Prerequisites
 
+Install these global dependencies:
+
+```bash
+# Pulumi CLI
+# Windows (PowerShell)
+iwr https://get.pulumi.com/install.ps1 -UseBasicParsing | iex
+
+# macOS/Linux
+curl -fsSL https://get.pulumi.com | sh
+
+# AWS CLI
+# https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 ```
-[profile dev-sso]
-sso_start_url = https://d-9967643ec3.awsapps.com/start
-sso_region = eu-central-1
-sso_account_id = 560875410618
-sso_role_name = AdministratorAccess
-region = eu-central-1
+
+### AWS SSO Setup (One-time)
+
+1. **Configure AWS SSO profile:**
+
+```bash
+aws configure sso
 ```
+
+Enter the following when prompted:
+
+| Setting                 | Value                              |
+| ----------------------- | ---------------------------------- |
+| SSO session name        | `ecommerce` (or any name)          |
+| SSO start URL           | Your organization's SSO URL        |
+| SSO region              | `eu-central-1`                     |
+| SSO registration scopes | _(leave blank, press Enter)_       |
+| Account ID              | Your AWS account ID                |
+| Role                    | `AdministratorAccess`              |
+| CLI default region      | `eu-central-1`                     |
+| CLI profile name        | `AdministratorAccess-<account-id>` |
+
+2. **Login to AWS SSO:**
+
+```bash
+aws sso login --profile AdministratorAccess-<account-id>
+```
+
+3. **Verify credentials:**
+
+```bash
+aws sts get-caller-identity --profile AdministratorAccess-<account-id>
+```
+
+### Pulumi Backend Setup (One-time)
+
+We use S3 as the Pulumi state backend (not Pulumi Cloud).
+
+1. **Run the bootstrap script:**
+
+```powershell
+cd infra
+.\bootstrap-pulumi-backend.ps1 -Profile "AdministratorAccess-<account-id>"
+```
+
+This creates:
+
+- S3 bucket for Pulumi state (`pulumi-state-<account-id>`)
+- Bucket versioning, encryption, and public access block
+
+2. **Login to Pulumi S3 backend:**
+
+```bash
+pulumi login s3://pulumi-state-<account-id>?region=eu-central-1
+```
+
+3. **Initialize the stack:**
+
+```bash
+cd infra
+pulumi stack init dev
+# Enter a passphrase to encrypt secrets
+```
+
+### Running Pulumi Locally
+
+```bash
+# Set AWS profile for the session
+$env:AWS_PROFILE = "AdministratorAccess-<account-id>"  # PowerShell
+export AWS_PROFILE="AdministratorAccess-<account-id>"  # Bash
+
+# Preview changes
+cd infra
+pulumi preview
+
+# Deploy changes
+pulumi up
+```
+
+### GitHub Actions Setup (CI/CD)
+
+The repo includes workflows for automated infrastructure deployment.
+
+1. **Run the GitHub OIDC bootstrap script:**
+
+```powershell
+cd infra
+.\bootstrap-github-oidc.ps1 -GitHubOrg "<your-username>" -GitHubRepo "ecommerce-store" -Profile "AdministratorAccess-<account-id>"
+```
+
+2. **Add secrets to GitHub** (Settings → Secrets → Actions):
+
+| Secret                     | Value                                                  |
+| -------------------------- | ------------------------------------------------------ |
+| `AWS_ROLE_ARN`             | `arn:aws:iam::<account-id>:role/github-actions-pulumi` |
+| `PULUMI_CONFIG_PASSPHRASE` | The passphrase from stack init                         |
+| `PULUMI_BACKEND_URL`       | `s3://pulumi-state-<account-id>?region=eu-central-1`   |
+
+3. **Workflow triggers:**
+
+| Workflow            | Trigger         | Action                 |
+| ------------------- | --------------- | ---------------------- |
+| `infra-preview.yml` | PR to `main`    | `pulumi preview`       |
+| `infra-deploy.yml`  | Push to `main`  | `pulumi up` (dev)      |
+| `infra-deploy.yml`  | Manual dispatch | `pulumi up` (dev/prod) |
 
 ## Roadmap
 
