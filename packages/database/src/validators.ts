@@ -138,6 +138,7 @@ export const selectCartItemSchema = createSelectSchema(tables.cartItems);
 
 export const insertCategorySchema = createInsertSchema(tables.categories);
 export const selectCategorySchema = createSelectSchema(tables.categories);
+export const updateCategorySchema = insertCategorySchema.partial().required({ id: true });
 
 export const insertReviewSchema = createInsertSchema(tables.reviews);
 export const selectReviewSchema = createSelectSchema(tables.reviews);

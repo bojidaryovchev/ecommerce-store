@@ -8,6 +8,13 @@
       "when": 1770075080671,
       "tag": "0000_early_garia",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770082889623,
+      "tag": "0001_thick_unus",
+      "breakpoints": true
     }
   ]
 }

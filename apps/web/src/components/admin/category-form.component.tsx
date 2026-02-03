@@ -167,16 +167,22 @@ const CategoryForm: React.FC<Props> = ({ category, parentCategories }) => {
           name="parentId"
           control={control}
           render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={(value) => field.onChange(value === "" ? null : value)}>
+            <Select
+              value={field.value ?? "none"}
+              onValueChange={(value) => field.onChange(value === "none" ? null : value)}
+            >
               <SelectTrigger id="parentId">
                 <SelectValue placeholder="Select a parent category (optional)" />
               </SelectTrigger>
               <SelectContent>
-                {parentCategories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="none">No Parent (Root Category)</SelectItem>
+                {parentCategories
+                  .filter((cat) => cat.id !== category?.id)
+                  .map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           )}
