@@ -21,8 +21,8 @@ const ProductsGrid: React.FC<Props> = ({ products }) => {
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+      {products.map((product, index) => (
+        <ProductCard key={product.id} product={product} priority={index < 4} />
       ))}
     </div>
   );
@@ -30,9 +30,10 @@ const ProductsGrid: React.FC<Props> = ({ products }) => {
 
 interface ProductCardProps {
   product: ProductWithPrices;
+  priority?: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) => {
   const defaultPrice = product.prices.find((p) => p.id === product.defaultPriceId) ?? product.prices[0];
   const productImage = product.images?.[0];
 
@@ -47,6 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               width={400}
               height={400}
               className="aspect-square w-full object-cover"
+              priority={priority}
             />
           ) : (
             <div className="bg-muted flex aspect-square w-full items-center justify-center">

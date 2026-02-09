@@ -55,11 +55,11 @@ const ImageUpload: React.FC<Props> = ({ value, onChange, folder = "categories", 
         });
 
         if (!presignedResponse.ok) {
-          const errorData = (await presignedResponse.json()) as { error?: string };
+          const errorData = await presignedResponse.json<{ error?: string }>();
           throw new Error(errorData.error ?? "Failed to get upload URL");
         }
 
-        const { uploadUrl, publicUrl } = (await presignedResponse.json()) as PresignedUrlResponse;
+        const { uploadUrl, publicUrl } = await presignedResponse.json<PresignedUrlResponse>();
 
         // Upload to S3 using presigned URL
         // Note: Content-Type is already signed in the presigned URL

@@ -7,7 +7,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
@@ -15,6 +14,7 @@ import type { ProductWithDetails } from "@/types/product.type";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import ProductAddToCartClient from "./product-add-to-cart-client.component";
 
 interface Props {
   product: ProductWithDetails;
@@ -120,9 +120,7 @@ const ProductDetail: React.FC<Props> = ({ product }) => {
           <Separator />
 
           <div className="space-y-4">
-            <Button size="lg" className="w-full" disabled={!product.active}>
-              {product.active ? "Add to Cart" : "Currently Unavailable"}
-            </Button>
+            <ProductAddToCartClient productId={product.id} priceId={defaultPrice?.id} isActive={product.active} />
           </div>
 
           {/* Product Details */}

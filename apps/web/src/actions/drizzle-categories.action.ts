@@ -1,10 +1,11 @@
 "use server";
 
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Category } from "@ecommerce/database";
 import { db, insertCategorySchema, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { linkUpload } from "./uploads.action";
 
 /**
@@ -23,8 +24,7 @@ export async function createCategory(
       await linkUpload(category.image, category.id, "category");
     }
 
-    revalidatePath("/categories");
-    revalidatePath("/");
+    revalidateTag(CACHE_TAGS.categories, "max");
 
     return {
       success: true,
@@ -68,9 +68,9 @@ export async function updateCategory(
       await linkUpload(data.image, category.id, "category");
     }
 
-    revalidatePath("/categories");
-    revalidatePath(`/categories/${category.slug}`);
-    revalidatePath("/");
+    revalidateTag(CACHE_TAGS.categories, "max");
+    revalidateTag(CACHE_TAGS.category(id), "max");
+    revalidateTag(CACHE_TAGS.categoryBySlug(category.slug), "max");
 
     return {
       success: true,
@@ -113,9 +113,9 @@ export async function deleteCategory(id: string): Promise<ActionResult<void>> {
       .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(eq(schema.categories.parentId, id));
 
-    revalidatePath("/categories");
-    revalidatePath(`/categories/${category.slug}`);
-    revalidatePath("/");
+    revalidateTag(CACHE_TAGS.categories, "max");
+    revalidateTag(CACHE_TAGS.category(id), "max");
+    revalidateTag(CACHE_TAGS.categoryBySlug(category.slug), "max");
 
     return {
       success: true,
@@ -148,10 +148,9 @@ export async function restoreCategory(id: string): Promise<ActionResult<Category
       };
     }
 
-    revalidatePath("/categories");
-    revalidatePath(`/categories/${category.slug}`);
-    revalidatePath("/");
-    revalidatePath("/admin/categories");
+    revalidateTag(CACHE_TAGS.categories, "max");
+    revalidateTag(CACHE_TAGS.category(id), "max");
+    revalidateTag(CACHE_TAGS.categoryBySlug(category.slug), "max");
 
     return {
       success: true,

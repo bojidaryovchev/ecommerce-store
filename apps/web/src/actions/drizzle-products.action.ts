@@ -1,10 +1,11 @@
 "use server";
 
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Price, Product } from "@ecommerce/database";
 import { db, insertProductSchema, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { linkUploads } from "./uploads.action";
 
 /**
@@ -23,9 +24,7 @@ export async function createProduct(
       await linkUploads(product.images, product.id, "product");
     }
 
-    revalidatePath("/products");
-    revalidatePath("/admin/products");
-    revalidatePath("/");
+    revalidateTag(CACHE_TAGS.products, "max");
 
     return {
       success: true,
@@ -69,11 +68,8 @@ export async function updateProduct(
       await linkUploads(data.images, product.id, "product");
     }
 
-    revalidatePath("/products");
-    revalidatePath(`/products/${id}`);
-    revalidatePath("/admin/products");
-    revalidatePath(`/admin/products/${id}`);
-    revalidatePath("/");
+    revalidateTag(CACHE_TAGS.products, "max");
+    revalidateTag(CACHE_TAGS.product(id), "max");
 
     return {
       success: true,
@@ -107,10 +103,8 @@ export async function deleteProduct(id: string): Promise<ActionResult<void>> {
     // Soft delete: set active to false
     await db.update(schema.products).set({ active: false, updatedAt: new Date() }).where(eq(schema.products.id, id));
 
-    revalidatePath("/products");
-    revalidatePath(`/products/${id}`);
-    revalidatePath("/admin/products");
-    revalidatePath("/");
+    revalidateTag(CACHE_TAGS.products, "max");
+    revalidateTag(CACHE_TAGS.product(id), "max");
 
     return {
       success: true,
@@ -143,10 +137,8 @@ export async function restoreProduct(id: string): Promise<ActionResult<Product>>
       };
     }
 
-    revalidatePath("/products");
-    revalidatePath(`/products/${id}`);
-    revalidatePath("/admin/products");
-    revalidatePath("/");
+    revalidateTag(CACHE_TAGS.products, "max");
+    revalidateTag(CACHE_TAGS.product(id), "max");
 
     return {
       success: true,
@@ -200,9 +192,8 @@ export async function createPrice(data: {
         .where(eq(schema.products.id, data.productId));
     }
 
-    revalidatePath("/products");
-    revalidatePath(`/products/${data.productId}`);
-    revalidatePath("/admin/products");
+    revalidateTag(CACHE_TAGS.products, "max");
+    revalidateTag(CACHE_TAGS.product(data.productId), "max");
 
     return {
       success: true,
@@ -241,9 +232,8 @@ export async function updatePrice(
       };
     }
 
-    revalidatePath("/products");
-    revalidatePath(`/products/${price.productId}`);
-    revalidatePath("/admin/products");
+    revalidateTag(CACHE_TAGS.products, "max");
+    revalidateTag(CACHE_TAGS.product(price.productId), "max");
 
     return {
       success: true,
@@ -296,9 +286,8 @@ export async function deletePrice(id: string): Promise<ActionResult<void>> {
         .where(eq(schema.products.id, price.productId));
     }
 
-    revalidatePath("/products");
-    revalidatePath(`/products/${price.productId}`);
-    revalidatePath("/admin/products");
+    revalidateTag(CACHE_TAGS.products, "max");
+    revalidateTag(CACHE_TAGS.product(price.productId), "max");
 
     return {
       success: true,
@@ -331,9 +320,8 @@ export async function setDefaultPrice(productId: string, priceId: string): Promi
       };
     }
 
-    revalidatePath("/products");
-    revalidatePath(`/products/${productId}`);
-    revalidatePath("/admin/products");
+    revalidateTag(CACHE_TAGS.products, "max");
+    revalidateTag(CACHE_TAGS.product(productId), "max");
 
     return {
       success: true,

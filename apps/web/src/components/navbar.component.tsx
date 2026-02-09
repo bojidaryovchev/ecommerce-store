@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useCart } from "@/contexts/cart-context";
 import type { Category } from "@ecommerce/database/schema";
-import { Menu } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -26,6 +27,7 @@ interface Props {
 
 const Navbar: React.FC<Props> = ({ categories, session }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { summary, openCart } = useCart();
   const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
 
   const getInitials = (name: string | null | undefined) => {
@@ -122,8 +124,19 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
           </DropdownMenu>
         </nav>
 
-        {/* Right side - User menu */}
-        <div className="flex items-center gap-4">
+        {/* Right side - Cart and User menu */}
+        <div className="flex items-center gap-2">
+          {/* Cart Button */}
+          <Button variant="ghost" size="icon" className="relative" onClick={openCart}>
+            <ShoppingCart className="h-5 w-5" />
+            {summary.itemCount > 0 && (
+              <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium">
+                {summary.itemCount > 99 ? "99+" : summary.itemCount}
+              </span>
+            )}
+            <span className="sr-only">Open cart</span>
+          </Button>
+
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
