@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 
 /**
- * Get a single order by ID
+ * Get a single order by ID (includes items and user)
  */
 async function getOrderById(orderId: string) {
   cacheTag(CACHE_TAGS.orders, CACHE_TAGS.order(orderId));
@@ -17,6 +17,13 @@ async function getOrderById(orderId: string) {
       items: {
         with: {
           product: true,
+        },
+      },
+      user: {
+        columns: {
+          id: true,
+          name: true,
+          email: true,
         },
       },
     },

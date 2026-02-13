@@ -14,6 +14,9 @@ const AdminSidebar: React.FC = () => {
           <Link href="/admin">Dashboard</Link>
         </Button>
         <Button asChild variant="ghost" className="w-full justify-start">
+          <Link href="/admin/orders">Orders</Link>
+        </Button>
+        <Button asChild variant="ghost" className="w-full justify-start">
           <Link href="/admin/categories">Categories</Link>
         </Button>
         <Button asChild variant="ghost" className="w-full justify-start">

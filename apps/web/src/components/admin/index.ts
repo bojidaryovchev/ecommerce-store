@@ -9,3 +9,6 @@ export { AdminProductsHeader, ProductFormLoader, ProductsTableLoader } from "./p
 
 // Categories
 export { AdminCategoriesHeader, CategoriesTableLoader, CategoryFormLoader } from "./categories";
+
+// Orders
+export { AdminOrderDetail, AdminOrdersHeader, OrdersTableLoader } from "./orders";

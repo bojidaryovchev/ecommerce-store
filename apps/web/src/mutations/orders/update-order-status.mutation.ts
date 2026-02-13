@@ -18,7 +18,9 @@ async function updateOrderStatus(
   try {
     const timestamps: Record<string, Date> = {};
 
-    if (status === "shipped") {
+    if (status === "paid") {
+      timestamps.paidAt = new Date();
+    } else if (status === "shipped") {
       timestamps.shippedAt = new Date();
     } else if (status === "delivered") {
       timestamps.deliveredAt = new Date();

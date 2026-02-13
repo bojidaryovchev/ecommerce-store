@@ -9,8 +9,17 @@ type OrderWithItems = Order & {
   })[];
 };
 
+type OrderWithItemsAndUser = OrderWithItems & {
+  user: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  } | null;
+};
+
+export { getAllOrders, type GetAllOrdersOptions } from "./get-all-orders.query";
 export { getOrderByCheckoutSessionId } from "./get-order-by-checkout-session-id.query";
 export { getOrderById } from "./get-order-by-id.query";
 export { getOrdersByGuestEmail } from "./get-orders-by-guest-email.query";
 export { getOrdersByUserId } from "./get-orders-by-user-id.query";
-export { type OrderWithItems };
+export { type OrderWithItems, type OrderWithItemsAndUser };

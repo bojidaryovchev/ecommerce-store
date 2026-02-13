@@ -88,8 +88,10 @@ Zod validators generated for every table + custom business-logic validators for 
 | Product detail   | `/products/[id]`     | Image gallery, pricing, description, marketing features, reviews display |
 | Category listing | `/categories`        | Grid of root categories                                                  |
 | Category detail  | `/categories/[slug]` | Breadcrumbs, subcategories, filtered products                            |
+| Order history    | `/orders`            | User's orders table with status badges, totals, item counts              |
+| Order detail     | `/orders/[id]`       | Items, summary, addresses, timeline — auth-gated with ownership check    |
 | Login            | `/login`             | Google OAuth sign-in, redirect if already authenticated                  |
-| Checkout success | `/checkout/success`  | Order confirmation with items, totals, address                           |
+| Checkout success | `/checkout/success`  | Order confirmation with items, totals, address, link to My Orders        |
 | Checkout cancel  | `/checkout/cancel`   | Cancellation notice with navigation links                                |
 
 - All pages are Server Components with Suspense/streaming and loading skeletons
@@ -162,14 +164,14 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 
 ### 🔴 Critical — Blocks a Usable MVP
 
-| #   | Gap                         | Details                                                                 |
-| --- | --------------------------- | ----------------------------------------------------------------------- |
-| 1   | Customer order history      | No `/orders` route — users can't see past orders after checkout success |
-| 2   | Admin order management      | No `/admin/orders` — admins can't view, filter, or fulfill orders       |
-| 3   | Admin dashboard is static   | Placeholder cards, no real stats (revenue, counts, recent orders)       |
-| 4   | No search or filtering      | No product search, category filter, price sort, or any discovery tools  |
-| 5   | No inventory/stock tracking | No `stock_quantity` on products — nothing prevents overselling          |
-| 6   | No transactional emails     | No order confirmation, no shipping notification, no welcome email       |
+| #     | Gap                         | Details                                                                |
+| ----- | --------------------------- | ---------------------------------------------------------------------- |
+| ~~1~~ | ~~Customer order history~~  | ~~No `/orders` route~~ — ✅ **Done** (Phase 1.1)                       |
+| ~~2~~ | ~~Admin order management~~  | ~~No `/admin/orders`~~ — ✅ **Done** (Phase 1.2)                       |
+| 3     | Admin dashboard is static   | Placeholder cards, no real stats (revenue, counts, recent orders)      |
+| 4     | No search or filtering      | No product search, category filter, price sort, or any discovery tools |
+| 5     | No inventory/stock tracking | No `stock_quantity` on products — nothing prevents overselling         |
+| 6     | No transactional emails     | No order confirmation, no shipping notification, no welcome email      |
 
 ### 🟡 Important — Expected for a Credible MVP
 
@@ -202,20 +204,32 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 
 The core flow (browse → cart → pay → track) is broken after payment. Fix it.
 
-**1.1 Customer Order History**
+**1.1 Customer Order History** ✅ Completed
 
 - Route: `/orders` (list), `/orders/[id]` (detail)
-- Queries exist: `getOrdersByUser`, `getOrderById` — just need pages
-- Components: order list table, order detail with items/totals/address, status badge
-- Navbar: add "My Orders" to user dropdown
+- Queries used: `getOrdersByUserId`, `getOrderById` with `"use cache"` + `cacheTag()`
+- Components: `OrderList` (table), `OrderDetail` (items/summary/addresses/timeline), `OrderStatusBadge` (7 statuses, color-coded), `OrderSummary` (totals breakdown), `AddressDisplay` (reusable)
+- Skeletons: `OrdersListSkeleton`, `OrderDetailSkeleton`
+- Navbar: "My Orders" in user dropdown (desktop + mobile)
+- Auth: `/orders` protected by `proxy.ts` middleware + page-level `auth()` redirect
+- Access control: `order.userId !== session.user.id` → `notFound()`
+- Checkout success page: "View My Orders" link added
+- Bug fixes applied:
+  - Moved `CART_SESSION_COOKIE` from `"use server"` file to `@/lib/cart-utils.ts` (Next.js requires server files to only export async functions)
+  - Moved `auth()` call inside `<Suspense>` boundary in root Providers to prevent blocking route rendering
 
-**1.2 Admin Order Management**
+**1.2 Admin Order Management** ✅ Completed
 
-- Route: `/admin/orders` (list with status filters), `/admin/orders/[id]` (detail + actions)
-- New query: `getAllOrders` with pagination, status filter, date range
-- Wire existing `updateOrderStatus` action to admin UI
-- Status transitions: pending → processing → shipped → delivered (and cancelled/refunded)
-- Add "Orders" link to admin sidebar
+- Route: `/admin/orders` (list with status filters via search params), `/admin/orders/[id]` (detail + status actions)
+- New query: `getAllOrders` with status filter, date range, limit/offset (`"use cache"` + `cacheTag()`)
+- New type: `OrderWithItemsAndUser` extending `OrderWithItems` with user info
+- Enhanced `getOrderById` to include `user` relation (benefits admin detail view)
+- Components: `AdminOrdersHeader`, `OrdersTableLoader` (async server → client table), `OrdersTable` (status filter dropdown, customer info, totals), `AdminOrderDetail` (status update buttons with confirmation dialog)
+- Status transitions: paid → processing → shipped → delivered, with cancel and refund actions where appropriate. Terminal states (cancelled, refunded) have no further transitions
+- Admin sidebar: "Orders" link added between Dashboard and Categories
+- Reuses existing `OrderStatusBadge`, `OrderSummary`, `AddressDisplay` components
+- Wires existing `updateOrderStatus` server action with `useDisclosure` confirmation dialog pattern
+- Loading/not-found pages follow established admin patterns
 
 **1.3 Admin Dashboard**
 
