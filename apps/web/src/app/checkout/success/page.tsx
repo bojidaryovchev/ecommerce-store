@@ -1,4 +1,5 @@
 import { ClearCartOnSuccess } from "@/components/checkout";
+import { AddressDisplay } from "@/components/orders/address-display";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -126,21 +127,7 @@ const CheckoutSuccessPage: React.FC<Props> = async ({ searchParams }) => {
                 <Separator />
                 <div className="space-y-2">
                   <h3 className="font-semibold">Shipping Address</h3>
-                  <address className="text-muted-foreground text-sm not-italic">
-                    {order.shippingAddress.name}
-                    <br />
-                    {order.shippingAddress.line1}
-                    <br />
-                    {order.shippingAddress.line2 && (
-                      <>
-                        {order.shippingAddress.line2}
-                        <br />
-                      </>
-                    )}
-                    {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}
-                    <br />
-                    {order.shippingAddress.country}
-                  </address>
+                  <AddressDisplay address={order.shippingAddress} />
                 </div>
               </>
             )}
@@ -153,7 +140,7 @@ const CheckoutSuccessPage: React.FC<Props> = async ({ searchParams }) => {
             <Link href="/products">Continue Shopping</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/">Back to Home</Link>
+            <Link href="/orders">View My Orders</Link>
           </Button>
         </div>
       </div>

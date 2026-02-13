@@ -8,6 +8,18 @@ const setPathnameHeader = (res: NextResponse, pathname: string) => {
   res.headers.set("x-pathname", pathname);
 };
 
+const protectAuthRoutes = (req: NextAuthRequest, pathname: string) => {
+  if (pathname.startsWith("/orders")) {
+    const session = req.auth;
+
+    if (!session?.user) {
+      const signInUrl = new URL("/api/auth/signin", req.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+  }
+};
+
 const protectAdminRoutes = (req: NextAuthRequest, pathname: string) => {
   if (pathname.startsWith("/admin")) {
     // Allow access to unauthorized page
@@ -41,7 +53,7 @@ export default auth((req) => {
   setPathnameHeader(res, pathname);
   setSecurityHeaders(res);
 
-  return protectAdminRoutes(req, pathname) ?? res;
+  return protectAuthRoutes(req, pathname) ?? protectAdminRoutes(req, pathname) ?? res;
 });
 
 export const config = {

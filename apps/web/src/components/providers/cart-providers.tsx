@@ -1,12 +1,11 @@
 import { CartSheet } from "@/components/cart";
 import { CartProvider } from "@/contexts/cart-context";
+import { CART_SESSION_COOKIE } from "@/lib/cart-utils";
 import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import type { CartWithItems } from "@/types/cart.type";
 import type { Session } from "next-auth";
 import { cookies } from "next/headers";
 import React, { PropsWithChildren } from "react";
-
-const CART_SESSION_COOKIE = "cart_session_id";
 
 interface Props extends PropsWithChildren {
   session: Session | null;

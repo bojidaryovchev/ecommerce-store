@@ -1,5 +1,8 @@
 import type { CartSummary } from "@/types/cart.type";
 
+/**
+ * Cookie name for guest cart session tracking
+ */
 export const CART_SESSION_COOKIE = "cart_session_id";
 
 /**

@@ -6,20 +6,26 @@ import ToasterProviders from "@/components/providers/toaster-providers";
 import { auth } from "@/lib/auth";
 import React, { PropsWithChildren, Suspense } from "react";
 
-const Providers: React.FC<PropsWithChildren> = async ({ children }) => {
+const SessionProviders: React.FC<PropsWithChildren> = async ({ children }) => {
   const session = await auth();
 
+  return (
+    <AuthProviders session={session}>
+      <ToasterProviders>
+        <CartProviders session={session}>
+          <NavbarProviders session={session}>{children}</NavbarProviders>
+        </CartProviders>
+      </ToasterProviders>
+    </AuthProviders>
+  );
+};
+
+const Providers: React.FC<PropsWithChildren> = ({ children }) => {
   return (
     <>
       <HtmlProviders>
         <Suspense fallback={null}>
-          <AuthProviders session={session}>
-            <ToasterProviders>
-              <CartProviders session={session}>
-                <NavbarProviders session={session}>{children}</NavbarProviders>
-              </CartProviders>
-            </ToasterProviders>
-          </AuthProviders>
+          <SessionProviders>{children}</SessionProviders>
         </Suspense>
       </HtmlProviders>
     </>

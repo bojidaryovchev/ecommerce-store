@@ -78,6 +78,14 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                     {category.name}
                   </Link>
                 ))}
+                {session && (
+                  <>
+                    <Separator />
+                    <Link href="/orders" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+                      My Orders
+                    </Link>
+                  </>
+                )}
                 {session && isAdmin && (
                   <>
                     <Separator />
@@ -153,6 +161,9 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                   <p className="text-muted-foreground text-xs">{session.user?.email}</p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/orders">My Orders</Link>
+                </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin">Admin Panel</Link>

@@ -4,6 +4,8 @@ export {
   CategoriesGridSkeleton,
   CategoryDetailSkeleton,
   FormSkeleton,
+  OrderDetailSkeleton,
+  OrdersListSkeleton,
   ProductDetailSkeleton,
   ProductsGridSkeleton,
   TableSkeleton,
