@@ -1,11 +1,11 @@
 "use server";
 
+import { CART_SESSION_COOKIE } from "@/lib/cart-utils";
 import { getCartBySessionId, getOrCreateCartForUser } from "@/queries/cart";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
 import { and, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
-import { CART_SESSION_COOKIE } from "./get-cart.mutation";
 
 /**
  * Merge guest cart into user cart on login

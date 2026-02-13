@@ -1,12 +1,11 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { CART_SESSION_COOKIE } from "@/lib/cart-utils";
 import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import type { ActionResult } from "@/types/action-result.type";
 import type { CartWithItems } from "@/types/cart.type";
 import { cookies } from "next/headers";
-
-const CART_SESSION_COOKIE = "cart_session_id";
 
 /**
  * Get or generate a session ID for guest users
@@ -53,4 +52,4 @@ async function getCart(): Promise<ActionResult<CartWithItems | null>> {
   }
 }
 
-export { CART_SESSION_COOKIE, getCart, getOrCreateSessionId };
+export { getCart, getOrCreateSessionId };

@@ -1,5 +1,7 @@
 import type { CartSummary } from "@/types/cart.type";
 
+export const CART_SESSION_COOKIE = "cart_session_id";
+
 /**
  * Calculate cart summary (item count, subtotal)
  * This is a pure function that can be used on both client and server

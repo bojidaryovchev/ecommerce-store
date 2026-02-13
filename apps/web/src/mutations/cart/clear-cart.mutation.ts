@@ -1,12 +1,12 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { CART_SESSION_COOKIE } from "@/lib/cart-utils";
 import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
-import { CART_SESSION_COOKIE } from "./get-cart.mutation";
 
 /**
  * Clear all items from the cart
