@@ -41,7 +41,7 @@ export const prices = pgTable("price", {
   }>(),
   lookupKey: text("lookup_key"),
   nickname: text("nickname"),
-  metadata: jsonb("metadata").$type<Record<string, string>>(),
+  metadata: jsonb("metadata").$type<Record<string, string>>().notNull().default({}),
   currencyOptions: jsonb("currency_options").$type<
     Record<
       string,

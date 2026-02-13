@@ -31,7 +31,7 @@ export const charges = pgTable("charge", {
   currency: text("currency").notNull(),
   customerId: text("customer_id").references(() => customers.id, { onDelete: "set null" }),
   description: text("description"),
-  disputed: boolean("disputed").default(false),
+  disputed: boolean("disputed").default(false).notNull(),
   paymentIntentId: text("payment_intent_id").references(() => paymentIntents.id, { onDelete: "set null" }),
   paymentMethodDetails: jsonb("payment_method_details").$type<{
     card?: {
@@ -52,7 +52,7 @@ export const charges = pgTable("charge", {
     type?: string;
   }>(),
   receiptEmail: text("receipt_email"),
-  refunded: boolean("refunded").default(false),
+  refunded: boolean("refunded").default(false).notNull(),
   shipping: jsonb("shipping").$type<{
     name?: string;
     phone?: string;
@@ -70,9 +70,9 @@ export const charges = pgTable("charge", {
   statementDescriptor: text("statement_descriptor"),
   statementDescriptorSuffix: text("statement_descriptor_suffix"),
   status: chargeStatusEnum("status").notNull(),
-  paid: boolean("paid").default(false),
+  paid: boolean("paid").default(false).notNull(),
   balanceTransactionId: text("balance_transaction_id"),
-  captured: boolean("captured").default(false),
+  captured: boolean("captured").default(false).notNull(),
   failureCode: text("failure_code"),
   failureMessage: text("failure_message"),
   outcome: jsonb("outcome").$type<{
@@ -93,7 +93,7 @@ export const charges = pgTable("charge", {
     userReport?: string;
   }>(),
   paymentMethod: text("payment_method"),
-  metadata: jsonb("metadata").$type<Record<string, string>>(),
+  metadata: jsonb("metadata").$type<Record<string, string>>().notNull().default({}),
   refunds: jsonb("refunds").$type<{
     data?: Array<{ id?: string; amount?: number }>;
     hasMore?: boolean;

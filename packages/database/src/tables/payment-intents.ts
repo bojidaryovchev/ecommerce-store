@@ -14,8 +14,8 @@ export const paymentIntents = pgTable("payment_intent", {
   stripePaymentIntentId: text("stripe_payment_intent_id").unique().notNull(),
   object: text("object").default("payment_intent"),
   amount: integer("amount").notNull(),
-  amountCapturable: integer("amount_capturable").default(0),
-  amountReceived: integer("amount_received").default(0),
+  amountCapturable: integer("amount_capturable").default(0).notNull(),
+  amountReceived: integer("amount_received").default(0).notNull(),
   automaticPaymentMethods: jsonb("automatic_payment_methods").$type<{
     allowRedirects?: string;
     enabled?: boolean;
@@ -24,7 +24,7 @@ export const paymentIntents = pgTable("payment_intent", {
   customerId: text("customer_id").references(() => customers.id, { onDelete: "set null" }),
   description: text("description"),
   latestChargeId: text("latest_charge_id"),
-  metadata: jsonb("metadata").$type<Record<string, string>>(),
+  metadata: jsonb("metadata").$type<Record<string, string>>().notNull().default({}),
   paymentMethodId: text("payment_method_id"),
   receiptEmail: text("receipt_email"),
   shipping: jsonb("shipping").$type<{

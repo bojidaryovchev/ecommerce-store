@@ -16,6 +16,12 @@ export const promotionCodes = pgTable("promotion_code", {
   maxRedemptions: integer("max_redemptions"),
   timesRedeemed: integer("times_redeemed").default(0).notNull(),
   expiresAt: timestamp("expires_at", { mode: "date" }),
+  promotion: jsonb("promotion")
+    .$type<{
+      coupon?: Record<string, unknown>;
+    }>()
+    .notNull()
+    .default({}),
   restrictions: jsonb("restrictions").$type<{
     firstTimeTransaction?: boolean;
     minimumAmount?: number;

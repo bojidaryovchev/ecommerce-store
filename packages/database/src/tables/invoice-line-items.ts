@@ -57,7 +57,7 @@ export const invoiceLineItems = pgTable("invoice_line_item", {
       creditNote?: string;
     }>
   >(),
-  subtotal: integer("subtotal"),
+  subtotal: integer("subtotal").default(0).notNull(),
   amountExcludingTax: integer("amount_excluding_tax"),
   unitAmountExcludingTax: text("unit_amount_excluding_tax"),
   taxes: jsonb("taxes").$type<

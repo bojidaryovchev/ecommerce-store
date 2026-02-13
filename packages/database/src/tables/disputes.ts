@@ -15,47 +15,53 @@ export const disputes = pgTable("dispute", {
     .references(() => charges.id, { onDelete: "cascade" }),
   currency: text("currency").notNull(),
   enhancedEligibilityTypes: text("enhanced_eligibility_types").array().notNull(),
-  evidence: jsonb("evidence").$type<{
-    accessActivityLog?: string;
-    billingAddress?: string;
-    cancellationPolicy?: string;
-    cancellationPolicyDisclosure?: string;
-    cancellationRebuttal?: string;
-    customerCommunication?: string;
-    customerEmailAddress?: string;
-    customerName?: string;
-    customerPurchaseIp?: string;
-    customerSignature?: string;
-    duplicateChargeDocumentation?: string;
-    duplicateChargeExplanation?: string;
-    duplicateChargeId?: string;
-    productDescription?: string;
-    receipt?: string;
-    refundPolicy?: string;
-    refundPolicyDisclosure?: string;
-    refundRefusalExplanation?: string;
-    serviceDate?: string;
-    serviceDocumentation?: string;
-    shippingAddress?: string;
-    shippingCarrier?: string;
-    shippingDate?: string;
-    shippingDocumentation?: string;
-    shippingTrackingNumber?: string;
-    uncategorizedFile?: string;
-    uncategorizedText?: string;
-  }>(),
-  metadata: jsonb("metadata").$type<Record<string, string>>(),
+  evidence: jsonb("evidence")
+    .$type<{
+      accessActivityLog?: string;
+      billingAddress?: string;
+      cancellationPolicy?: string;
+      cancellationPolicyDisclosure?: string;
+      cancellationRebuttal?: string;
+      customerCommunication?: string;
+      customerEmailAddress?: string;
+      customerName?: string;
+      customerPurchaseIp?: string;
+      customerSignature?: string;
+      duplicateChargeDocumentation?: string;
+      duplicateChargeExplanation?: string;
+      duplicateChargeId?: string;
+      productDescription?: string;
+      receipt?: string;
+      refundPolicy?: string;
+      refundPolicyDisclosure?: string;
+      refundRefusalExplanation?: string;
+      serviceDate?: string;
+      serviceDocumentation?: string;
+      shippingAddress?: string;
+      shippingCarrier?: string;
+      shippingDate?: string;
+      shippingDocumentation?: string;
+      shippingTrackingNumber?: string;
+      uncategorizedFile?: string;
+      uncategorizedText?: string;
+    }>()
+    .notNull()
+    .default({}),
+  metadata: jsonb("metadata").$type<Record<string, string>>().notNull().default({}),
   paymentIntentId: text("payment_intent_id").references(() => paymentIntents.id, { onDelete: "set null" }),
   reason: disputeReasonEnum("reason").notNull(),
   status: disputeStatusEnum("status").notNull(),
-  balanceTransactions: text("balance_transactions").array(),
-  evidenceDetails: jsonb("evidence_details").$type<{
-    dueBy?: number;
-    hasEvidence?: boolean;
-    pastDue?: boolean;
-    submissionCount?: number;
-  }>(),
-  isChargeRefundable: boolean("is_charge_refundable"),
+  balanceTransactions: text("balance_transactions").array().notNull().default([]),
+  evidenceDetails: jsonb("evidence_details")
+    .$type<{
+      dueBy?: number;
+      hasEvidence?: boolean;
+      pastDue?: boolean;
+      submissionCount?: number;
+    }>()
+    .notNull()
+    .default({}),
+  isChargeRefundable: boolean("is_charge_refundable").notNull().default(false),
   paymentMethodDetails: jsonb("payment_method_details").$type<{
     card?: {
       brand?: string;

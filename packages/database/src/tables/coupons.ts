@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, numeric, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { couponDurationEnum } from "../enums";
 
 export const coupons = pgTable("coupon", {
@@ -7,7 +7,7 @@ export const coupons = pgTable("coupon", {
     .$defaultFn(() => crypto.randomUUID()),
   stripeCouponId: text("stripe_coupon_id").unique(),
   object: text("object").default("coupon"),
-  percentOff: integer("percent_off"),
+  percentOff: numeric("percent_off", { precision: 5, scale: 2 }),
   amountOff: integer("amount_off"),
   currency: text("currency"),
   duration: couponDurationEnum("duration").notNull(),
