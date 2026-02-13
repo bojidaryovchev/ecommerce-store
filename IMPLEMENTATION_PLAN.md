@@ -164,14 +164,14 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 
 ### 🔴 Critical — Blocks a Usable MVP
 
-| #     | Gap                           | Details                                                                |
-| ----- | ----------------------------- | ---------------------------------------------------------------------- |
-| ~~1~~ | ~~Customer order history~~    | ~~No `/orders` route~~ — ✅ **Done** (Phase 1.1)                       |
-| ~~2~~ | ~~Admin order management~~    | ~~No `/admin/orders`~~ — ✅ **Done** (Phase 1.2)                       |
-| ~~3~~ | ~~Admin dashboard is static~~ | ~~Placeholder cards~~ — ✅ **Done** (Phase 1.3)                        |
-| 4     | No search or filtering        | No product search, category filter, price sort, or any discovery tools |
-| 5     | No inventory/stock tracking   | No `stock_quantity` on products — nothing prevents overselling         |
-| 6     | No transactional emails       | No order confirmation, no shipping notification, no welcome email      |
+| #     | Gap                           | Details                                                                                   |
+| ----- | ----------------------------- | ----------------------------------------------------------------------------------------- |
+| ~~1~~ | ~~Customer order history~~    | ~~No `/orders` route~~ — ✅ **Done** (Phase 1.1)                                          |
+| ~~2~~ | ~~Admin order management~~    | ~~No `/admin/orders`~~ — ✅ **Done** (Phase 1.2)                                          |
+| ~~3~~ | ~~Admin dashboard is static~~ | ~~Placeholder cards~~ — ✅ **Done** (Phase 1.3)                                           |
+| 4     | No search or filtering        | ~~No product search~~ (✅ Phase 2.1), category filter, price sort, or any discovery tools |
+| 5     | No inventory/stock tracking   | No `stock_quantity` on products — nothing prevents overselling                            |
+| 6     | No transactional emails       | No order confirmation, no shipping notification, no welcome email                         |
 
 ### 🟡 Important — Expected for a Credible MVP
 
@@ -242,11 +242,16 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 
 ### Phase 2 — Discovery & Browsing
 
-**2.1 Product Search**
+**2.1 Product Search** ✅ Completed
 
-- Search bar in navbar (client component, debounced input)
-- New query: `searchProducts(query, filters)` with full-text or ILIKE search
-- Search results page or instant dropdown results
+- Search bar in navbar: `SearchBar` client component with 300ms inline debounce (`setTimeout` + `timerRef`), `useTransition` for non-blocking navigation, search icon + clear button
+- Desktop: search bar inline in desktop nav (lg+) and right section (sm–lg). Mobile: inside sheet nav
+- Navigates to `/products?q=term` on debounce and on form submit
+- Syncs input with URL search params; clears when navigating away from `/products`
+- New query: `searchProducts(query)` using ILIKE on `name` and `COALESCE(description, '')` for null-safe search, filters `active: true`, includes prices + category, uses `"use cache"` + `cacheTag()`
+- New component: `SearchResults` async server component — fetches via `searchProducts`, renders `ProductsGrid` with contextual empty message
+- `/products` page updated: accepts `searchParams`, conditionally renders `SearchResults` or `AllProducts`, Suspense `key={query}` for re-streaming on search change
+- Heading dynamically shows `Search: "query"` with subtitle when searching
 
 **2.2 Filtering & Sorting**
 

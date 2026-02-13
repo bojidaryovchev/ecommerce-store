@@ -19,6 +19,7 @@ import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import React, { useState } from "react";
+import { SearchBar } from "./search-bar";
 
 interface Props {
   categories: Category[];
@@ -58,6 +59,7 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                 <SheetTitle>Navigation</SheetTitle>
               </SheetHeader>
               <nav className="mt-6 flex flex-col gap-4">
+                <SearchBar className="sm:hidden" />
                 <Link href="/" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
                   Home
                 </Link>
@@ -130,10 +132,13 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <SearchBar className="hidden lg:block" />
         </nav>
 
         {/* Right side - Cart and User menu */}
         <div className="flex items-center gap-2">
+          {/* Mobile/Tablet search toggle */}
+          <SearchBar className="hidden sm:block lg:hidden" />
           {/* Cart Button */}
           <Button variant="ghost" size="icon" className="relative" onClick={openCart}>
             <ShoppingCart className="h-5 w-5" />
