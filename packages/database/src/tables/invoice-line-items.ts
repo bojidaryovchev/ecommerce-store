@@ -58,6 +58,8 @@ export const invoiceLineItems = pgTable("invoice_line_item", {
     }>
   >(),
   subtotal: integer("subtotal"),
+  amountExcludingTax: integer("amount_excluding_tax"),
+  unitAmountExcludingTax: text("unit_amount_excluding_tax"),
   taxes: jsonb("taxes").$type<
     Array<{
       amount?: number;

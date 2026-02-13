@@ -54,4 +54,5 @@ export const paymentMethodTypeEnum = pgEnum("payment_method_type", [
   "us_bank_account",
   "wechat_pay",
   "zip",
+  "custom",
 ]);

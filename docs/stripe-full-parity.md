@@ -365,18 +365,18 @@ erDiagram
     }
 
     SubscriptionItem {
-        string id PK
-        string object
-        object metadata
-        object price
-        integer quantity
-        string subscription FK
-        object billing_thresholds
-        array discounts
-        timestamp created
-        timestamp current_period_start
-        timestamp current_period_end
-        array tax_rates
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        object billing_thresholds "NULLABLE"
+        timestamp created "NOT NULL"
+        timestamp current_period_end "NOT NULL"
+        timestamp current_period_start "NOT NULL"
+        array discounts "NOT NULL, Expandable"
+        object metadata "NOT NULL"
+        object price "NOT NULL, Expandable"
+        integer quantity "NULLABLE"
+        string subscription "NOT NULL, FK"
+        array tax_rates "NULLABLE"
     }
 
     %% Invoices
@@ -695,23 +695,33 @@ erDiagram
     }
 
     Discount {
-        string id PK
-        string object
-        object coupon
-        string customer FK
-        string promotion_code FK
-        timestamp start
-        timestamp end
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        string checkout_session "NULLABLE"
+        string customer "NULLABLE, FK, Expandable"
+        string customer_account "NULLABLE"
+        timestamp end "NULLABLE"
+        string invoice "NULLABLE"
+        string invoice_item "NULLABLE"
+        string promotion_code "NULLABLE, FK, Expandable"
+        object source "NOT NULL"
+        timestamp start "NOT NULL"
+        string subscription "NULLABLE"
+        string subscription_item "NULLABLE"
     }
 
     TaxId {
-        string id PK
-        string object
-        string country
-        string customer FK
-        enum type
-        string value
-        timestamp created
+        string id PK "NOT NULL"
+        string object "NOT NULL"
+        string country "NULLABLE"
+        string customer "NULLABLE, FK, Expandable"
+        string customer_account "NULLABLE"
+        timestamp created "NOT NULL"
+        boolean livemode "NOT NULL"
+        object owner "NULLABLE"
+        enum type "NOT NULL"
+        string value "NOT NULL"
+        object verification "NULLABLE"
     }
 ```
 
@@ -1117,6 +1127,37 @@ flowchart LR
 - `exempt` - Tax exempt
 - `reverse` - Reverse charge
 
+### TaxId Type (112+ country-specific tax ID formats)
+
+- `ad_nrt` - Andorran NRT number
+- `ae_trn` - UAE TRN
+- `ar_cuit` - Argentina CUIT
+- `au_abn` - Australian ABN
+- `au_arn` - Australian ARN
+- `br_cnpj` - Brazil CNPJ
+- `br_cpf` - Brazil CPF
+- `ca_bn` - Canadian BN
+- `ca_gst_hst` - Canadian GST/HST
+- `ch_vat` - Swiss VAT
+- `cl_tin` - Chile TIN
+- `de_stn` - German Tax ID
+- `es_cif` - Spain CIF
+- `eu_vat` - European VAT
+- `gb_vat` - UK VAT
+- `hk_br` - Hong Kong BR
+- `in_gst` - Indian GST
+- `jp_cn` - Japan Corporate Number
+- `jp_rn` - Japan Registered Number
+- `kr_brn` - Korean BRN
+- `mx_rfc` - Mexico RFC
+- `my_sst` - Malaysian SST
+- `nz_gst` - New Zealand GST
+- `sg_gst` - Singapore GST
+- `sg_uen` - Singapore UEN
+- `us_ein` - US EIN
+- `za_vat` - South Africa VAT
+- _(100+ additional country-specific formats)_
+
 ### Price Types
 
 - `one_time`
@@ -1424,7 +1465,7 @@ flowchart TB
 - [Testing Guide](https://docs.stripe.com/testing) - Test card numbers and scenarios
 - [API Versioning](https://docs.stripe.com/upgrades) - Version upgrade guides
 
-_Last Updated: February 2, 2026_  
+_Last Updated: February 13, 2026_  
 _Based on: Stripe API Documentation (docs.stripe.com/api)_  
-_Verification: Systematic entity-by-entity comparison completed_  
-_Status: ✅ Full 1:1 parity achieved with all core Stripe objects_
+_Verification: Systematic entity-by-entity comparison completed against live API docs_  
+_Status: ✅ Full 1:1 parity achieved with all 22 core Stripe objects_

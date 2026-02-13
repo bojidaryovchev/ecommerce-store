@@ -16,7 +16,7 @@ export const subscriptions = pgTable("subscription", {
   description: text("description"),
   automaticTax: jsonb("automatic_tax").$type<{
     enabled?: boolean;
-    liabilty?: {
+    liability?: {
       type?: string;
       account?: string;
     };

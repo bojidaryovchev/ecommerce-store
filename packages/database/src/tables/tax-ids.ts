@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { taxIdTypeEnum } from "../enums";
 import { customers } from "./customers";
 
@@ -14,6 +14,18 @@ export const taxIds = pgTable("tax_id", {
   type: taxIdTypeEnum("type").notNull(),
   value: text("value").notNull(),
   country: text("country"),
+  description: text("description"),
+  owner: jsonb("owner").$type<{
+    type?: string;
+    customer?: string;
+    account?: string;
+  }>(),
+  verification: jsonb("verification").$type<{
+    status?: "pending" | "verified" | "unverified" | "unavailable";
+    verifiedAddress?: string;
+    verifiedName?: string;
+  }>(),
+  livemode: boolean("livemode").default(false).notNull(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });

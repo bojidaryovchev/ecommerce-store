@@ -10,21 +10,24 @@ export const charges = pgTable("charge", {
   stripeChargeId: text("stripe_charge_id").unique().notNull(),
   object: text("object").default("charge"),
   amount: integer("amount").notNull(),
-  amountCaptured: integer("amount_captured").default(0),
-  amountRefunded: integer("amount_refunded").default(0),
-  billingDetails: jsonb("billing_details").$type<{
-    address?: {
-      line1?: string;
-      line2?: string;
-      city?: string;
-      state?: string;
-      postalCode?: string;
-      country?: string;
-    };
-    email?: string;
-    name?: string;
-    phone?: string;
-  }>(),
+  amountCaptured: integer("amount_captured").default(0).notNull(),
+  amountRefunded: integer("amount_refunded").default(0).notNull(),
+  billingDetails: jsonb("billing_details")
+    .$type<{
+      address?: {
+        line1?: string;
+        line2?: string;
+        city?: string;
+        state?: string;
+        postalCode?: string;
+        country?: string;
+      };
+      email?: string;
+      name?: string;
+      phone?: string;
+    }>()
+    .notNull()
+    .default({}),
   currency: text("currency").notNull(),
   customerId: text("customer_id").references(() => customers.id, { onDelete: "set null" }),
   description: text("description"),

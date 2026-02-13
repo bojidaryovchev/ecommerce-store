@@ -43,19 +43,22 @@ export const customers = pgTable("customer", {
     }>()
     .notNull()
     .default({}),
-  metadata: jsonb("metadata").$type<Record<string, string>>(),
-  balance: integer("balance").default(0),
+  metadata: jsonb("metadata").$type<Record<string, string>>().notNull().default({}),
+  balance: integer("balance").default(0).notNull(),
   currency: text("currency"),
   defaultSourceId: text("default_source_id"),
   delinquent: boolean("delinquent").default(false),
-  invoiceSettings: jsonb("invoice_settings").$type<{
-    customFields?: Array<{ name: string; value: string }>;
-    defaultPaymentMethod?: string;
-    footer?: string;
-    renderingOptions?: {
-      amountTaxDisplay?: string;
-    };
-  }>(),
+  invoiceSettings: jsonb("invoice_settings")
+    .$type<{
+      customFields?: Array<{ name: string; value: string }>;
+      defaultPaymentMethod?: string;
+      footer?: string;
+      renderingOptions?: {
+        amountTaxDisplay?: string;
+      };
+    }>()
+    .notNull()
+    .default({}),
   livemode: boolean("livemode").default(false).notNull(),
   customerAccount: text("customer_account"),
   businessName: text("business_name"),

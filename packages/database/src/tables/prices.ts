@@ -16,7 +16,7 @@ export const prices = pgTable("price", {
   unitAmount: integer("unit_amount"),
   unitAmountDecimal: text("unit_amount_decimal"),
   type: priceTypeEnum("type").default("one_time").notNull(),
-  billingScheme: priceBillingSchemeEnum("billing_scheme").default("per_unit"),
+  billingScheme: priceBillingSchemeEnum("billing_scheme").default("per_unit").notNull(),
   recurring: jsonb("recurring").$type<{
     interval: "day" | "week" | "month" | "year";
     intervalCount: number;

@@ -10,7 +10,7 @@ export const balanceTransactions = pgTable("balance_transaction", {
   amount: integer("amount").notNull(),
   currency: text("currency").notNull(),
   description: text("description"),
-  fee: integer("fee").default(0),
+  fee: integer("fee").default(0).notNull(),
   feeDetails: jsonb("fee_details").$type<
     Array<{
       amount?: number;
