@@ -20,10 +20,10 @@ const CheckoutCancelPage: React.FC = () => {
         </p>
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Button asChild>
-            <Link href="/cart">Return to Cart</Link>
+            <Link href="/products">Continue Shopping</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/products">Continue Shopping</Link>
+            <Link href="/">Back to Home</Link>
           </Button>
         </div>
       </div>

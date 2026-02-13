@@ -1,10 +1,8 @@
+import { mergeGuestCartToUser } from "@/mutations/cart";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { accounts, db, sessions, users, verificationTokens } from "@ecommerce/database";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-
-// User role type
-type UserRole = "USER" | "ADMIN" | "SUPER_ADMIN";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -29,6 +27,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
   },
+  events: {
+    async signIn({ user }) {
+      // Merge guest cart into user cart on login
+      if (user.id) {
+        await mergeGuestCartToUser(user.id);
+      }
+    },
+  },
   callbacks: {
     async jwt({ token, user, account }) {
       // Initial sign in
@@ -45,8 +51,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       // Add user id and role to session
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as UserRole;
+        session.user.id = token.id;
+        session.user.role = token.role;
       }
       return session;
     },

@@ -1,10 +1,14 @@
 import { Navbar } from "@/components/common/navbar";
-import { auth } from "@/lib/auth";
 import { getRootCategories } from "@/queries/categories";
+import type { Session } from "next-auth";
 import React, { PropsWithChildren } from "react";
 
-const NavbarProviders: React.FC<PropsWithChildren> = async ({ children }) => {
-  const [categories, session] = await Promise.all([getRootCategories(), auth()]);
+interface Props extends PropsWithChildren {
+  session: Session | null;
+}
+
+const NavbarProviders: React.FC<Props> = async ({ session, children }) => {
+  const categories = await getRootCategories();
 
   return (
     <>

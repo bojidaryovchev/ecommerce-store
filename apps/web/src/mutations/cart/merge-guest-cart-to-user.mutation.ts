@@ -4,7 +4,6 @@ import { getCartBySessionId, getOrCreateCartForUser } from "@/queries/cart";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
 import { and, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { CART_SESSION_COOKIE } from "./get-cart.mutation";
 
@@ -63,9 +62,6 @@ async function mergeGuestCartToUser(userId: string): Promise<ActionResult<void>>
 
     // Clear the session cookie
     cookieStore.delete(CART_SESSION_COOKIE);
-
-    revalidatePath("/");
-    revalidatePath("/cart");
 
     return { success: true, data: undefined };
   } catch (error) {

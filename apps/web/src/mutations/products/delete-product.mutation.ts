@@ -1,6 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { unlinkUploads } from "@/mutations/uploads";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
@@ -24,6 +25,9 @@ async function deleteProduct(id: string): Promise<ActionResult<void>> {
 
     // Soft delete: set active to false
     await db.update(schema.products).set({ active: false, updatedAt: new Date() }).where(eq(schema.products.id, id));
+
+    // Unlink uploads so orphan cleanup can reclaim storage
+    await unlinkUploads(id, "product");
 
     revalidateTag(CACHE_TAGS.products, "max");
     revalidateTag(CACHE_TAGS.product(id), "max");

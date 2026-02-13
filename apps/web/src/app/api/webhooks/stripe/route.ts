@@ -1,6 +1,8 @@
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { stripe } from "@/lib/stripe";
 import { db, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -87,23 +89,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     return sum + (item.price.unitAmount ?? 0) * item.quantity;
   }, 0);
 
-  // Get shipping address from Stripe session
-  // Use type assertion as shipping_details is available when shipping_address_collection is enabled
-  const sessionWithShipping = session as Stripe.Checkout.Session & {
-    shipping_details?: {
-      name?: string | null;
-      phone?: string | null;
-      address?: {
-        line1?: string | null;
-        line2?: string | null;
-        city?: string | null;
-        state?: string | null;
-        postal_code?: string | null;
-        country?: string | null;
-      } | null;
-    } | null;
-  };
-  const shippingDetails = sessionWithShipping.shipping_details;
+  // Get shipping address from Stripe session (v20: under collected_information)
+  const shippingDetails = session.collected_information?.shipping_details;
   const shippingAddress = shippingDetails?.address
     ? {
         name: shippingDetails.name ?? "",
@@ -113,7 +100,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         state: shippingDetails.address.state ?? undefined,
         postalCode: shippingDetails.address.postal_code ?? "",
         country: shippingDetails.address.country ?? "",
-        phone: shippingDetails.phone ?? undefined,
       }
     : undefined;
 
@@ -175,6 +161,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   // Clear the cart
   await db.delete(schema.cartItems).where(eq(schema.cartItems.cartId, cartId));
+
+  // Invalidate order cache so success page can find the new order
+  revalidateTag(CACHE_TAGS.orders, "max");
+  revalidateTag(`checkout-session:${session.id}`, "max");
+  if (userId) {
+    revalidateTag(CACHE_TAGS.ordersByUser(userId), "max");
+  }
 
   console.log("Order created:", order.id);
 }

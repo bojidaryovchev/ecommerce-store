@@ -6,7 +6,7 @@ const ProductDetailSkeleton: React.FC = () => {
       {/* Breadcrumb skeleton */}
       <div className="bg-muted h-4 w-64 animate-pulse rounded" />
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-2">
         {/* Image skeleton */}
         <div className="bg-muted aspect-square animate-pulse rounded-lg" />
 

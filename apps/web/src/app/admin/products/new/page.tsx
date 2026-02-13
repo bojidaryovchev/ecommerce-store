@@ -1,6 +1,11 @@
 import { ProductFormLoader } from "@/components/admin";
 import { FormSkeleton } from "@/components/common";
+import type { Metadata } from "next";
 import React, { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "New Product | Admin",
+};
 
 const NewProductPage: React.FC = () => {
   return (

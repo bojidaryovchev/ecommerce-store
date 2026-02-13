@@ -171,13 +171,11 @@ const CategoryForm: React.FC<Props> = ({ category, parentCategories }) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No Parent (Root Category)</SelectItem>
-                {parentCategories
-                  .filter((cat) => cat.id !== category?.id)
-                  .map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
+                {parentCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}

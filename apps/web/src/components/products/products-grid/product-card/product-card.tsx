@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import type { ProductWithPrices } from "@/types/category.type";
+import type { ProductWithPrices } from "@/types/product.type";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";

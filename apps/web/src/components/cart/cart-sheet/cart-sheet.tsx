@@ -100,8 +100,8 @@ const CartSheet: React.FC = () => {
               </Button>
 
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={closeCart} asChild>
-                  <Link href="/cart">View Cart</Link>
+                <Button variant="outline" className="flex-1" onClick={closeCart}>
+                  Continue Shopping
                 </Button>
                 <Button
                   variant="ghost"

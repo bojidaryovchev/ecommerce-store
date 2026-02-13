@@ -5,7 +5,6 @@ import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { CART_SESSION_COOKIE } from "./get-cart.mutation";
 
@@ -30,9 +29,6 @@ async function clearCart(): Promise<ActionResult<void>> {
     if (cart) {
       await db.delete(schema.cartItems).where(eq(schema.cartItems.cartId, cart.id));
     }
-
-    revalidatePath("/");
-    revalidatePath("/cart");
 
     return {
       success: true,

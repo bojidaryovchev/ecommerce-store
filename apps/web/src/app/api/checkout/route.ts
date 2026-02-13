@@ -1,10 +1,9 @@
 import { auth } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
+import { CART_SESSION_COOKIE } from "@/mutations/cart";
 import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-
-const CART_SESSION_COOKIE = "cart_session_id";
 
 export async function POST(request: NextRequest) {
   try {

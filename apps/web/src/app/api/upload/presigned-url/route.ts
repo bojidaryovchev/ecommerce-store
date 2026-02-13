@@ -1,9 +1,18 @@
+import { auth } from "@/lib/auth";
 import { generateUploadKey, getS3ObjectUrl, getUploadPresignedUrl, S3_BUCKET_NAME } from "@/lib/s3";
 import { db, schema } from "@ecommerce/database";
+import { UserRole } from "@ecommerce/database/schema";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
+    // Only admins can upload
+    const session = await auth();
+    const isAdmin = session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.SUPER_ADMIN;
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Validate bucket is configured
     if (!S3_BUCKET_NAME) {
       return NextResponse.json({ error: "S3 bucket not configured" }, { status: 500 });

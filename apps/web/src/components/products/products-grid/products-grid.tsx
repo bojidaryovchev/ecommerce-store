@@ -1,16 +1,17 @@
-import type { ProductWithPrices } from "@/types/category.type";
+import type { ProductWithPrices } from "@/types/product.type";
 import React from "react";
 import { ProductCard } from "./product-card";
 
 interface Props {
   products: ProductWithPrices[];
+  emptyMessage?: string;
 }
 
-const ProductsGrid: React.FC<Props> = ({ products }) => {
+const ProductsGrid: React.FC<Props> = ({ products, emptyMessage = "No products found" }) => {
   if (products.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-muted-foreground">No products found in this category</p>
+        <p className="text-muted-foreground">{emptyMessage}</p>
       </div>
     );
   }

@@ -1,6 +1,11 @@
 import { CategoryFormLoader } from "@/components/admin";
 import { FormSkeleton } from "@/components/common";
+import type { Metadata } from "next";
 import React, { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "New Category | Admin",
+};
 
 const NewCategoryPage: React.FC = () => {
   return (

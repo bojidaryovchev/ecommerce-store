@@ -6,7 +6,6 @@ import type { ActionResult } from "@/types/action-result.type";
 import type { CartWithItems } from "@/types/cart.type";
 import { db, schema } from "@ecommerce/database";
 import { and, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { getOrCreateSessionId } from "./get-cart.mutation";
 
 /**
@@ -18,6 +17,24 @@ async function addToCart(
   quantity: number = 1,
 ): Promise<ActionResult<CartWithItems>> {
   try {
+    // Validate product exists and is active
+    const product = await db.query.products.findFirst({
+      where: and(eq(schema.products.id, productId), eq(schema.products.active, true)),
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found or unavailable" };
+    }
+
+    // Validate price exists, is active, and belongs to this product
+    const price = await db.query.prices.findFirst({
+      where: and(eq(schema.prices.id, priceId), eq(schema.prices.productId, productId), eq(schema.prices.active, true)),
+    });
+
+    if (!price) {
+      return { success: false, error: "Price not found or unavailable" };
+    }
+
     const session = await auth();
     let cart;
 
@@ -68,10 +85,6 @@ async function addToCart(
         },
       },
     });
-
-    revalidatePath("/");
-    revalidatePath("/products");
-    revalidatePath("/cart");
 
     return {
       success: true,

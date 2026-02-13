@@ -1,4 +1,7 @@
-import type { Category, Price, Product } from "@ecommerce/database/schema";
+import type { ProductWithPrices } from "@/types/product.type";
+import type { Category } from "@ecommerce/database/schema";
+
+export type { ProductWithPrices };
 
 export type CategoryWithChildren = Category & {
   children: Category[];
@@ -10,10 +13,6 @@ export type CategoryWithParent = Category & {
 
 export type CategoryWithProducts = Category & {
   products: ProductWithPrices[];
-};
-
-export type ProductWithPrices = Product & {
-  prices: Price[];
 };
 
 export type CategoryWithProductsAndChildren = Category & {

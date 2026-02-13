@@ -1,6 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { unlinkUploads } from "@/mutations/uploads";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
@@ -29,10 +30,19 @@ async function deleteCategory(id: string): Promise<ActionResult<void>> {
       .where(eq(schema.categories.id, id));
 
     // Also soft delete child categories
+    const children = await db.query.categories.findMany({
+      where: eq(schema.categories.parentId, id),
+    });
     await db
       .update(schema.categories)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(eq(schema.categories.parentId, id));
+
+    // Unlink uploads so orphan cleanup can reclaim storage
+    await unlinkUploads(id, "category");
+    for (const child of children) {
+      await unlinkUploads(child.id, "category");
+    }
 
     revalidateTag(CACHE_TAGS.categories, "max");
     revalidateTag(CACHE_TAGS.category(id), "max");

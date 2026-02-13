@@ -19,7 +19,7 @@ export const orders = pgTable("order", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   stripePaymentIntentId: text("stripe_payment_intent_id").unique(),
-  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+  stripeCheckoutSessionId: text("stripe_checkout_session_id").unique(),
   userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
   guestEmail: text("guest_email"),
   status: orderStatusEnum("status").default("pending").notNull(),

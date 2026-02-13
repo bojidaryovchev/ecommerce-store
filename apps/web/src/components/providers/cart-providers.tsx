@@ -1,15 +1,18 @@
 import { CartSheet } from "@/components/cart";
 import { CartProvider } from "@/contexts/cart-context";
-import { auth } from "@/lib/auth";
 import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import type { CartWithItems } from "@/types/cart.type";
+import type { Session } from "next-auth";
 import { cookies } from "next/headers";
 import React, { PropsWithChildren } from "react";
 
 const CART_SESSION_COOKIE = "cart_session_id";
 
-const CartProviders: React.FC<PropsWithChildren> = async ({ children }) => {
-  const session = await auth();
+interface Props extends PropsWithChildren {
+  session: Session | null;
+}
+
+const CartProviders: React.FC<Props> = async ({ session, children }) => {
   let initialCart: CartWithItems | null = null;
 
   if (session?.user?.id) {

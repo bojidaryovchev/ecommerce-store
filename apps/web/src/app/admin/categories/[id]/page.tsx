@@ -1,6 +1,11 @@
 import { CategoryFormLoader } from "@/components/admin";
 import { FormSkeleton } from "@/components/common";
+import type { Metadata } from "next";
 import React, { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Edit Category | Admin",
+};
 
 interface Props {
   params: Promise<{ id: string }>;
