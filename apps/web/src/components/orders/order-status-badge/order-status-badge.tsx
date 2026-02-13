@@ -1,8 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { OrderStatus } from "@ecommerce/database/schema";
 import React from "react";
-
-type OrderStatus = "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
 
 type Props = {
   status: OrderStatus;

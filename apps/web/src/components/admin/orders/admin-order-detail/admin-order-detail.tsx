@@ -15,14 +15,13 @@ import { useDisclosure } from "@/hooks/use-disclosure";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { updateOrderStatus } from "@/mutations/orders";
 import type { OrderWithItemsAndUser } from "@/queries/orders";
+import type { OrderStatus } from "@ecommerce/database/schema";
 import { ArrowLeft, CheckCircle, Package, RotateCcw, Truck, XCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-
-type OrderStatus = "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
 
 type Props = {
   order: OrderWithItemsAndUser;

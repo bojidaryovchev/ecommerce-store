@@ -164,14 +164,14 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 
 ### 🔴 Critical — Blocks a Usable MVP
 
-| #     | Gap                         | Details                                                                |
-| ----- | --------------------------- | ---------------------------------------------------------------------- |
-| ~~1~~ | ~~Customer order history~~  | ~~No `/orders` route~~ — ✅ **Done** (Phase 1.1)                       |
-| ~~2~~ | ~~Admin order management~~  | ~~No `/admin/orders`~~ — ✅ **Done** (Phase 1.2)                       |
-| 3     | Admin dashboard is static   | Placeholder cards, no real stats (revenue, counts, recent orders)      |
-| 4     | No search or filtering      | No product search, category filter, price sort, or any discovery tools |
-| 5     | No inventory/stock tracking | No `stock_quantity` on products — nothing prevents overselling         |
-| 6     | No transactional emails     | No order confirmation, no shipping notification, no welcome email      |
+| #     | Gap                           | Details                                                                |
+| ----- | ----------------------------- | ---------------------------------------------------------------------- |
+| ~~1~~ | ~~Customer order history~~    | ~~No `/orders` route~~ — ✅ **Done** (Phase 1.1)                       |
+| ~~2~~ | ~~Admin order management~~    | ~~No `/admin/orders`~~ — ✅ **Done** (Phase 1.2)                       |
+| ~~3~~ | ~~Admin dashboard is static~~ | ~~Placeholder cards~~ — ✅ **Done** (Phase 1.3)                        |
+| 4     | No search or filtering        | No product search, category filter, price sort, or any discovery tools |
+| 5     | No inventory/stock tracking   | No `stock_quantity` on products — nothing prevents overselling         |
+| 6     | No transactional emails       | No order confirmation, no shipping notification, no welcome email      |
 
 ### 🟡 Important — Expected for a Credible MVP
 
@@ -231,13 +231,14 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 - Wires existing `updateOrderStatus` server action with `useDisclosure` confirmation dialog pattern
 - Loading/not-found pages follow established admin patterns
 
-**1.3 Admin Dashboard**
+**1.3 Admin Dashboard** ✅ Completed
 
-- Replace placeholder cards with real aggregations:
-  - Total orders / revenue (all-time + last 30 days)
-  - Product count / category count
-  - Orders pending fulfillment
-- Recent orders table (last 10) with quick links
+- Replaced static placeholder cards with real aggregated data
+- New queries: `getDashboardStats` (parallel aggregations: order count/revenue all-time + 30 days, pending fulfillment, product/category counts), `getRecentOrders` (last 10 non-pending orders with user info)
+- Components: `DashboardStatsCards` (4 metric cards with icons: revenue, orders, pending fulfillment, catalog), `DashboardRecentOrders` (recent orders table with status badges, customer info, "View All" link)
+- `AdminDashboard` refactored from sync placeholder to async server component fetching data via `Promise.all`
+- Admin page wrapped in `<Suspense>` with skeleton fallback
+- Cache: uses existing `CACHE_TAGS.orders`, `CACHE_TAGS.products`, `CACHE_TAGS.categories` — auto-invalidated by existing mutations
 
 ### Phase 2 — Discovery & Browsing
 

@@ -1,4 +1,4 @@
-import { OrderDetailSkeleton } from "@/components/common/skeletons/order-detail-skeleton";
+import { OrderDetailSkeleton } from "@/components/common";
 import { OrderDetail } from "@/components/orders";
 import { auth } from "@/lib/auth";
 import { getOrderById } from "@/queries/orders";

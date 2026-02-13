@@ -1,5 +1,5 @@
 import { ClearCartOnSuccess } from "@/components/checkout";
-import { AddressDisplay } from "@/components/orders/address-display";
+import { AddressDisplay } from "@/components/orders";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";

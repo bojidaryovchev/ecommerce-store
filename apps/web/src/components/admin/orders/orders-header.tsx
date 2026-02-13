@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-interface Props {
+type Props = {
   children: React.ReactNode;
-}
+};
 
 const AdminOrdersHeader: React.FC<Props> = ({ children }) => {
   return (

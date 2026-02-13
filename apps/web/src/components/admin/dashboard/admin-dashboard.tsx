@@ -1,29 +1,16 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { getDashboardStats, getRecentOrders } from "@/queries/dashboard";
+import React from "react";
+import { DashboardRecentOrders } from "./dashboard-recent-orders";
+import { DashboardStatsCards } from "./dashboard-stats-cards";
 
-const AdminDashboard: React.FC = () => {
+const AdminDashboard: React.FC = async () => {
+  const [stats, recentOrders] = await Promise.all([getDashboardStats(), getRecentOrders()]);
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Dashboard</h1>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-muted-foreground">Categories</p>
-            <p className="text-2xl font-bold">Manage your categories</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-muted-foreground">Products</p>
-            <p className="text-2xl font-bold">Manage your products</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-muted-foreground">Orders</p>
-            <p className="text-2xl font-bold">View orders</p>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardStatsCards stats={stats} />
+      <DashboardRecentOrders orders={recentOrders} />
     </div>
   );
 };

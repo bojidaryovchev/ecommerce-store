@@ -1,4 +1,4 @@
-import { OrderDetailSkeleton } from "@/components/common/skeletons/order-detail-skeleton";
+import { OrderDetailSkeleton } from "@/components/common";
 import React from "react";
 
 const OrderLoading: React.FC = () => {
