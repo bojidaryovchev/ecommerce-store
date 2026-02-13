@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
-import { getCartBySessionId, getCartByUserId } from "@/lib/queries/cart";
 import { stripe } from "@/lib/stripe";
+import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 

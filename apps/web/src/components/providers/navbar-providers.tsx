@@ -1,6 +1,6 @@
-import Navbar from "@/components/navbar.component";
+import { Navbar } from "@/components/common/navbar";
 import { auth } from "@/lib/auth";
-import { getRootCategories } from "@/lib/queries/categories";
+import { getRootCategories } from "@/queries/categories";
 import React, { PropsWithChildren } from "react";
 
 const NavbarProviders: React.FC<PropsWithChildren> = async ({ children }) => {

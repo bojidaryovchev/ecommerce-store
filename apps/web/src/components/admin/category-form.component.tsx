@@ -1,12 +1,12 @@
 "use client";
 
-import { createCategory, updateCategory } from "@/actions/drizzle-categories.action";
 import { Button } from "@/components/ui/button";
 import ImageUpload from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { createCategory, updateCategory } from "@/mutations/categories";
 import type { Category } from "@ecommerce/database/schema";
 import { insertCategorySchema } from "@ecommerce/database/validators";
 import { zodResolver } from "@hookform/resolvers/zod";

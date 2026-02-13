@@ -1,7 +1,7 @@
-import CartSheet from "@/components/cart-sheet.component";
+import { CartSheet } from "@/components/cart";
 import { CartProvider } from "@/contexts/cart-context";
 import { auth } from "@/lib/auth";
-import { getCartBySessionId, getCartByUserId } from "@/lib/queries/cart";
+import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import type { CartWithItems } from "@/types/cart.type";
 import { cookies } from "next/headers";
 import React, { PropsWithChildren } from "react";

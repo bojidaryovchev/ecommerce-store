@@ -1,6 +1,5 @@
 "use client";
 
-import { deleteCategory } from "@/actions/drizzle-categories.action";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +13,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDisclosure } from "@/hooks/use-disclosure";
+import { deleteCategory } from "@/mutations/categories";
 import type { Category } from "@ecommerce/database/schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

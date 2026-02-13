@@ -1,4 +1,4 @@
-import AdminSidebar from "@/components/admin/admin-sidebar.component";
+import { AdminSidebar } from "@/components/admin";
 import React, { PropsWithChildren } from "react";
 
 const AdminLayout: React.FC<PropsWithChildren> = ({ children }) => {

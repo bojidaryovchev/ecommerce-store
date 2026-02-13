@@ -1,9 +1,9 @@
-import { ClearCartOnSuccess } from "@/components/clear-cart-on-success.component";
+import { ClearCartOnSuccess } from "@/components/checkout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getOrderByCheckoutSessionId } from "@/lib/queries/orders";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { getOrderByCheckoutSessionId } from "@/queries/orders";
 import { CheckCircle2, Package } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";

@@ -1,6 +1,5 @@
 "use client";
 
-import { deleteProduct, restoreProduct } from "@/actions/drizzle-products.action";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import { formatCurrency } from "@/lib/utils";
+import { deleteProduct, restoreProduct } from "@/mutations/products";
 import type { ProductWithPricesAndCategory } from "@/types/product.type";
 import Image from "next/image";
 import Link from "next/link";

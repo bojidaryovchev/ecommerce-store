@@ -1,7 +1,7 @@
 "use client";
 
-import { addToCart, clearCart, getCart, removeFromCart, updateCartItemQuantity } from "@/actions/cart.action";
 import { calculateCartSummary } from "@/lib/cart-utils";
+import { addToCart, clearCart, getCart, removeFromCart, updateCartItemQuantity } from "@/mutations/cart";
 import type { CartSummary, CartWithItems } from "@/types/cart.type";
 import React, { createContext, PropsWithChildren, useCallback, useContext, useState, useTransition } from "react";
 import toast from "react-hot-toast";

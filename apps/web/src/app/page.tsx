@@ -1,9 +1,5 @@
-import CategoriesGrid from "@/components/categories-grid.component";
-import HomeHero from "@/components/home-hero.component";
-import ProductsGrid from "@/components/products-grid.component";
-import SectionHeader from "@/components/section-header.component";
-import { getRootCategories } from "@/lib/queries/categories";
-import { getFeaturedProducts } from "@/lib/queries/products";
+import { CategoriesGridSkeleton, ProductsGridSkeleton, SectionHeader } from "@/components/common";
+import { FeaturedCategories, FeaturedProducts, HomeHero } from "@/components/home";
 import React, { Suspense } from "react";
 
 const Home: React.FC = () => {
@@ -25,42 +21,6 @@ const Home: React.FC = () => {
         </Suspense>
       </section>
     </main>
-  );
-};
-
-const FeaturedProducts: React.FC = async () => {
-  const products = await getFeaturedProducts(8);
-  return <ProductsGrid products={products} />;
-};
-
-const FeaturedCategories: React.FC = async () => {
-  const categories = await getRootCategories();
-  const featuredCategories = categories.slice(0, 4);
-
-  return <CategoriesGrid categories={featuredCategories} />;
-};
-
-const ProductsGridSkeleton: React.FC = () => {
-  return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="space-y-3">
-          <div className="bg-muted aspect-square animate-pulse rounded-lg" />
-          <div className="bg-muted h-4 w-3/4 animate-pulse rounded" />
-          <div className="bg-muted h-4 w-1/2 animate-pulse rounded" />
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const CategoriesGridSkeleton: React.FC = () => {
-  return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-muted aspect-square animate-pulse rounded-lg" />
-      ))}
-    </div>
   );
 };
 

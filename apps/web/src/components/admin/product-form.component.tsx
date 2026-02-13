@@ -1,12 +1,13 @@
 "use client";
 
-import { createPrice, createProduct, updateProduct } from "@/actions/drizzle-products.action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { createPrice } from "@/mutations/prices";
+import { createProduct, updateProduct } from "@/mutations/products";
 import type { ProductWithDetails } from "@/types/product.type";
 import type { Category } from "@ecommerce/database/schema";
 import { insertProductSchema } from "@ecommerce/database/validators";
@@ -108,7 +109,7 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
         unitLabel: data.unitLabel || null,
         url: data.url || null,
         statementDescriptor: data.statementDescriptor || null,
-        images: images.length > 0 ? images : null,
+        images: images.length > 0 ? images : undefined,
       };
 
       if (isEditing) {
