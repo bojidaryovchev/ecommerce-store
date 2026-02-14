@@ -164,14 +164,14 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 
 ### 🔴 Critical — Blocks a Usable MVP
 
-| #     | Gap                           | Details                                                                                   |
-| ----- | ----------------------------- | ----------------------------------------------------------------------------------------- |
-| ~~1~~ | ~~Customer order history~~    | ~~No `/orders` route~~ — ✅ **Done** (Phase 1.1)                                          |
-| ~~2~~ | ~~Admin order management~~    | ~~No `/admin/orders`~~ — ✅ **Done** (Phase 1.2)                                          |
-| ~~3~~ | ~~Admin dashboard is static~~ | ~~Placeholder cards~~ — ✅ **Done** (Phase 1.3)                                           |
-| 4     | No search or filtering        | ~~No product search~~ (✅ Phase 2.1), category filter, price sort, or any discovery tools |
-| 5     | No inventory/stock tracking   | No `stock_quantity` on products — nothing prevents overselling                            |
-| 6     | No transactional emails       | No order confirmation, no shipping notification, no welcome email                         |
+| #     | Gap                           | Details                                                                                                         |
+| ----- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| ~~1~~ | ~~Customer order history~~    | ~~No `/orders` route~~ — ✅ **Done** (Phase 1.1)                                                                |
+| ~~2~~ | ~~Admin order management~~    | ~~No `/admin/orders`~~ — ✅ **Done** (Phase 1.2)                                                                |
+| ~~3~~ | ~~Admin dashboard is static~~ | ~~Placeholder cards~~ — ✅ **Done** (Phase 1.3)                                                                 |
+| 4     | No search or filtering        | ~~No product search~~ (✅ Phase 2.1), ~~category filter, price sort~~ (✅ Phase 2.2) — discovery tools complete |
+| 5     | No inventory/stock tracking   | No `stock_quantity` on products — nothing prevents overselling                                                  |
+| 6     | No transactional emails       | No order confirmation, no shipping notification, no welcome email                                               |
 
 ### 🟡 Important — Expected for a Credible MVP
 
@@ -253,11 +253,15 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 - `/products` page updated: accepts `searchParams`, conditionally renders `SearchResults` or `AllProducts`, Suspense `key={query}` for re-streaming on search change
 - Heading dynamically shows `Search: "query"` with subtitle when searching
 
-**2.2 Filtering & Sorting**
+**2.2 Filtering & Sorting** ✅ Completed
 
-- `/products` page: filter by category, price range, availability
-- Sort: price ↑↓, newest, name A-Z
-- URL search params for shareable filtered views
+- Unified query: `getFilteredProducts(filters)` accepts optional `query`, `categoryId`, `minPrice`, `maxPrice`, `sort` — replaces separate `getProducts` + `searchProducts` on the products page
+- ILIKE search on name + description, category via `eq(categoryId)`, price range via correlated MIN subquery on active prices, 6 sort options (newest, oldest, price ↑↓, name A–Z/Z–A)
+- `ProductFilters` client component: category Select, min/max price Inputs (dollars → cents on blur), sort Select, "Clear filters" button. All state driven by URL search params via `useTransition` + `router.push`
+- `FilteredProducts` async server component: fetches via `getFilteredProducts`, renders `ProductsGrid` with contextual empty message
+- `/products` page: parses all search params (`q`, `category`, `minPrice`, `maxPrice`, `sort`), validates sort against allowed set, fetches categories for filter dropdown, `Suspense key={JSON.stringify(filters)}` for re-streaming
+- URL-based state: all filters are URL search params — shareable, bookmarkable, back/forward compatible
+- Search bar in navbar + filter bar on page work together: `q` param preserved when toggling filters, "Clear filters" preserves active search
 
 **2.3 Pagination**
 
