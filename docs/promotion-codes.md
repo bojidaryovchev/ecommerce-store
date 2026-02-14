@@ -20,11 +20,12 @@ A **promotion code** is a customer-facing code (e.g. `SUMMER20`) linked to a cou
 
 One coupon can have **many** promotion codes, each with different restrictions:
 
-```
-Coupon: "Summer Sale" — 20% off, once
-  ├── SUMMER20       (unlimited uses)
-  ├── VIP20          (first-time customers only, max 50 uses)
-  └── INFLUENCER20   (min $50 order, expires Dec 2026)
+```mermaid
+graph TD
+  C["Coupon: Summer Sale — 20% off, once"]
+  C --> S["SUMMER20\n(unlimited uses)"]
+  C --> V["VIP20\n(first-time customers only, max 50 uses)"]
+  C --> I["INFLUENCER20\n(min $50 order, expires Dec 2026)"]
 ```
 
 All three codes apply the same 20% discount but with different constraints.
@@ -43,16 +44,16 @@ Since our store uses **one-time payments** (`mode: "payment"` in Stripe Checkout
 
 ## Data Flow
 
-```
-Admin creates coupon          Admin creates promo code        Customer at checkout
-       │                              │                              │
-       ▼                              ▼                              ▼
-stripe.coupons.create()       stripe.promotionCodes.create()  Stripe Checkout UI
-       │                              │                       shows "Add promo code"
-       ▼                              ▼                              │
-   DB: coupons table            DB: promotion_codes table            ▼
-                                   (couponId FK)              Stripe validates code,
-                                                              applies discount
+```mermaid
+flowchart TD
+  A1["Admin creates coupon"] --> B1["stripe.coupons.create()"]
+  B1 --> C1[("DB: coupons table")]
+
+  A2["Admin creates promo code"] --> B2["stripe.promotionCodes.create()"]
+  B2 --> C2[("DB: promotion_codes table\n(couponId FK)")]
+
+  A3["Customer at checkout"] --> B3["Stripe Checkout UI\nshows 'Add promo code'"]
+  B3 --> C3["Stripe validates code,\napplies discount"]
 ```
 
 ### Checkout Integration

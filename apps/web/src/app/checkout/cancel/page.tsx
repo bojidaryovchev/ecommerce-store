@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 const CheckoutCancelPage: React.FC = () => {
   return (
-    <main className="container mx-auto px-4 py-16">
+    <main className="max-w-container py-16">
       <div className="mx-auto max-w-lg text-center">
         <XCircle className="text-muted-foreground mx-auto h-16 w-16" />
         <h1 className="mt-6 text-3xl font-bold">Checkout Cancelled</h1>

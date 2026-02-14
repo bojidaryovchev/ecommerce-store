@@ -22,7 +22,7 @@ const OrderDetail: React.FC<Props> = ({ order }) => {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/orders">
+          <Link href="/account/orders">
             <ArrowLeft className="mr-1 h-4 w-4" />
             Back to Orders
           </Link>

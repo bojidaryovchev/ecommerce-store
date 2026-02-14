@@ -36,7 +36,7 @@ const ProductPage: React.FC<Props> = async ({ params }) => {
   const { id } = await params;
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="max-w-container py-8">
       <Suspense fallback={<ProductDetailSkeleton />}>
         <ProductLoader productId={id} />
       </Suspense>

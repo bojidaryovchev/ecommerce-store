@@ -16,7 +16,7 @@ const LoginPage = async () => {
   }
 
   return (
-    <main className="container mx-auto flex min-h-[60vh] items-center justify-center px-4 py-16">
+    <main className="max-w-container flex min-h-[60vh] items-center justify-center py-16">
       <LoginCard />
     </main>
   );

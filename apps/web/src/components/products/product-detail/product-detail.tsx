@@ -56,18 +56,18 @@ const ProductDetail: React.FC<Props> = ({ product, isWishlisted }) => {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Product Images */}
         <div className="space-y-4">
-          <div className="bg-muted aspect-square overflow-hidden rounded-lg">
+          <div className="overflow-hidden rounded-lg">
             {productImage ? (
               <Image
                 src={productImage}
                 alt={product.name}
                 width={600}
-                height={600}
-                className="h-full w-full object-cover"
+                height={450}
+                className="h-auto w-full rounded-lg"
                 priority
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center">
+              <div className="bg-muted flex aspect-square items-center justify-center rounded-lg">
                 <span className="text-muted-foreground text-8xl">{product.name.charAt(0).toUpperCase()}</span>
               </div>
             )}

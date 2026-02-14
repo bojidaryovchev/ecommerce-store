@@ -4,7 +4,7 @@ import React, { Suspense } from "react";
 
 const Home: React.FC = () => {
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="max-w-container py-8">
       <HomeHero />
 
       <section className="space-y-8 py-12">

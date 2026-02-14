@@ -134,3 +134,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+@utility max-w-container {
+  @apply mx-auto max-w-7xl px-4;
+}

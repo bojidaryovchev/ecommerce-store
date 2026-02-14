@@ -43,7 +43,7 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
 
   return (
     <header className="border-border bg-background sticky top-0 z-50 w-full border-b">
-      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+      <div className="max-w-container flex h-16 items-center justify-between">
         {/* Left side - Logo and Mobile menu toggle */}
         <div className="flex items-center gap-4">
           {/* Mobile menu */}
@@ -83,11 +83,33 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                 {session && (
                   <>
                     <Separator />
-                    <Link href="/account" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                      My Account
+                    <Link
+                      href="/account/profile"
+                      className="text-lg font-medium"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Profile
                     </Link>
-                    <Link href="/orders" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                      My Orders
+                    <Link
+                      href="/account/addresses"
+                      className="text-lg font-medium"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Addresses
+                    </Link>
+                    <Link
+                      href="/account/wishlist"
+                      className="text-lg font-medium"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Wishlist
+                    </Link>
+                    <Link
+                      href="/account/orders"
+                      className="text-lg font-medium"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Orders
                     </Link>
                   </>
                 )}
@@ -95,7 +117,7 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                   <>
                     <Separator />
                     <Link href="/admin" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                      Admin Panel
+                      Admin
                     </Link>
                   </>
                 )}
@@ -170,17 +192,20 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/account">My Account</Link>
+                  <Link href="/account/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/account/addresses">Addresses</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/account/wishlist">Wishlist</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/orders">My Orders</Link>
+                  <Link href="/account/orders">Orders</Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
-                    <Link href="/admin">Admin Panel</Link>
+                    <Link href="/admin">Admin</Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => signOut()}>

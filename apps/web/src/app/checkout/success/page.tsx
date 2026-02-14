@@ -32,7 +32,7 @@ const CheckoutSuccessPage: React.FC<Props> = async ({ searchParams }) => {
   if (!order) {
     // Order might not be created yet (webhook processing)
     return (
-      <main className="container mx-auto px-4 py-16">
+      <main className="max-w-container py-16">
         <ClearCartOnSuccess />
         <div className="mx-auto max-w-lg text-center">
           <CheckCircle2 className="text-primary mx-auto h-16 w-16" />
@@ -51,7 +51,7 @@ const CheckoutSuccessPage: React.FC<Props> = async ({ searchParams }) => {
   }
 
   return (
-    <main className="container mx-auto px-4 py-16">
+    <main className="max-w-container py-16">
       <ClearCartOnSuccess />
       <div className="mx-auto max-w-2xl">
         {/* Success Header */}
@@ -146,7 +146,7 @@ const CheckoutSuccessPage: React.FC<Props> = async ({ searchParams }) => {
             <Link href="/products">Continue Shopping</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/orders">View My Orders</Link>
+            <Link href="/account/orders">View My Orders</Link>
           </Button>
         </div>
       </div>

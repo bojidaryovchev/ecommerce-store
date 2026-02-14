@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "My Orders | Ecommerce Store",
+  title: "Orders | My Account | Ecommerce Store",
   description: "View your order history",
 };
 
@@ -25,12 +25,15 @@ const OrdersPage: React.FC = async () => {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <h1 className="mb-8 text-3xl font-bold">My Orders</h1>
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-bold">Orders</h2>
+        <p className="text-muted-foreground text-sm">View and track your order history.</p>
+      </div>
       <Suspense fallback={<OrdersListSkeleton />}>
         <OrdersContent userId={session.user.id} />
       </Suspense>
-    </main>
+    </div>
   );
 };
 

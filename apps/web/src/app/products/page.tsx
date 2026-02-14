@@ -47,7 +47,7 @@ const ProductsPage: React.FC<ProductsPageProps> = async ({ searchParams }) => {
   const suspenseKey = JSON.stringify(filters);
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="max-w-container py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">{query ? `Search: "${query}"` : "Products"}</h1>
         {query && <p className="text-muted-foreground mt-1 text-sm">Showing results for &ldquo;{query}&rdquo;</p>}

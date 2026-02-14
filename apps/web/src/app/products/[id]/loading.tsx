@@ -3,7 +3,7 @@ import React from "react";
 
 const ProductLoading: React.FC = () => {
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="max-w-container py-8">
       <ProductDetailSkeleton />
     </main>
   );

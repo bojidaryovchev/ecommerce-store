@@ -17,7 +17,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = async ({ searchParams }) =
   const page = Math.max(1, params.page ? Number(params.page) : 1);
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="max-w-container py-8">
       <h1 className="mb-8 text-3xl font-bold">Categories</h1>
       <Suspense key={page} fallback={<CategoriesGridSkeleton count={8} />}>
         <AllCategories page={page} />

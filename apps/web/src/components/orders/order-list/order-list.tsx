@@ -53,7 +53,7 @@ const OrderList: React.FC<Props> = ({ orders }) => {
             </TableCell>
             <TableCell>
               <Button asChild variant="ghost" size="sm">
-                <Link href={`/orders/${order.id}`}>View</Link>
+                <Link href={`/account/orders/${order.id}`}>View</Link>
               </Button>
             </TableCell>
           </TableRow>

@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
   return {
-    title: `Order #${id.slice(0, 8).toUpperCase()} | Ecommerce Store`,
+    title: `Order #${id.slice(0, 8).toUpperCase()} | My Account | Ecommerce Store`,
     description: "View order details",
   };
 }
@@ -38,11 +38,9 @@ const OrderDetailPage: React.FC<Props> = async ({ params }) => {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <Suspense fallback={<OrderDetailSkeleton />}>
-        <OrderContent orderId={id} userId={session.user.id} />
-      </Suspense>
-    </main>
+    <Suspense fallback={<OrderDetailSkeleton />}>
+      <OrderContent orderId={id} userId={session.user.id} />
+    </Suspense>
   );
 };
 
