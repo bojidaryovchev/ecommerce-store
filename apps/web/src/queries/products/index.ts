@@ -1,4 +1,4 @@
-export { getAllProducts } from "./get-all-products.query";
+export { getAllProducts, type GetAllProductsOptions } from "./get-all-products.query";
 export { getFeaturedProducts } from "./get-featured-products.query";
 export { getFilteredProducts } from "./get-filtered-products.query";
 export type { ProductFilters, SortOption } from "./get-filtered-products.query";

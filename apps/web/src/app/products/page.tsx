@@ -17,6 +17,7 @@ type ProductsPageProps = {
     minPrice?: string;
     maxPrice?: string;
     sort?: string;
+    page?: string;
   }>;
 };
 
@@ -24,13 +25,14 @@ const VALID_SORTS = new Set<SortOption>(["newest", "oldest", "price-asc", "price
 
 const ProductsPage: React.FC<ProductsPageProps> = async ({ searchParams }) => {
   const params = await searchParams;
-  const [categories] = await Promise.all([getRootCategories()]);
+  const [{ data: categories }] = await Promise.all([getRootCategories({ pageSize: 100 })]);
 
   const query = params.q?.trim() ?? "";
   const categoryId = params.category ?? "";
   const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
   const sort = VALID_SORTS.has(params.sort as SortOption) ? (params.sort as SortOption) : undefined;
+  const page = Math.max(1, params.page ? Number(params.page) : 1);
 
   const filters = {
     ...(query && { query }),
@@ -38,6 +40,7 @@ const ProductsPage: React.FC<ProductsPageProps> = async ({ searchParams }) => {
     ...(minPrice !== undefined && !Number.isNaN(minPrice) && { minPrice }),
     ...(maxPrice !== undefined && !Number.isNaN(maxPrice) && { maxPrice }),
     ...(sort && { sort }),
+    page,
   };
 
   // Stable key for Suspense — re-stream when any filter changes

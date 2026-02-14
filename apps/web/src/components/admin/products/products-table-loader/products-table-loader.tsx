@@ -1,10 +1,21 @@
+import { Pagination } from "@/components/common/pagination";
 import { getAllProducts } from "@/queries/products";
 import React from "react";
 import { ProductsTable } from "./products-table";
 
-const ProductsTableLoader: React.FC = async () => {
-  const products = await getAllProducts();
-  return <ProductsTable products={products} />;
+type Props = {
+  page?: number;
+};
+
+const ProductsTableLoader: React.FC<Props> = async ({ page = 1 }) => {
+  const { data: products, pageCount } = await getAllProducts({ page });
+
+  return (
+    <>
+      <ProductsTable products={products} />
+      <Pagination page={page} pageCount={pageCount} />
+    </>
+  );
 };
 
 export { ProductsTableLoader };

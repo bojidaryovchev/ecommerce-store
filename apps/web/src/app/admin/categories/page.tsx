@@ -7,11 +7,18 @@ export const metadata: Metadata = {
   title: "Categories | Admin",
 };
 
-const AdminCategoriesPage: React.FC = () => {
+type Props = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+const AdminCategoriesPage: React.FC<Props> = async ({ searchParams }) => {
+  const params = await searchParams;
+  const page = Math.max(1, params.page ? Number(params.page) : 1);
+
   return (
     <AdminCategoriesHeader>
-      <Suspense fallback={<TableSkeleton />}>
-        <CategoriesTableLoader />
+      <Suspense key={page} fallback={<TableSkeleton />}>
+        <CategoriesTableLoader page={page} />
       </Suspense>
     </AdminCategoriesHeader>
   );

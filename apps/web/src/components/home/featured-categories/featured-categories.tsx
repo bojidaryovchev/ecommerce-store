@@ -7,7 +7,7 @@ interface Props {
 }
 
 const FeaturedCategories: React.FC<Props> = async ({ count = 4 }) => {
-  const categories = await getRootCategories();
+  const { data: categories } = await getRootCategories({ pageSize: count });
   const featuredCategories = categories.slice(0, count);
   return <CategoriesGrid categories={featuredCategories} />;
 };

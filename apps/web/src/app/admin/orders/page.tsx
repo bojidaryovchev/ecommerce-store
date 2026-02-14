@@ -8,21 +8,22 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; page?: string }>;
 };
 
 const AdminOrdersPage: React.FC<Props> = async ({ searchParams }) => {
-  const { status } = await searchParams;
+  const params = await searchParams;
 
   const validStatuses = ["pending", "paid", "processing", "shipped", "delivered", "cancelled", "refunded"] as const;
-  const statusFilter = validStatuses.includes(status as (typeof validStatuses)[number])
-    ? (status as (typeof validStatuses)[number])
+  const statusFilter = validStatuses.includes(params.status as (typeof validStatuses)[number])
+    ? (params.status as (typeof validStatuses)[number])
     : undefined;
+  const page = Math.max(1, params.page ? Number(params.page) : 1);
 
   return (
     <AdminOrdersHeader>
-      <Suspense fallback={<TableSkeleton />}>
-        <OrdersTableLoader status={statusFilter} />
+      <Suspense key={`${statusFilter}-${page}`} fallback={<TableSkeleton />}>
+        <OrdersTableLoader status={statusFilter} page={page} />
       </Suspense>
     </AdminOrdersHeader>
   );

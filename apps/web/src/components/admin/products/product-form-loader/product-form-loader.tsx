@@ -9,7 +9,7 @@ interface Props {
 }
 
 const ProductFormLoader: React.FC<Props> = async ({ productId }) => {
-  const categories = await getCategories();
+  const { data: categories } = await getCategories({ pageSize: 200 });
 
   if (productId) {
     const product = await getProductById(productId);

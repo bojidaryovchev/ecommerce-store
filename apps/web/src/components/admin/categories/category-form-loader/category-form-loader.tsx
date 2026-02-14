@@ -8,7 +8,7 @@ interface Props {
 }
 
 const CategoryFormLoader: React.FC<Props> = async ({ categoryId }) => {
-  const categories = await getCategories();
+  const { data: categories } = await getCategories({ pageSize: 200 });
 
   if (categoryId) {
     const category = await getCategoryById(categoryId);

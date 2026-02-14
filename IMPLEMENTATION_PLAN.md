@@ -175,15 +175,15 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 
 ### 🟡 Important — Expected for a Credible MVP
 
-| #   | Gap                         | Details                                                             |
-| --- | --------------------------- | ------------------------------------------------------------------- |
-| 7   | No user account page        | No profile view, no address management, no saved payment methods    |
-| 8   | No pagination               | All lists fetch everything — won't scale past ~100 items            |
-| 9   | Reviews are read-only       | Display exists on PDP but no submission form                        |
-| 10  | Wishlist has no UI          | `wishlist` table exists, zero frontend                              |
-| 11  | No Stripe Customer sync     | `customer` table exists but users aren't mapped to Stripe customers |
-| 12  | Refund flow incomplete      | `refund` table exists, no admin UI or Stripe refund API integration |
-| 13  | Promo codes not in checkout | Coupon/promotion tables exist but not wired to Stripe Checkout      |
+| #   | Gap                         | Details                                                                                       |
+| --- | --------------------------- | --------------------------------------------------------------------------------------------- |
+| 7   | No user account page        | No profile view, no address management, no saved payment methods                              |
+| 8   | ~~No pagination~~           | ✅ Phase 2.3 — all list queries paginated, reusable `Pagination` component applied to 5 pages |
+| 9   | Reviews are read-only       | Display exists on PDP but no submission form                                                  |
+| 10  | Wishlist has no UI          | `wishlist` table exists, zero frontend                                                        |
+| 11  | No Stripe Customer sync     | `customer` table exists but users aren't mapped to Stripe customers                           |
+| 12  | Refund flow incomplete      | `refund` table exists, no admin UI or Stripe refund API integration                           |
+| 13  | Promo codes not in checkout | Coupon/promotion tables exist but not wired to Stripe Checkout                                |
 
 ### 🟢 Nice-to-Have — Post-MVP
 
@@ -263,11 +263,14 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 - URL-based state: all filters are URL search params — shareable, bookmarkable, back/forward compatible
 - Search bar in navbar + filter bar on page work together: `q` param preserved when toggling filters, "Clear filters" preserves active search
 
-**2.3 Pagination**
+**2.3 Pagination** ✅ Completed
 
-- Add `page`/`limit` params to all list queries
-- Pagination component (prev/next, page numbers)
-- Apply to: `/products`, `/categories`, `/admin/products`, `/admin/categories`, `/admin/orders`
+- Reusable `Pagination` client component with prev/next, first/last, page numbers with ellipsis, `useTransition` for non-blocking navigation, URL `?page=` param driven
+- `PaginatedResult` type: `{ data, total, page, pageSize, pageCount }`
+- All list queries updated: `getFilteredProducts` (12/page), `getAllProducts` (20/page), `getCategories` (20/page), `getRootCategories` (12/page), `getAllOrders` (20/page) — all return `PaginatedResult` with `COUNT(*)` totals
+- Applied to: `/products`, `/categories`, `/admin/products`, `/admin/categories`, `/admin/orders`
+- Suspense keys include page for re-streaming on page change
+- Non-paginated callers (navbar, form dropdowns, featured, generateStaticParams) use large `pageSize` to fetch all
 
 ### Phase 3 — Inventory
 

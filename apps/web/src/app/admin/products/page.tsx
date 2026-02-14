@@ -7,11 +7,18 @@ export const metadata: Metadata = {
   title: "Products | Admin",
 };
 
-const AdminProductsPage: React.FC = () => {
+type Props = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+const AdminProductsPage: React.FC<Props> = async ({ searchParams }) => {
+  const params = await searchParams;
+  const page = Math.max(1, params.page ? Number(params.page) : 1);
+
   return (
     <AdminProductsHeader>
-      <Suspense fallback={<TableSkeleton />}>
-        <ProductsTableLoader />
+      <Suspense key={page} fallback={<TableSkeleton />}>
+        <ProductsTableLoader page={page} />
       </Suspense>
     </AdminProductsHeader>
   );

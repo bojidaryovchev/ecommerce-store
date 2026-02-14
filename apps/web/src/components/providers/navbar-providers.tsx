@@ -8,7 +8,7 @@ interface Props extends PropsWithChildren {
 }
 
 const NavbarProviders: React.FC<Props> = async ({ session, children }) => {
-  const categories = await getRootCategories();
+  const { data: categories } = await getRootCategories({ pageSize: 100 });
 
   return (
     <>

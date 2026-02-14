@@ -2,7 +2,7 @@
 
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { db, schema } from "@ecommerce/database";
-import { and, asc, desc, eq, gte, ilike, inArray, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or, sql, type SQL } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 
 type SortOption = "newest" | "oldest" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
@@ -13,7 +13,11 @@ type ProductFilters = {
   minPrice?: number;
   maxPrice?: number;
   sort?: SortOption;
+  page?: number;
+  pageSize?: number;
 };
+
+const DEFAULT_PAGE_SIZE = 12;
 
 /**
  * Pre-query product IDs whose minimum active price falls within the given range.
@@ -52,6 +56,9 @@ async function getFilteredProducts(filters: ProductFilters = {}) {
     cacheTag(CACHE_TAGS.productsByCategory(filters.categoryId));
   }
 
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = Math.max(1, filters.pageSize ?? DEFAULT_PAGE_SIZE);
+
   const conditions: SQL[] = [eq(schema.products.active, true)];
 
   // Search filter
@@ -75,18 +82,31 @@ async function getFilteredProducts(filters: ProductFilters = {}) {
     const ids = await getProductIdsInPriceRange(filters.minPrice, filters.maxPrice);
 
     if (ids.length === 0) {
-      return [];
+      return { data: [], total: 0, page, pageSize, pageCount: 0 };
     }
 
     conditions.push(inArray(schema.products.id, ids));
+  }
+
+  const whereClause = and(...conditions);
+
+  // Total count for pagination
+  const [{ total }] = await db.select({ total: count() }).from(schema.products).where(whereClause);
+
+  const pageCount = Math.ceil(total / pageSize);
+
+  if (total === 0) {
+    return { data: [], total: 0, page, pageSize, pageCount: 0 };
   }
 
   // Sorting
   const orderBy = getOrderBy(filters.sort);
 
   const products = await db.query.products.findMany({
-    where: and(...conditions),
+    where: whereClause,
     orderBy,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
     with: {
       prices: {
         where: eq(schema.prices.active, true),
@@ -95,7 +115,7 @@ async function getFilteredProducts(filters: ProductFilters = {}) {
     },
   });
 
-  return products;
+  return { data: products, total, page, pageSize, pageCount };
 }
 
 function getOrderBy(sort?: SortOption) {
