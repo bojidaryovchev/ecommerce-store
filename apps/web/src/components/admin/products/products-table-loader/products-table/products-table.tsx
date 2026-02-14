@@ -94,6 +94,7 @@ const ProductsTable: React.FC<Props> = ({ products }) => {
             <TableHead>NAME</TableHead>
             <TableHead>PRICE</TableHead>
             <TableHead>CATEGORY</TableHead>
+            <TableHead>STOCK</TableHead>
             <TableHead>STATUS</TableHead>
             <TableHead>ACTIONS</TableHead>
           </TableRow>
@@ -140,6 +141,21 @@ const ProductsTable: React.FC<Props> = ({ products }) => {
                 <TableCell>
                   {product.category ? (
                     <Badge variant="secondary">{product.category.name}</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {product.trackInventory ? (
+                    product.stockQuantity === null || product.stockQuantity === 0 ? (
+                      <Badge variant="destructive">Out of Stock</Badge>
+                    ) : product.stockQuantity <= 10 ? (
+                      <Badge variant="outline" className="border-amber-500 text-amber-600">
+                        Low: {product.stockQuantity}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">{product.stockQuantity}</span>
+                    )
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}

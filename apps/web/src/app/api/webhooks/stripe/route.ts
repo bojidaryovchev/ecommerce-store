@@ -159,14 +159,31 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   await db.insert(schema.orderItems).values(orderItems);
 
+  // Decrement stock for products with inventory tracking
+  for (const item of cart.items) {
+    if (item.product.trackInventory && item.product.stockQuantity !== null) {
+      const newQuantity = Math.max(0, item.product.stockQuantity - item.quantity);
+      await db
+        .update(schema.products)
+        .set({ stockQuantity: newQuantity, updatedAt: new Date() })
+        .where(eq(schema.products.id, item.product.id));
+    }
+  }
+
   // Clear the cart
   await db.delete(schema.cartItems).where(eq(schema.cartItems.cartId, cartId));
 
   // Invalidate order cache so success page can find the new order
   revalidateTag(CACHE_TAGS.orders, "max");
+  revalidateTag(CACHE_TAGS.products, "max");
   revalidateTag(`checkout-session:${session.id}`, "max");
   if (userId) {
     revalidateTag(CACHE_TAGS.ordersByUser(userId), "max");
+  }
+  for (const item of cart.items) {
+    if (item.product.trackInventory) {
+      revalidateTag(CACHE_TAGS.product(item.product.id), "max");
+    }
   }
 
   console.log("Order created:", order.id);

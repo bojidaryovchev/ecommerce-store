@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
 
@@ -26,6 +26,8 @@ const formSchema = insertProductSchema.pick({
   active: true,
   categoryId: true,
   shippable: true,
+  trackInventory: true,
+  stockQuantity: true,
   taxCode: true,
   unitLabel: true,
   url: true,
@@ -63,6 +65,8 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
       active: product?.active ?? true,
       categoryId: product?.categoryId ?? null,
       shippable: product?.shippable ?? true,
+      trackInventory: product?.trackInventory ?? false,
+      stockQuantity: product?.stockQuantity ?? null,
       taxCode: product?.taxCode ?? "",
       unitLabel: product?.unitLabel ?? "",
       url: product?.url ?? "",
@@ -70,6 +74,8 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
       images: product?.images ?? [],
     },
   });
+
+  const trackInventory = useWatch({ control, name: "trackInventory" });
 
   const handleImageUpload = (url: string | null) => {
     if (url) {
@@ -105,6 +111,8 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
         active: data.active,
         categoryId: data.categoryId || null,
         shippable: data.shippable,
+        trackInventory: data.trackInventory,
+        stockQuantity: data.trackInventory ? data.stockQuantity : null,
         taxCode: data.taxCode || null,
         unitLabel: data.unitLabel || null,
         url: data.url || null,
@@ -296,6 +304,43 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
           />
           <Label htmlFor="shippable">Shippable</Label>
         </div>
+      </div>
+
+      {/* Inventory Management */}
+      <div className="space-y-4 rounded-lg border p-4">
+        <div className="flex items-center space-x-2">
+          <Controller
+            name="trackInventory"
+            control={control}
+            render={({ field }) => (
+              <Switch id="trackInventory" checked={field.value ?? false} onCheckedChange={field.onChange} />
+            )}
+          />
+          <Label htmlFor="trackInventory">Track Inventory</Label>
+        </div>
+
+        {trackInventory && (
+          <div className="space-y-2">
+            <Label htmlFor="stockQuantity">Stock Quantity</Label>
+            <Controller
+              name="stockQuantity"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="stockQuantity"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value === "" ? null : parseInt(e.target.value, 10))}
+                  placeholder="Enter stock quantity"
+                />
+              )}
+            />
+            {errors.stockQuantity && <p className="text-destructive text-sm">{errors.stockQuantity.message}</p>}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">

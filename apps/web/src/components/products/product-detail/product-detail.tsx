@@ -108,6 +108,21 @@ const ProductDetail: React.FC<Props> = ({ product }) => {
                 {formatCurrency(defaultPrice.unitAmount, defaultPrice.currency)}
               </p>
             )}
+            {product.trackInventory && (
+              <div className="mt-1">
+                {product.stockQuantity === null || product.stockQuantity <= 0 ? (
+                  <Badge variant="destructive">Out of Stock</Badge>
+                ) : product.stockQuantity <= 10 ? (
+                  <Badge variant="outline" className="border-amber-500 text-amber-600">
+                    Low Stock — Only {product.stockQuantity} left
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-green-500 text-green-600">
+                    In Stock
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
 
           {product.description && (
@@ -120,7 +135,13 @@ const ProductDetail: React.FC<Props> = ({ product }) => {
           <Separator />
 
           <div className="space-y-4">
-            <ProductAddToCart productId={product.id} priceId={defaultPrice?.id} isActive={product.active} />
+            <ProductAddToCart
+              productId={product.id}
+              priceId={defaultPrice?.id}
+              isActive={product.active}
+              trackInventory={product.trackInventory}
+              stockQuantity={product.stockQuantity}
+            />
           </div>
 
           {/* Product Details */}

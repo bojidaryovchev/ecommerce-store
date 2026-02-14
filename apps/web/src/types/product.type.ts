@@ -26,6 +26,8 @@ export type ProductFormData = {
   images?: string[] | null;
   categoryId?: string | null;
   shippable?: boolean | null;
+  trackInventory?: boolean;
+  stockQuantity?: number | null;
   taxCode?: string | null;
   unitLabel?: string | null;
   url?: string | null;

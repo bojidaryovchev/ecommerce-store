@@ -1,4 +1,4 @@
-import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { categories } from "./categories";
 
 export const products = pgTable("product", {
@@ -20,6 +20,8 @@ export const products = pgTable("product", {
   categoryId: text("category_id").references(() => categories.id, { onDelete: "set null" }),
   statementDescriptor: text("statement_descriptor"),
   livemode: boolean("livemode").default(false).notNull(),
+  trackInventory: boolean("track_inventory").default(false).notNull(),
+  stockQuantity: integer("stock_quantity"),
   marketingFeatures: jsonb("marketing_features")
     .$type<
       Array<{

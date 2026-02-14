@@ -25,6 +25,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
+    // Validate stock for all items with inventory tracking
+    for (const item of cart.items) {
+      if (item.product.trackInventory) {
+        if (item.product.stockQuantity === null || item.product.stockQuantity < item.quantity) {
+          const available = item.product.stockQuantity ?? 0;
+          return NextResponse.json(
+            {
+              error: `"${item.product.name}" ${available === 0 ? "is out of stock" : `only has ${available} in stock (requested ${item.quantity})`}`,
+            },
+            { status: 400 },
+          );
+        }
+      }
+    }
+
     // Build line items with inline price_data
     const lineItems = cart.items.map((item) => {
       const unitAmount = item.price.unitAmount ?? 0;

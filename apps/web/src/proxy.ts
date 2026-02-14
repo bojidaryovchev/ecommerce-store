@@ -9,7 +9,7 @@ const setPathnameHeader = (res: NextResponse, pathname: string) => {
 };
 
 const protectAuthRoutes = (req: NextAuthRequest, pathname: string) => {
-  if (pathname.startsWith("/orders")) {
+  if (pathname.startsWith("/orders") || pathname.startsWith("/account")) {
     const session = req.auth;
 
     if (!session?.user) {

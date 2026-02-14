@@ -164,14 +164,14 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 
 ### 🔴 Critical — Blocks a Usable MVP
 
-| #     | Gap                           | Details                                                                                                         |
-| ----- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| ~~1~~ | ~~Customer order history~~    | ~~No `/orders` route~~ — ✅ **Done** (Phase 1.1)                                                                |
-| ~~2~~ | ~~Admin order management~~    | ~~No `/admin/orders`~~ — ✅ **Done** (Phase 1.2)                                                                |
-| ~~3~~ | ~~Admin dashboard is static~~ | ~~Placeholder cards~~ — ✅ **Done** (Phase 1.3)                                                                 |
-| 4     | No search or filtering        | ~~No product search~~ (✅ Phase 2.1), ~~category filter, price sort~~ (✅ Phase 2.2) — discovery tools complete |
-| 5     | No inventory/stock tracking   | No `stock_quantity` on products — nothing prevents overselling                                                  |
-| 6     | No transactional emails       | No order confirmation, no shipping notification, no welcome email                                               |
+| #     | Gap                             | Details                                                                                                         |
+| ----- | ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| ~~1~~ | ~~Customer order history~~      | ~~No `/orders` route~~ — ✅ **Done** (Phase 1.1)                                                                |
+| ~~2~~ | ~~Admin order management~~      | ~~No `/admin/orders`~~ — ✅ **Done** (Phase 1.2)                                                                |
+| ~~3~~ | ~~Admin dashboard is static~~   | ~~Placeholder cards~~ — ✅ **Done** (Phase 1.3)                                                                 |
+| 4     | No search or filtering          | ~~No product search~~ (✅ Phase 2.1), ~~category filter, price sort~~ (✅ Phase 2.2) — discovery tools complete |
+| ~~5~~ | ~~No inventory/stock tracking~~ | ~~No `stock_quantity` on products~~ — ✅ **Done** (Phase 3)                                                     |
+| 6     | No transactional emails         | No order confirmation, no shipping notification, no welcome email                                               |
 
 ### 🟡 Important — Expected for a Credible MVP
 
@@ -272,20 +272,21 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 - Suspense keys include page for re-streaming on page change
 - Non-paginated callers (navbar, form dropdowns, featured, generateStaticParams) use large `pageSize` to fetch all
 
-### Phase 3 — Inventory
+### Phase 3 — Inventory ✅ Completed
 
-**3.1 Schema Changes**
+**3.1 Schema Changes** ✅ Completed
 
-- Add to `product` table: `stock_quantity` (integer, nullable), `track_inventory` (boolean, default false)
-- New Drizzle migration
+- Added to `product` table: `trackInventory` (boolean, default false, not null), `stockQuantity` (integer, nullable)
+- Migration `0004_parched_rhodey.sql` generated and applied via `drizzle-kit push`
 
-**3.2 Stock Logic**
+**3.2 Stock Logic** ✅ Completed
 
-- Validate stock on add-to-cart and at checkout creation
-- Decrement stock in webhook handler on successful payment
-- Product detail: "Out of Stock" state, "Low Stock (X left)" indicator
-- Admin product form: stock quantity field, inventory toggle
-- Admin product table: stock column with low-stock highlighting
+- **Admin product form**: "Inventory Management" section with `trackInventory` Switch toggle and conditional `stockQuantity` number Input (only shown when tracking enabled). Stock quantity resets to null when tracking is disabled
+- **Admin products table**: STOCK column between CATEGORY and STATUS — shows "Out of Stock" (red badge) when 0/null, "Low: X" (amber badge) when ≤10, plain number otherwise, "—" when not tracking inventory
+- **Product detail page**: Stock indicator badges after price — "Out of Stock" (destructive), "Low Stock — Only X left" (amber/warning), "In Stock" (green) — only displayed when `trackInventory` is true
+- **Add-to-cart validation**: Server action checks `product.trackInventory` and `product.stockQuantity <= 0` → returns error "This product is out of stock". Add-to-cart button disabled with "Out of Stock" label when stock unavailable
+- **Checkout validation**: `POST /api/checkout` validates each cart item's stock — checks `trackInventory` → `stockQuantity < item.quantity` → returns 400 with specific error including product name and available/requested quantities
+- **Webhook stock decrement**: On `checkout.session.completed`, iterates cart items and decrements `stockQuantity` for products with `trackInventory && stockQuantity !== null` using `Math.max(0, current - quantity)`. Invalidates product cache tags for updated items
 
 ### Phase 4 — User Account
 

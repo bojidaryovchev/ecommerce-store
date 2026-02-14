@@ -26,6 +26,13 @@ async function addToCart(
       return { success: false, error: "Product not found or unavailable" };
     }
 
+    // Validate stock if inventory tracking is enabled
+    if (product.trackInventory) {
+      if (product.stockQuantity === null || product.stockQuantity <= 0) {
+        return { success: false, error: "This product is out of stock" };
+      }
+    }
+
     // Validate price exists, is active, and belongs to this product
     const price = await db.query.prices.findFirst({
       where: and(eq(schema.prices.id, priceId), eq(schema.prices.productId, productId), eq(schema.prices.active, true)),

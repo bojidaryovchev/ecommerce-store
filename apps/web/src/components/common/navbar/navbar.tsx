@@ -83,6 +83,9 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                 {session && (
                   <>
                     <Separator />
+                    <Link href="/account" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+                      My Account
+                    </Link>
                     <Link href="/orders" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
                       My Orders
                     </Link>
@@ -166,6 +169,9 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                   <p className="text-muted-foreground text-xs">{session.user?.email}</p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/account">My Account</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/orders">My Orders</Link>
                 </DropdownMenuItem>
