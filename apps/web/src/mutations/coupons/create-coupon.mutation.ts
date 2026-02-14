@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { stripe } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
@@ -20,6 +21,8 @@ type CreateCouponInput = {
 
 async function createCoupon(data: CreateCouponInput): Promise<ActionResult<Coupon>> {
   try {
+    await requireAdmin();
+
     if (!data.percentOff && !data.amountOff) {
       return { success: false, error: "Either percent off or amount off is required" };
     }

@@ -220,7 +220,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   // Invalidate order cache so success page can find the new order
   revalidateTag(CACHE_TAGS.orders, "max");
   revalidateTag(CACHE_TAGS.products, "max");
-  revalidateTag(`checkout-session:${session.id}`, "max");
+  revalidateTag(CACHE_TAGS.checkoutSession(session.id), "max");
   if (userId) {
     revalidateTag(CACHE_TAGS.ordersByUser(userId), "max");
   }

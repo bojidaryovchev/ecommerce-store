@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { linkUpload } from "@/mutations/uploads";
 import type { ActionResult } from "@/types/action-result.type";
@@ -14,6 +15,8 @@ async function createCategory(
   data: Omit<typeof schema.categories.$inferInsert, "id" | "createdAt" | "updatedAt">,
 ): Promise<ActionResult<Category>> {
   try {
+    await requireAdmin();
+
     const validated = insertCategorySchema.parse(data);
 
     const [category] = await db.insert(schema.categories).values(validated).returning();

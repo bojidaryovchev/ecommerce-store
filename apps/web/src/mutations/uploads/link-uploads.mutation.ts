@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { extractKeyFromUrl } from "@/lib/s3";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
@@ -14,6 +15,8 @@ async function linkUploads(
   entityType: "category" | "product",
 ): Promise<ActionResult<{ linked: number }>> {
   try {
+    await requireAdmin();
+
     const keys = publicUrls.map((url) => extractKeyFromUrl(url)).filter((key): key is string => key !== null);
 
     if (keys.length === 0) {

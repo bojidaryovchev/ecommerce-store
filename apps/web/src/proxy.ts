@@ -13,7 +13,7 @@ const protectAuthRoutes = (req: NextAuthRequest, pathname: string) => {
     const session = req.auth;
 
     if (!session?.user) {
-      const signInUrl = new URL("/api/auth/signin", req.url);
+      const signInUrl = new URL("/login", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);
     }
@@ -22,16 +22,11 @@ const protectAuthRoutes = (req: NextAuthRequest, pathname: string) => {
 
 const protectAdminRoutes = (req: NextAuthRequest, pathname: string) => {
   if (pathname.startsWith("/admin")) {
-    // Allow access to unauthorized page
-    if (pathname === "/admin/unauthorized") {
-      return NextResponse.next();
-    }
-
     const session = req.auth;
 
     // Check if user is authenticated
     if (!session?.user) {
-      const signInUrl = new URL("/api/auth/signin", req.url);
+      const signInUrl = new URL("/login", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);
     }
@@ -41,7 +36,7 @@ const protectAdminRoutes = (req: NextAuthRequest, pathname: string) => {
     const isAdmin = userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
 
     if (!isAdmin) {
-      return NextResponse.redirect(new URL("/admin/unauthorized", req.url));
+      return NextResponse.redirect(new URL("/", req.url));
     }
   }
 };

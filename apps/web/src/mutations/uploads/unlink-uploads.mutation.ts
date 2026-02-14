@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
 import { and, eq } from "drizzle-orm";
@@ -10,6 +11,8 @@ import { and, eq } from "drizzle-orm";
  */
 async function unlinkUploads(entityId: string, entityType: "category" | "product"): Promise<ActionResult<void>> {
   try {
+    await requireAdmin();
+
     await db
       .update(schema.uploads)
       .set({

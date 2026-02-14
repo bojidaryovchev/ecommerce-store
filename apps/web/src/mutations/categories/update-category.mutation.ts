@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { linkUpload } from "@/mutations/uploads";
 import type { ActionResult } from "@/types/action-result.type";
@@ -16,6 +17,8 @@ async function updateCategory(
   data: Partial<Omit<typeof schema.categories.$inferInsert, "id" | "createdAt" | "updatedAt">>,
 ): Promise<ActionResult<Category>> {
   try {
+    await requireAdmin();
+
     const [category] = await db
       .update(schema.categories)
       .set({

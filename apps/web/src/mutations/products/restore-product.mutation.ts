@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Product } from "@ecommerce/database";
@@ -12,6 +13,8 @@ import { revalidateTag } from "next/cache";
  */
 async function restoreProduct(id: string): Promise<ActionResult<Product>> {
   try {
+    await requireAdmin();
+
     const [product] = await db
       .update(schema.products)
       .set({ active: true, updatedAt: new Date() })

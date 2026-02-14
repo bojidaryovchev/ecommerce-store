@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Price } from "@ecommerce/database";
@@ -19,6 +20,8 @@ async function createPrice(data: {
   type?: "one_time" | "recurring";
 }): Promise<ActionResult<Price>> {
   try {
+    await requireAdmin();
+
     const [price] = await db
       .insert(schema.prices)
       .values({

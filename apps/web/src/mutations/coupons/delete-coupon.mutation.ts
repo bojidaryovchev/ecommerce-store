@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { stripe } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
@@ -9,6 +10,8 @@ import { revalidateTag } from "next/cache";
 
 async function deleteCoupon(id: string): Promise<ActionResult> {
   try {
+    await requireAdmin();
+
     const coupon = await db.query.coupons.findFirst({
       where: eq(schema.coupons.id, id),
     });

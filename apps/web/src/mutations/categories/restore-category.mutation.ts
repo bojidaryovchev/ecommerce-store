@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Category } from "@ecommerce/database";
@@ -12,6 +13,8 @@ import { revalidateTag } from "next/cache";
  */
 async function restoreCategory(id: string): Promise<ActionResult<Category>> {
   try {
+    await requireAdmin();
+
     const [category] = await db
       .update(schema.categories)
       .set({ deletedAt: null, updatedAt: new Date() })

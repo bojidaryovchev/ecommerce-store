@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { linkUploads } from "@/mutations/uploads";
 import type { ActionResult } from "@/types/action-result.type";
@@ -14,6 +15,8 @@ async function createProduct(
   data: Omit<typeof schema.products.$inferInsert, "id" | "createdAt" | "updatedAt" | "created">,
 ): Promise<ActionResult<Product>> {
   try {
+    await requireAdmin();
+
     const validated = insertProductSchema.parse(data);
 
     const [product] = await db.insert(schema.products).values(validated).returning();

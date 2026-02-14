@@ -1,7 +1,23 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const navItems = [
+  { href: "/admin", label: "Dashboard", exact: true },
+  { href: "/admin/orders", label: "Orders" },
+  { href: "/admin/categories", label: "Categories" },
+  { href: "/admin/products", label: "Products" },
+  { href: "/admin/reviews", label: "Reviews" },
+  { href: "/admin/coupons", label: "Coupons" },
+  { href: "/admin/promotions", label: "Promotions" },
+];
 
 const AdminSidebar: React.FC = () => {
+  const pathname = usePathname();
+
   return (
     <aside className="border-border bg-muted/50 w-64 border-r p-4">
       <div className="mb-8">
@@ -10,28 +26,23 @@ const AdminSidebar: React.FC = () => {
         </Link>
       </div>
       <nav className="space-y-2">
-        <Button asChild variant="ghost" className="w-full justify-start">
-          <Link href="/admin">Dashboard</Link>
-        </Button>
-        <Button asChild variant="ghost" className="w-full justify-start">
-          <Link href="/admin/orders">Orders</Link>
-        </Button>
-        <Button asChild variant="ghost" className="w-full justify-start">
-          <Link href="/admin/categories">Categories</Link>
-        </Button>
-        <Button asChild variant="ghost" className="w-full justify-start">
-          <Link href="/admin/products">Products</Link>
-        </Button>
-        <Button asChild variant="ghost" className="w-full justify-start">
-          <Link href="/admin/reviews">Reviews</Link>
-        </Button>
-        <Button asChild variant="ghost" className="w-full justify-start">
-          <Link href="/admin/coupons">Coupons</Link>
-        </Button>
-        <Button asChild variant="ghost" className="w-full justify-start">
-          <Link href="/admin/promotions">Promotions</Link>
-        </Button>
+        {navItems.map((item) => {
+          const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+          return (
+            <Button key={item.href} asChild variant={isActive ? "secondary" : "ghost"} className="w-full justify-start">
+              <Link href={item.href}>{item.label}</Link>
+            </Button>
+          );
+        })}
       </nav>
+      <div className="mt-8 border-t pt-4">
+        <Button asChild variant="ghost" className="w-full justify-start">
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Store
+          </Link>
+        </Button>
+      </div>
     </aside>
   );
 };

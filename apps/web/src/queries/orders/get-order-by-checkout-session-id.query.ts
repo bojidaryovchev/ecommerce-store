@@ -9,7 +9,7 @@ import { cacheTag } from "next/cache";
  * Get order by Stripe checkout session ID
  */
 async function getOrderByCheckoutSessionId(sessionId: string) {
-  cacheTag(CACHE_TAGS.orders, `checkout-session:${sessionId}`);
+  cacheTag(CACHE_TAGS.orders, CACHE_TAGS.checkoutSession(sessionId));
 
   const order = await db.query.orders.findFirst({
     where: eq(schema.orders.stripeCheckoutSessionId, sessionId),

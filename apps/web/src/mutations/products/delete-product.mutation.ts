@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { unlinkUploads } from "@/mutations/uploads";
 import type { ActionResult } from "@/types/action-result.type";
@@ -12,6 +13,8 @@ import { revalidateTag } from "next/cache";
  */
 async function deleteProduct(id: string): Promise<ActionResult<void>> {
   try {
+    await requireAdmin();
+
     const product = await db.query.products.findFirst({
       where: eq(schema.products.id, id),
     });

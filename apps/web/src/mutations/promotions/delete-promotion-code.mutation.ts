@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { stripe } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
@@ -9,6 +10,8 @@ import { revalidateTag } from "next/cache";
 
 async function deletePromotionCode(id: string): Promise<ActionResult> {
   try {
+    await requireAdmin();
+
     const promotionCode = await db.query.promotionCodes.findFirst({
       where: eq(schema.promotionCodes.id, id),
     });

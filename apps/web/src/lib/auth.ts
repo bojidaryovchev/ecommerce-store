@@ -35,15 +35,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, isNewUser }) {
       // Merge guest cart into user cart on login
       if (user.id) {
-        await mergeGuestCartToUser(user.id);
+        try {
+          await mergeGuestCartToUser(user.id);
+        } catch (error) {
+          console.error("Failed to merge guest cart:", error);
+        }
       }
       // Send welcome email on first sign-in
       if (isNewUser && user.email) {
-        await sendEmail({
-          to: user.email,
-          subject: "Welcome to our store!",
-          react: React.createElement(WelcomeEmail, { name: user.name ?? "there" }),
-        });
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: "Welcome to our store!",
+            react: React.createElement(WelcomeEmail, { name: user.name ?? "there" }),
+          });
+        } catch (error) {
+          console.error("Failed to send welcome email:", error);
+        }
       }
     },
   },

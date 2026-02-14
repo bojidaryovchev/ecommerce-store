@@ -1,6 +1,7 @@
 "use server";
 
 import { OrderShippedEmail } from "@/emails";
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { sendEmail } from "@/lib/email";
 import type { ActionResult } from "@/types/action-result.type";
@@ -27,6 +28,8 @@ async function updateOrderStatus(
   status: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded",
 ): Promise<ActionResult<Order>> {
   try {
+    await requireAdmin();
+
     const timestamps: Record<string, Date> = {};
 
     if (status === "paid") {

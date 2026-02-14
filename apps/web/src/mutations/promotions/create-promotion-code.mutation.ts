@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { stripe } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
@@ -20,6 +21,8 @@ type CreatePromotionCodeInput = {
 
 async function createPromotionCode(data: CreatePromotionCodeInput): Promise<ActionResult<PromotionCode>> {
   try {
+    await requireAdmin();
+
     if (!data.code.trim()) {
       return { success: false, error: "Promotion code is required" };
     }

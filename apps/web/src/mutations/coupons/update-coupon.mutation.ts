@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { stripe } from "@/lib/stripe";
 import type { ActionResult } from "@/types/action-result.type";
@@ -14,6 +15,8 @@ type UpdateCouponInput = {
 
 async function updateCoupon(id: string, data: UpdateCouponInput): Promise<ActionResult<Coupon>> {
   try {
+    await requireAdmin();
+
     const existing = await db.query.coupons.findFirst({
       where: eq(schema.coupons.id, id),
     });

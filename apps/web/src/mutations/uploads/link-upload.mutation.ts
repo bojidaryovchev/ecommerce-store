@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { extractKeyFromUrl } from "@/lib/s3";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
@@ -16,6 +17,8 @@ async function linkUpload(
   entityType: "category" | "product",
 ): Promise<ActionResult<Upload>> {
   try {
+    await requireAdmin();
+
     const key = extractKeyFromUrl(publicUrl);
     if (!key) {
       return { success: false, error: "Invalid upload URL" };

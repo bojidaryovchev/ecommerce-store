@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Price } from "@ecommerce/database";
@@ -15,6 +16,8 @@ async function updatePrice(
   data: Partial<Omit<typeof schema.prices.$inferInsert, "id" | "createdAt" | "updatedAt" | "created">>,
 ): Promise<ActionResult<Price>> {
   try {
+    await requireAdmin();
+
     const [price] = await db
       .update(schema.prices)
       .set({
