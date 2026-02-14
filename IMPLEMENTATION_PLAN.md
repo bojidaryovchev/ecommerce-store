@@ -359,11 +359,17 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 - Account sidebar updated with Wishlist nav item
 - Cache tags: `wishlist:{userId}` with proper invalidation
 
-**6.4 Refund Management**
+**6.4 Refund Management** ✅ Completed
 
-- Admin order detail: "Issue Refund" (full or partial amount)
-- Action: calls `stripe.refunds.create()`, stores in `refund` table
-- Updates order status, shows refund info on order detail
+- Admin order detail: "Issue Refund" button on eligible statuses (paid, processing, shipped, delivered)
+- RefundDialog component: full/partial refund toggle, amount input, reason select, validation against max refundable
+- Server action `issueRefund`: calls `stripe.refunds.create()`, stores in `refund` table, auto-sets order to "refunded" on full refund
+- Refund history section on admin order detail with status badges, amounts, dates, Stripe IDs
+- Query `getRefundsByOrderId` with `"use cache"` + `cacheTag`
+- `getOrderById` now includes `refunds` relation (ordered by created desc)
+- `OrderWithItemsAndUser` type extended with optional `refunds` array
+- Cache tags: `refundsByOrder:{orderId}` with proper invalidation
+- Removed old simple "Refund Order" status transition from delivered → refunded
 
 ---
 

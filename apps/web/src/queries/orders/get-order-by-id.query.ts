@@ -26,6 +26,9 @@ async function getOrderById(orderId: string) {
           email: true,
         },
       },
+      refunds: {
+        orderBy: (refunds, { desc }) => [desc(refunds.created)],
+      },
     },
   });
 

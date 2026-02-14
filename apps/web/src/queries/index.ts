@@ -6,5 +6,6 @@ export * from "./dashboard";
 export * from "./orders";
 export * from "./products";
 export * from "./promotions";
+export * from "./refunds";
 export * from "./reviews";
 export * from "./wishlist";

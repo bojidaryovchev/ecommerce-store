@@ -9,12 +9,15 @@ type OrderWithItems = Order & {
   })[];
 };
 
+type Refund = typeof schema.refunds.$inferSelect;
+
 type OrderWithItemsAndUser = OrderWithItems & {
   user: {
     id: string;
     name: string | null;
     email: string | null;
   } | null;
+  refunds?: Refund[];
 };
 
 export { getAllOrders, type GetAllOrdersOptions } from "./get-all-orders.query";

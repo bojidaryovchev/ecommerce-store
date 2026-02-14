@@ -36,6 +36,9 @@ export const CACHE_TAGS = {
   // Checkout Sessions
   checkoutSession: (sessionId: string) => `checkout-session:${sessionId}`,
 
+  // Refunds
+  refundsByOrder: (orderId: string) => `refunds-order:${orderId}`,
+
   // Cart is user-specific and changes frequently - no caching
   // Wishlists are also uncached — user-specific, frequent changes, always fetched with auth()
 } as const;

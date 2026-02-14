@@ -1,6 +1,8 @@
 "use client";
 
+import { RefundDialog } from "@/components/admin/orders/refund-dialog";
 import { AddressDisplay, OrderStatusBadge, OrderSummary } from "@/components/orders";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -53,20 +55,38 @@ const STATUS_TRANSITIONS: Record<
       variant: "default",
     },
   ],
-  delivered: [
-    { status: "refunded", label: "Refund Order", icon: <RotateCcw className="mr-1 h-4 w-4" />, variant: "destructive" },
-  ],
+  delivered: [],
   cancelled: [],
   refunded: [],
+};
+
+const REFUNDABLE_STATUSES: OrderStatus[] = ["paid", "processing", "shipped", "delivered"];
+
+const REFUND_STATUS_LABELS: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+> = {
+  succeeded: { label: "Succeeded", variant: "default" },
+  pending: { label: "Pending", variant: "secondary" },
+  failed: { label: "Failed", variant: "destructive" },
+  canceled: { label: "Canceled", variant: "outline" },
+  requires_action: { label: "Requires Action", variant: "secondary" },
 };
 
 const AdminOrderDetail: React.FC<Props> = ({ order }) => {
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const refundDialog = useDisclosure();
   const [targetStatus, setTargetStatus] = useState<{ status: OrderStatus; label: string } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const transitions = STATUS_TRANSITIONS[order.status];
+  const canRefund = REFUNDABLE_STATUSES.includes(order.status) && !!order.stripePaymentIntentId;
+
+  const refunds = order.refunds ?? [];
+  const totalRefunded = refunds
+    .filter((r) => r.status === "succeeded" || r.status === "pending")
+    .reduce((sum, r) => sum + r.amount, 0);
 
   const handleStatusClick = (status: OrderStatus, label: string) => {
     setTargetStatus({ status, label });
@@ -111,7 +131,7 @@ const AdminOrderDetail: React.FC<Props> = ({ order }) => {
         </div>
         <div className="flex items-center gap-3">
           <OrderStatusBadge status={order.status} />
-          {transitions.length > 0 && (
+          {(transitions.length > 0 || canRefund) && (
             <div className="flex gap-2">
               {transitions.map((t) => (
                 <Button
@@ -124,6 +144,12 @@ const AdminOrderDetail: React.FC<Props> = ({ order }) => {
                   {t.label}
                 </Button>
               ))}
+              {canRefund && totalRefunded < order.totalAmount && (
+                <Button variant="destructive" size="sm" onClick={refundDialog.onOpen}>
+                  <RotateCcw className="mr-1 h-4 w-4" />
+                  Issue Refund
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -319,6 +345,49 @@ const AdminOrderDetail: React.FC<Props> = ({ order }) => {
         </div>
       </div>
 
+      {/* Refund History */}
+      {refunds.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <RotateCcw className="h-5 w-5" />
+              Refund History
+            </CardTitle>
+            <CardDescription>
+              Total refunded: {formatCurrency(totalRefunded, order.currency)}
+              {totalRefunded >= order.totalAmount
+                ? " (fully refunded)"
+                : ` of ${formatCurrency(order.totalAmount, order.currency)}`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-border divide-y">
+              {refunds.map((refund) => {
+                const statusInfo = REFUND_STATUS_LABELS[refund.status] ?? {
+                  label: refund.status,
+                  variant: "outline" as const,
+                };
+                return (
+                  <div key={refund.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{formatCurrency(refund.amount, refund.currency)}</span>
+                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                      </div>
+                      <div className="text-muted-foreground flex gap-3 text-xs">
+                        <span>{formatDate(refund.created)}</span>
+                        {refund.reason && <span className="capitalize">{refund.reason.replace(/_/g, " ")}</span>}
+                        {refund.stripeRefundId && <span className="font-mono">{refund.stripeRefundId}</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Status Update Confirmation Dialog */}
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent>
@@ -328,7 +397,6 @@ const AdminOrderDetail: React.FC<Props> = ({ order }) => {
               Are you sure you want to update order #{order.id.slice(0, 8).toUpperCase()} status to{" "}
               <strong>{targetStatus?.status}</strong>?
               {targetStatus?.status === "cancelled" && " This action cannot be easily undone."}
-              {targetStatus?.status === "refunded" && " This will mark the order as refunded."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -336,9 +404,7 @@ const AdminOrderDetail: React.FC<Props> = ({ order }) => {
               Cancel
             </Button>
             <Button
-              variant={
-                targetStatus?.status === "cancelled" || targetStatus?.status === "refunded" ? "destructive" : "default"
-              }
+              variant={targetStatus?.status === "cancelled" ? "destructive" : "default"}
               onClick={handleConfirmUpdate}
               disabled={isUpdating}
             >
@@ -347,6 +413,17 @@ const AdminOrderDetail: React.FC<Props> = ({ order }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Refund Dialog */}
+      <RefundDialog
+        orderId={order.id}
+        totalAmount={order.totalAmount}
+        totalRefunded={totalRefunded}
+        currency={order.currency}
+        isOpen={refundDialog.isOpen}
+        onClose={refundDialog.onClose}
+        onSuccess={() => router.refresh()}
+      />
     </div>
   );
 };
