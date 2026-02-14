@@ -12,3 +12,6 @@ export { AdminCategoriesHeader, CategoriesTableLoader, CategoryFormLoader } from
 
 // Orders
 export { AdminOrderDetail, AdminOrdersHeader, OrdersTableLoader } from "./orders";
+
+// Reviews
+export { AdminReviewsHeader, ReviewsTableLoader } from "./reviews";

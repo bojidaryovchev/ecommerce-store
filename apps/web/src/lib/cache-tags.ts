@@ -22,5 +22,9 @@ export const CACHE_TAGS = {
   // Addresses
   addresses: (userId: string) => `addresses:${userId}`,
 
+  // Reviews
+  reviews: "reviews",
+  reviewsByProduct: (productId: string) => `reviews-product:${productId}`,
+
   // Cart is user-specific and changes frequently - no caching
 } as const;

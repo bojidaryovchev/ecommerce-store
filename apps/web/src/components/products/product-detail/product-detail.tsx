@@ -13,8 +13,9 @@ import { formatCurrency } from "@/lib/utils";
 import type { ProductWithDetails } from "@/types/product.type";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { Suspense } from "react";
 import { ProductAddToCart } from "./product-add-to-cart";
+import { ReviewSection } from "./review-section";
 
 interface Props {
   product: ProductWithDetails;
@@ -146,7 +147,7 @@ const ProductDetail: React.FC<Props> = ({ product }) => {
 
           {/* Product Details */}
           <Card>
-            <CardContent className="space-y-4 pt-6">
+            <CardContent className="space-y-4">
               <h3 className="font-semibold">Product Details</h3>
               <dl className="divide-border divide-y">
                 {product.shippable !== null && (
@@ -174,7 +175,7 @@ const ProductDetail: React.FC<Props> = ({ product }) => {
           {/* Marketing Features */}
           {product.marketingFeatures && product.marketingFeatures.length > 0 && (
             <Card>
-              <CardContent className="space-y-4 pt-6">
+              <CardContent className="space-y-4">
                 <h3 className="font-semibold">Features</h3>
                 <ul className="space-y-2">
                   {product.marketingFeatures.map((feature, index) => (
@@ -191,30 +192,16 @@ const ProductDetail: React.FC<Props> = ({ product }) => {
       </div>
 
       {/* Reviews Section */}
-      {product.reviews && product.reviews.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold">Customer Reviews ({product.reviews.length})</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {product.reviews.map((review) => (
-              <Card key={review.id}>
-                <CardContent className="space-y-2 pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} className={i < (review.rating ?? 0) ? "text-yellow-400" : "text-gray-300"}>
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  {review.title && <h4 className="font-medium">{review.title}</h4>}
-                  {review.content && <p className="text-muted-foreground text-sm">{review.content}</p>}
-                </CardContent>
-              </Card>
-            ))}
+      <Suspense
+        fallback={
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Customer Reviews</h2>
+            <p className="text-muted-foreground text-sm">Loading reviews...</p>
           </div>
-        </section>
-      )}
+        }
+      >
+        <ReviewSection productId={product.id} />
+      </Suspense>
     </div>
   );
 };

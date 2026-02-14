@@ -17,7 +17,6 @@ export const reviews = pgTable("review", {
     onDelete: "set null",
   }),
   rating: integer("rating").notNull(),
-  title: text("title"),
   content: text("content"),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

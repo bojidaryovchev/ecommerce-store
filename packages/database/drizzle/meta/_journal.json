@@ -36,6 +36,13 @@
       "when": 1771030915380,
       "tag": "0004_parched_rhodey",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771036142778,
+      "tag": "0005_first_thunderbird",
+      "breakpoints": true
     }
   ]
 }
