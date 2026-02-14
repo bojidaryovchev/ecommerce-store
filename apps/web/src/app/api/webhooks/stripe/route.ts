@@ -66,6 +66,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     return;
   }
 
+  // Sync Stripe Customer ID to the user (safety net for race conditions)
+  if (userId && typeof session.customer === "string") {
+    await db.update(schema.users).set({ stripeCustomerId: session.customer }).where(eq(schema.users.id, userId));
+  }
+
   // Get cart with items
   const cart = await db.query.carts.findFirst({
     where: eq(schema.carts.id, cartId),

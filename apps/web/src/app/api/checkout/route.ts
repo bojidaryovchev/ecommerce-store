@@ -2,8 +2,38 @@ import { auth } from "@/lib/auth";
 import { CART_SESSION_COOKIE } from "@/lib/cart-utils";
 import { stripe } from "@/lib/stripe";
 import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
+import { db, schema } from "@ecommerce/database";
+import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+
+/**
+ * Look up or create a Stripe Customer for the authenticated user.
+ * Stores the `stripeCustomerId` on the user row for future checkouts.
+ */
+async function getOrCreateStripeCustomer(userId: string, email: string, name?: string | null) {
+  // Check if user already has a Stripe Customer ID
+  const user = await db.query.users.findFirst({
+    where: eq(schema.users.id, userId),
+    columns: { stripeCustomerId: true },
+  });
+
+  if (user?.stripeCustomerId) {
+    return user.stripeCustomerId;
+  }
+
+  // Create a new Stripe Customer
+  const customer = await stripe.customers.create({
+    email,
+    name: name ?? undefined,
+    metadata: { userId },
+  });
+
+  // Persist the Stripe Customer ID on the user
+  await db.update(schema.users).set({ stripeCustomerId: customer.id }).where(eq(schema.users.id, userId));
+
+  return customer.id;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,13 +96,20 @@ export async function POST(request: NextRequest) {
     // Get the origin for success/cancel URLs
     const origin = request.headers.get("origin") ?? "http://localhost:3000";
 
+    // Resolve Stripe Customer for authenticated users
+    let stripeCustomerId: string | undefined;
+    if (session?.user?.id && session.user.email) {
+      stripeCustomerId = await getOrCreateStripeCustomer(session.user.id, session.user.email, session.user.name);
+    }
+
     // Create Stripe Checkout Session
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems,
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout/cancel`,
-      customer_email: session?.user?.email ?? undefined,
+      // Use Stripe Customer when available; fall back to email-only for guests
+      ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: session?.user?.email ?? undefined }),
       metadata: {
         cartId: cart.id,
         userId: session?.user?.id ?? "",

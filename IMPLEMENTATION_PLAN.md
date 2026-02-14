@@ -296,11 +296,12 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 - Profile: display name, email, avatar (read-only from Google OAuth)
 - Addresses: CRUD for shipping/billing using existing `address` table + schema
 
-**4.2 Stripe Customer Sync**
+**4.2 Stripe Customer Sync** ✅ Completed
 
-- On first checkout: create Stripe Customer, store in `customer` table linked to user
-- Pass `customer` ID to all future Checkout Sessions
-- Enables saved payment methods and Stripe-hosted customer portal
+- On first checkout: `getOrCreateStripeCustomer()` helper in checkout route looks up `stripeCustomerId` on the `user` row, creates a Stripe Customer via `stripe.customers.create()` if missing, and stores the ID back on the user
+- Checkout Session uses `customer` param (instead of `customer_email`) for authenticated users — enables saved payment methods, Stripe-hosted customer portal, and richer Stripe Dashboard data
+- Guest checkout falls back to `customer_email` as before
+- Webhook safety net: `handleCheckoutSessionCompleted` syncs `session.customer` to the user row to guard against race conditions
 
 ### Phase 5 — Emails
 
