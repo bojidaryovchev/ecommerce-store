@@ -1,20 +1,23 @@
 import { AddressDisplay } from "@/components/orders/address-display";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderSummary } from "@/components/orders/order-summary";
+import { OrderTimeline } from "@/components/orders/order-timeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { OrderWithItems } from "@/queries/orders";
+import type { OrderStatusHistoryEntry, OrderWithItems } from "@/queries/orders";
 import { ArrowLeft, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
 type Props = {
-  order: OrderWithItems;
+  order: OrderWithItems & { statusHistory?: OrderStatusHistoryEntry[] };
 };
 
 const OrderDetail: React.FC<Props> = ({ order }) => {
+  const statusHistory = order.statusHistory ?? [];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -125,44 +128,16 @@ const OrderDetail: React.FC<Props> = ({ order }) => {
             </Card>
           )}
 
-          {/* Timeline */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Timeline</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ordered</span>
-                  <span>{formatDate(order.createdAt)}</span>
-                </div>
-                {order.paidAt && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Paid</span>
-                    <span>{formatDate(order.paidAt)}</span>
-                  </div>
-                )}
-                {order.shippedAt && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipped</span>
-                    <span>{formatDate(order.shippedAt)}</span>
-                  </div>
-                )}
-                {order.deliveredAt && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Delivered</span>
-                    <span>{formatDate(order.deliveredAt)}</span>
-                  </div>
-                )}
-                {order.cancelledAt && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cancelled</span>
-                    <span>{formatDate(order.cancelledAt)}</span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <OrderTimeline
+            statusHistory={statusHistory}
+            timestamps={{
+              createdAt: order.createdAt,
+              paidAt: order.paidAt,
+              shippedAt: order.shippedAt,
+              deliveredAt: order.deliveredAt,
+              cancelledAt: order.cancelledAt,
+            }}
+          />
         </div>
       </div>
     </div>

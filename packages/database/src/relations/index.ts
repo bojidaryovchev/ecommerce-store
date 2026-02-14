@@ -16,6 +16,7 @@ export * from "./invoice-items";
 export * from "./invoice-line-items";
 export * from "./invoices";
 export * from "./order-items";
+export * from "./order-status-history";
 export * from "./orders";
 export * from "./payment-intents";
 export * from "./payment-links";

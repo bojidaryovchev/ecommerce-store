@@ -28,7 +28,17 @@ async function updateOrderStatus(
   status: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded",
 ): Promise<ActionResult<Order>> {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
+
+    // Get current order to record fromStatus
+    const existingOrder = await db.query.orders.findFirst({
+      where: eq(schema.orders.id, orderId),
+      columns: { status: true },
+    });
+
+    if (!existingOrder) {
+      return { success: false, error: "Order not found" };
+    }
 
     const timestamps: Record<string, Date> = {};
 
@@ -59,9 +69,19 @@ async function updateOrderStatus(
       };
     }
 
+    // Record status change in audit trail
+    await db.insert(schema.orderStatusHistory).values({
+      orderId,
+      fromStatus: existingOrder.status,
+      toStatus: status,
+      changedBy: session?.user?.id ?? null,
+      actor: session?.user?.name ?? "admin",
+    });
+
     // Invalidate order cache
     revalidateTag(CACHE_TAGS.orders, "max");
     revalidateTag(CACHE_TAGS.order(orderId), "max");
+    revalidateTag(CACHE_TAGS.orderStatusHistory(orderId), "max");
     if (order.userId) {
       revalidateTag(CACHE_TAGS.ordersByUser(order.userId), "max");
     }

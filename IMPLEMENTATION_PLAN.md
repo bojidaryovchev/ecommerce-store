@@ -191,14 +191,14 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 
 ### 🟢 Nice-to-Have — Post-MVP
 
-| #   | Gap                 | Details                                                 |
-| --- | ------------------- | ------------------------------------------------------- |
-| 14  | SEO metadata fields | No `metaTitle`/`metaDescription` on products/categories |
-| 15  | Product variants    | No size/color/option system — products are flat         |
-| 16  | Order audit trail   | No status change history or event log                   |
-| 17  | Multi-currency      | `currency_options` jsonb exists on `price` but unused   |
-| 18  | Shipping tracking   | Only timestamps on order, no carrier/tracking number    |
-| 19  | Rate limiting       | No API abuse protection                                 |
+| #   | Gap                 | Details                                                           |
+| --- | ------------------- | ----------------------------------------------------------------- |
+| 14  | SEO metadata fields | No `metaTitle`/`metaDescription` on products/categories           |
+| 15  | Product variants    | No size/color/option system — products are flat                   |
+| 16  | Order audit trail   | ~~No status change history or event log~~ — ✅ **Done** (Phase 7) |
+| 17  | Multi-currency      | `currency_options` jsonb exists on `price` but unused             |
+| 18  | Shipping tracking   | Only timestamps on order, no carrier/tracking number              |
+| 19  | Rate limiting       | No API abuse protection                                           |
 
 ---
 
@@ -370,6 +370,23 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 - `OrderWithItemsAndUser` type extended with optional `refunds` array
 - Cache tags: `refundsByOrder:{orderId}` with proper invalidation
 - Removed old simple "Refund Order" status transition from delivered → refunded
+
+### Phase 7 — Post-MVP Enhancements
+
+**7.1 Order Audit Trail** ✅ Completed
+
+- New `order_status_history` table: `id`, `orderId`, `fromStatus`, `toStatus`, `changedBy` (userId FK), `actor` (display name), `note`, `createdAt`
+- Relation: `orders.statusHistory` → `many(orderStatusHistory)`, `orderStatusHistory.order` → `one(orders)`, `orderStatusHistory.user` → `one(users)`
+- Webhook: records initial `paid` entry with `actor: "stripe-webhook"` when order is created
+- `updateOrderStatus` mutation: records every admin status transition with admin's userId and name
+- `issueRefund` mutation: records `refunded` status when order is fully refunded, with note showing amount
+- `getOrderById` now includes `statusHistory` relation (ordered by `createdAt` asc) with user info
+- Standalone query: `getOrderStatusHistory(orderId)` with `"use cache"` + `cacheTag`
+- Admin order detail: vertical timeline with dots, shows from→to status, actor name, date, optional notes. Falls back to timestamp-based timeline for pre-existing orders
+- Customer order detail: simplified vertical timeline (no actor info shown). Falls back to timestamp-based timeline for pre-existing orders
+- `OrderWithItemsAndUser` type extended with optional `statusHistory` array
+- `OrderStatusHistoryEntry` type exported from queries barrel
+- Cache tag: `orderStatusHistory:{orderId}` with invalidation in all status-changing mutations + webhook
 
 ---
 

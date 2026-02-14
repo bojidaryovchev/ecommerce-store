@@ -167,6 +167,15 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   await db.insert(schema.orderItems).values(orderItems);
 
+  // Record initial status in audit trail
+  await db.insert(schema.orderStatusHistory).values({
+    orderId: order.id,
+    fromStatus: null,
+    toStatus: "paid",
+    changedBy: null,
+    actor: "stripe-webhook",
+  });
+
   // Send order confirmation email
   let recipientEmail = customerDetails?.email ?? null;
   if (!recipientEmail && userId) {
@@ -227,6 +236,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   // Invalidate order cache so success page can find the new order
   revalidateTag(CACHE_TAGS.orders, "max");
   revalidateTag(CACHE_TAGS.checkoutSession(session.id), "max");
+  revalidateTag(CACHE_TAGS.orderStatusHistory(order.id), "max");
   revalidateTag(CACHE_TAGS.products, "max");
   if (userId) {
     revalidateTag(CACHE_TAGS.ordersByUser(userId), "max");

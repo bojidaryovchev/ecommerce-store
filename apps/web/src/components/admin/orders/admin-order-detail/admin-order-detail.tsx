@@ -1,7 +1,7 @@
 "use client";
 
 import { RefundDialog } from "@/components/admin/orders/refund-dialog";
-import { AddressDisplay, OrderStatusBadge, OrderSummary } from "@/components/orders";
+import { AddressDisplay, OrderStatusBadge, OrderSummary, OrderTimeline } from "@/components/orders";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,6 +84,7 @@ const AdminOrderDetail: React.FC<Props> = ({ order }) => {
   const canRefund = REFUNDABLE_STATUSES.includes(order.status) && !!order.stripePaymentIntentId;
 
   const refunds = order.refunds ?? [];
+  const statusHistory = order.statusHistory ?? [];
   const totalRefunded = refunds
     .filter((r) => r.status === "succeeded" || r.status === "pending")
     .reduce((sum, r) => sum + r.amount, 0);
@@ -270,44 +271,17 @@ const AdminOrderDetail: React.FC<Props> = ({ order }) => {
             </Card>
           )}
 
-          {/* Timeline */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Timeline</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ordered</span>
-                  <span>{formatDate(order.createdAt)}</span>
-                </div>
-                {order.paidAt && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Paid</span>
-                    <span>{formatDate(order.paidAt)}</span>
-                  </div>
-                )}
-                {order.shippedAt && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipped</span>
-                    <span>{formatDate(order.shippedAt)}</span>
-                  </div>
-                )}
-                {order.deliveredAt && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Delivered</span>
-                    <span>{formatDate(order.deliveredAt)}</span>
-                  </div>
-                )}
-                {order.cancelledAt && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cancelled</span>
-                    <span>{formatDate(order.cancelledAt)}</span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <OrderTimeline
+            statusHistory={statusHistory}
+            timestamps={{
+              createdAt: order.createdAt,
+              paidAt: order.paidAt,
+              shippedAt: order.shippedAt,
+              deliveredAt: order.deliveredAt,
+              cancelledAt: order.cancelledAt,
+            }}
+            showActor
+          />
 
           {/* Internal Notes / Metadata */}
           {order.notes && (

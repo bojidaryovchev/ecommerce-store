@@ -24,7 +24,7 @@ type IssueRefundInput = {
  */
 async function issueRefund(input: IssueRefundInput): Promise<ActionResult<Refund>> {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
 
     const { orderId, amount, reason } = input;
 
@@ -101,12 +101,23 @@ async function issueRefund(input: IssueRefundInput): Promise<ActionResult<Refund
         .update(schema.orders)
         .set({ status: "refunded", updatedAt: new Date() })
         .where(eq(schema.orders.id, orderId));
+
+      // Record status change in audit trail
+      await db.insert(schema.orderStatusHistory).values({
+        orderId,
+        fromStatus: order.status,
+        toStatus: "refunded",
+        changedBy: session?.user?.id ?? null,
+        actor: session?.user?.name ?? "admin",
+        note: `Fully refunded (${(order.totalAmount / 100).toFixed(2)} ${order.currency.toUpperCase()})`,
+      });
     }
 
     // 6. Invalidate caches
     revalidateTag(CACHE_TAGS.orders, "max");
     revalidateTag(CACHE_TAGS.order(orderId), "max");
     revalidateTag(CACHE_TAGS.refundsByOrder(orderId), "max");
+    revalidateTag(CACHE_TAGS.orderStatusHistory(orderId), "max");
     if (order.userId) {
       revalidateTag(CACHE_TAGS.ordersByUser(order.userId), "max");
     }
