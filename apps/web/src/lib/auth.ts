@@ -1,9 +1,12 @@
+import { WelcomeEmail } from "@/emails";
+import { sendEmail } from "@/lib/email";
 import { mergeGuestCartToUser } from "@/mutations/cart";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { accounts, db, sessions, users, verificationTokens } from "@ecommerce/database";
 import type { UserRole } from "@ecommerce/database/types/enums";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import React from "react";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -29,10 +32,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
   },
   events: {
-    async signIn({ user }) {
+    async signIn({ user, isNewUser }) {
       // Merge guest cart into user cart on login
       if (user.id) {
         await mergeGuestCartToUser(user.id);
+      }
+      // Send welcome email on first sign-in
+      if (isNewUser && user.email) {
+        await sendEmail({
+          to: user.email,
+          subject: "Welcome to our store!",
+          react: React.createElement(WelcomeEmail, { name: user.name ?? "there" }),
+        });
       }
     },
   },

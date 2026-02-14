@@ -1,10 +1,13 @@
+import { OrderConfirmationEmail } from "@/emails";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { sendEmail } from "@/lib/email";
 import { stripe } from "@/lib/stripe";
 import { db, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import React from "react";
 import Stripe from "stripe";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -163,6 +166,41 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }));
 
   await db.insert(schema.orderItems).values(orderItems);
+
+  // Send order confirmation email
+  const recipientEmail = customerDetails?.email ?? (userId ? undefined : null);
+  if (recipientEmail) {
+    await sendEmail({
+      to: recipientEmail,
+      subject: `Order Confirmed — #${order.id.slice(0, 8)}`,
+      react: React.createElement(OrderConfirmationEmail, {
+        orderId: order.id,
+        customerName: customerDetails?.name ?? "Customer",
+        items: cart.items.map((item) => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          unitAmount: item.price.unitAmount ?? 0,
+          currency: item.price.currency,
+        })),
+        subtotal: subtotalAmount,
+        shipping: session.shipping_cost?.amount_total ?? 0,
+        tax: session.total_details?.amount_tax ?? 0,
+        total: session.amount_total ?? subtotalAmount,
+        currency: session.currency ?? "usd",
+        shippingAddress: shippingAddress
+          ? {
+              name: shippingAddress.name,
+              line1: shippingAddress.line1,
+              line2: shippingAddress.line2,
+              city: shippingAddress.city,
+              state: shippingAddress.state,
+              postalCode: shippingAddress.postalCode,
+              country: shippingAddress.country,
+            }
+          : undefined,
+      }),
+    });
+  }
 
   // Decrement stock for products with inventory tracking
   for (const item of cart.items) {

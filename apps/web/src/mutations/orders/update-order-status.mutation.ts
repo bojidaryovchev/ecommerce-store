@@ -1,12 +1,23 @@
 "use server";
 
+import { OrderShippedEmail } from "@/emails";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { sendEmail } from "@/lib/email";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import React from "react";
 
 type Order = typeof schema.orders.$inferSelect;
+
+async function getUserEmail(userId: string): Promise<string | null> {
+  const user = await db.query.users.findFirst({
+    where: eq(schema.users.id, userId),
+    columns: { email: true },
+  });
+  return user?.email ?? null;
+}
 
 /**
  * Update order status
@@ -50,6 +61,19 @@ async function updateOrderStatus(
     revalidateTag(CACHE_TAGS.order(orderId), "max");
     if (order.userId) {
       revalidateTag(CACHE_TAGS.ordersByUser(order.userId), "max");
+    }
+
+    // Send shipped email
+    if (status === "shipped") {
+      const recipientEmail = order.guestEmail ?? (order.userId ? await getUserEmail(order.userId) : null);
+      if (recipientEmail) {
+        const customerName = order.shippingAddress?.name ?? "Customer";
+        await sendEmail({
+          to: recipientEmail,
+          subject: `Your order #${order.id.slice(0, 8)} has shipped!`,
+          react: React.createElement(OrderShippedEmail, { orderId: order.id, customerName }),
+        });
+      }
     }
 
     return {

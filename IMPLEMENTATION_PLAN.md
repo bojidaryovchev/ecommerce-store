@@ -305,16 +305,21 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 
 ### Phase 5 — Emails
 
-**5.1 Email Service**
+**5.1 Email Service** ✅ Completed
 
-- Integrate Resend (or AWS SES)
-- Shared email templates (React Email or HTML)
+- Integrated **Resend** (`resend@6.9.2`) with `@react-email/components` for templated transactional emails
+- Created `src/lib/email.ts` — `sendEmail()` helper with lazy Resend client init. Gracefully skips if `RESEND_API_KEY` is not set (safe for local dev)
+- Added `RESEND_API_KEY` and `EMAIL_FROM` to `environment.d.ts`
+- Three React Email templates in `src/emails/`:
+  - `OrderConfirmationEmail` — itemised receipt with subtotal/shipping/tax/total, shipping address
+  - `OrderShippedEmail` — shipment notification with order ID
+  - `WelcomeEmail` — first sign-in greeting
 
-**5.2 Transactional Emails**
+**5.2 Transactional Emails** ✅ Completed
 
-- Order confirmation — on `checkout.session.completed` webhook
-- Order shipped — on status → `shipped`
-- Welcome email — on first sign-in
+- **Order confirmation** — sent in webhook `handleCheckoutSessionCompleted` after order + items are created, to customer email from Stripe session
+- **Order shipped** — sent in `updateOrderStatus` mutation when status transitions to `shipped`, looks up user email via `getUserEmail()` helper or uses `guestEmail`
+- **Welcome email** — sent in NextAuth `signIn` event when `isNewUser` is true, to the user's email
 
 ### Phase 6 — Feature Completeness
 
