@@ -1,9 +1,10 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useCallback, useRef, useState, useTransition } from "react";
+import React, { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 type SearchBarProps = {
   className?: string;
@@ -23,7 +24,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
   const [query, setQuery] = useState(urlQuery);
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const debouncedQuery = useDebounce(query, DEBOUNCE_MS);
 
   // Sync local state with URL when user is not actively typing
   if (query !== urlQuery && !isFocused) {
@@ -45,30 +46,20 @@ const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
     [router, isOnProducts],
   );
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setQuery(value);
+  // Navigate when debounced query changes
+  useEffect(() => {
+    if (isFocused) {
+      navigate(debouncedQuery);
+    }
+  }, [debouncedQuery, navigate, isFocused]);
 
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-
-      timerRef.current = setTimeout(() => {
-        navigate(value);
-      }, DEBOUNCE_MS);
-    },
-    [navigate],
-  );
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+  }, []);
 
   const handleSubmit = useCallback(
     (e: React.SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
-
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-
       navigate(query);
       inputRef.current?.blur();
     },
@@ -76,10 +67,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
   );
 
   const handleClear = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-
     setQuery("");
     navigate("");
     inputRef.current?.focus();

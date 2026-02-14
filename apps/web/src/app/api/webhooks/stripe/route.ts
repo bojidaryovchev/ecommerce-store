@@ -137,7 +137,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       status: "paid",
       currency: session.currency ?? "usd",
       subtotalAmount,
-      discountAmount: 0,
+      discountAmount: session.total_details?.amount_discount ?? 0,
       shippingAmount: session.shipping_cost?.amount_total ?? 0,
       taxAmount: session.total_details?.amount_tax ?? 0,
       totalAmount: session.amount_total ?? subtotalAmount,
@@ -185,6 +185,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         subtotal: subtotalAmount,
         shipping: session.shipping_cost?.amount_total ?? 0,
         tax: session.total_details?.amount_tax ?? 0,
+        discount: session.total_details?.amount_discount ?? 0,
         total: session.amount_total ?? subtotalAmount,
         currency: session.currency ?? "usd",
         shippingAddress: shippingAddress

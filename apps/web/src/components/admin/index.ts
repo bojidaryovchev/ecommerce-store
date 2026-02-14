@@ -15,3 +15,9 @@ export { AdminOrderDetail, AdminOrdersHeader, OrdersTableLoader } from "./orders
 
 // Reviews
 export { AdminReviewsHeader, ReviewsTableLoader } from "./reviews";
+
+// Coupons
+export { AdminCouponsHeader, CouponFormLoader, CouponsTableLoader } from "./coupons";
+
+// Promotions
+export { AdminPromotionsHeader, PromotionFormLoader, PromotionsTableLoader } from "./promotions";

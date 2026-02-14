@@ -25,6 +25,12 @@ const AdminSidebar: React.FC = () => {
         <Button asChild variant="ghost" className="w-full justify-start">
           <Link href="/admin/reviews">Reviews</Link>
         </Button>
+        <Button asChild variant="ghost" className="w-full justify-start">
+          <Link href="/admin/coupons">Coupons</Link>
+        </Button>
+        <Button asChild variant="ghost" className="w-full justify-start">
+          <Link href="/admin/promotions">Promotions</Link>
+        </Button>
       </nav>
     </aside>
   );

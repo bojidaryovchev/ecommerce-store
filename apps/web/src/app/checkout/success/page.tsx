@@ -114,6 +114,12 @@ const CheckoutSuccessPage: React.FC<Props> = async ({ searchParams }) => {
                   <span>{formatCurrency(order.taxAmount, order.currency)}</span>
                 </div>
               )}
+              {order.discountAmount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Discount</span>
+                  <span className="text-green-600">-{formatCurrency(order.discountAmount, order.currency)}</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between font-semibold">
                 <span>Total</span>

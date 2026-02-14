@@ -16,6 +16,7 @@ type OrderConfirmationEmailProps = {
   subtotal: number;
   shipping: number;
   tax: number;
+  discount?: number;
   total: number;
   currency: string;
   shippingAddress?: {
@@ -36,6 +37,7 @@ const OrderConfirmationEmail: React.FC<OrderConfirmationEmailProps> = ({
   subtotal,
   shipping,
   tax,
+  discount = 0,
   total,
   currency,
   shippingAddress,
@@ -88,6 +90,12 @@ const OrderConfirmationEmail: React.FC<OrderConfirmationEmailProps> = ({
             <Row style={summaryRow}>
               <Column style={summaryLabel}>Tax</Column>
               <Column style={summaryValue}>{formatCurrency(tax, currency)}</Column>
+            </Row>
+          )}
+          {discount > 0 && (
+            <Row style={summaryRow}>
+              <Column style={summaryLabel}>Discount</Column>
+              <Column style={{ ...summaryValue, color: "#16a34a" }}>-{formatCurrency(discount, currency)}</Column>
             </Row>
           )}
           <Row style={summaryRow}>

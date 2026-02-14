@@ -110,6 +110,7 @@ export async function POST(request: NextRequest) {
       cancel_url: `${origin}/checkout/cancel`,
       // Use Stripe Customer when available; fall back to email-only for guests
       ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: session?.user?.email ?? undefined }),
+      allow_promotion_codes: true,
       metadata: {
         cartId: cart.id,
         userId: session?.user?.id ?? "",

@@ -26,5 +26,13 @@ export const CACHE_TAGS = {
   reviews: "reviews",
   reviewsByProduct: (productId: string) => `reviews-product:${productId}`,
 
+  // Coupons
+  coupons: "coupons",
+  coupon: (id: string) => `coupon:${id}`,
+
+  // Promotion Codes
+  promotionCodes: "promotion-codes",
+  promotionCode: (id: string) => `promotion-code:${id}`,
+
   // Cart is user-specific and changes frequently - no caching
 } as const;

@@ -123,9 +123,13 @@ Protected by middleware (ADMIN/SUPER_ADMIN roles only). Sidebar layout.
 
 | Feature             | Routes                               | Operations                                  |
 | ------------------- | ------------------------------------ | ------------------------------------------- |
-| Dashboard           | `/admin`                             | Static placeholder only                     |
+| Dashboard           | `/admin`                             | Revenue, orders, pending, catalog stats     |
 | Category management | `/admin/categories`, `/new`, `/[id]` | Create, edit, soft-delete                   |
 | Product management  | `/admin/products`, `/new`, `/[id]`   | Create, edit, soft-delete, restore, pricing |
+| Order management    | `/admin/orders`, `/[id]`             | View, status transitions, fulfillment       |
+| Review moderation   | `/admin/reviews`                     | List, delete                                |
+| Coupon management   | `/admin/coupons`, `/new`, `/[id]`    | Create, edit name, delete (cascade)         |
+| Promotion codes     | `/admin/promotions`, `/new`          | Create, activate/deactivate, delete         |
 
 - Data tables with confirmation dialogs
 - react-hook-form + Zod validation
@@ -156,7 +160,7 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 - Queries use `"use cache"` + `cacheTag()` for cross-request caching
 - Actions invalidate via `revalidateTag()` with `"max"` staleness
 - Cart is explicitly uncached (user-specific, high mutation rate)
-- Tags: `categories`, `category:{id}`, `category:slug:{slug}`, `products`, `product:{id}`, `orders`, `order:{id}`, `orders:user:{userId}`
+- Tags: `categories`, `category:{id}`, `category:slug:{slug}`, `products`, `product:{id}`, `orders`, `order:{id}`, `orders:user:{userId}`, `reviews`, `reviews:product:{id}`, `coupons`, `coupon:{id}`, `promotion-codes`, `promotion-code:{id}`
 
 ---
 
@@ -171,19 +175,19 @@ Docker Compose: local Postgres 17 + Stripe CLI (webhook forwarding).
 | ~~3~~ | ~~Admin dashboard is static~~   | ~~Placeholder cards~~ — ✅ **Done** (Phase 1.3)                                                                 |
 | 4     | No search or filtering          | ~~No product search~~ (✅ Phase 2.1), ~~category filter, price sort~~ (✅ Phase 2.2) — discovery tools complete |
 | ~~5~~ | ~~No inventory/stock tracking~~ | ~~No `stock_quantity` on products~~ — ✅ **Done** (Phase 3)                                                     |
-| 6     | No transactional emails         | No order confirmation, no shipping notification, no welcome email                                               |
+| ~~6~~ | ~~No transactional emails~~     | ~~No order confirmation, no shipping notification, no welcome email~~ — ✅ **Done** (Phase 5)                   |
 
 ### 🟡 Important — Expected for a Credible MVP
 
-| #   | Gap                         | Details                                                                                       |
-| --- | --------------------------- | --------------------------------------------------------------------------------------------- |
-| 7   | No user account page        | No profile view, no address management, no saved payment methods                              |
-| 8   | ~~No pagination~~           | ✅ Phase 2.3 — all list queries paginated, reusable `Pagination` component applied to 5 pages |
-| 9   | Reviews are read-only       | Display exists on PDP but no submission form                                                  |
-| 10  | Wishlist has no UI          | `wishlist` table exists, zero frontend                                                        |
-| 11  | No Stripe Customer sync     | `customer` table exists but users aren't mapped to Stripe customers                           |
-| 12  | Refund flow incomplete      | `refund` table exists, no admin UI or Stripe refund API integration                           |
-| 13  | Promo codes not in checkout | Coupon/promotion tables exist but not wired to Stripe Checkout                                |
+| #      | Gap                             | Details                                                                                       |
+| ------ | ------------------------------- | --------------------------------------------------------------------------------------------- |
+| ~~7~~  | ~~No user account page~~        | ✅ Phase 4.1 — account layout, profile page, address CRUD                                     |
+| 8      | ~~No pagination~~               | ✅ Phase 2.3 — all list queries paginated, reusable `Pagination` component applied to 5 pages |
+| ~~9~~  | ~~Reviews are read-only~~       | ✅ Phase 6.1 — rating + text submission, purchase-gated, user self-delete, admin moderation   |
+| 10     | Wishlist has no UI              | `wishlist` table exists, zero frontend                                                        |
+| ~~11~~ | ~~No Stripe Customer sync~~     | ✅ Phase 4.2 — `getOrCreateStripeCustomer()` on checkout, synced to user row                  |
+| 12     | Refund flow incomplete          | `refund` table exists, no admin UI or Stripe refund API integration                           |
+| ~~13~~ | ~~Promo codes not in checkout~~ | ✅ Phase 6.2 — `allow_promotion_codes: true`, admin CRUD for coupons + promo codes            |
 
 ### 🟢 Nice-to-Have — Post-MVP
 
@@ -290,11 +294,13 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 
 ### Phase 4 — User Account
 
-**4.1 Account Pages**
+**4.1 Account Pages** ✅ Completed
 
-- Route: `/account` (layout), `/account/profile`, `/account/addresses`
+- Route: `/account` (layout with sidebar nav), `/account/profile`, `/account/addresses`
 - Profile: display name, email, avatar (read-only from Google OAuth)
-- Addresses: CRUD for shipping/billing using existing `address` table + schema
+- Addresses: full CRUD for shipping/billing using existing `address` table + validators
+- Components: `AccountLayout` (sidebar + content), `ProfileView`, `AddressCard`, `AddressForm` (create/edit dialog with react-hook-form + Zod)
+- Auth-gated: redirects to `/login` if not authenticated
 
 **4.2 Stripe Customer Sync** ✅ Completed
 
@@ -323,18 +329,24 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 
 ### Phase 6 — Feature Completeness
 
-**6.1 Review Submission**
+**6.1 Review Submission** ✅ Completed
 
-- Action: `createReview` (rating 1-5, optional text)
-- Gate: only users who purchased the product can review
-- Form on product detail page
-- Admin: review moderation (list, delete)
+- Action: `createReview` (rating 1–5, optional text body — no title field, keeping it simple for MVP)
+- Gate: only users who have purchased the product can leave a review (verified via order items)
+- One review per user per product — users can delete their own review to re-submit
+- `ReviewSection` on product detail page with `ReviewForm` (star rating + textarea) and `ReviewList` (shows all reviews with delete button for own review)
+- Admin: `/admin/reviews` — review moderation table with delete capability
+- DB: dropped unused `title` column from `review` table via `drizzle-kit push`
 
-**6.2 Promotion Codes**
+**6.2 Promotion Codes** ✅ Completed
 
-- Enable `allow_promotion_codes: true` on Stripe Checkout Session
-- Admin CRUD for coupons (percent/amount off, duration, limits)
-- Admin CRUD for promotion codes (unique code → coupon mapping)
+- Checkout: `allow_promotion_codes: true` on Stripe Checkout Session — enables promo code input on Stripe's hosted checkout page
+- Admin coupon management (`/admin/coupons`): create (percent/amount off, duration, max redemptions), edit (name only — Stripe limitation), delete (cascade to promo codes)
+- Admin promotion code management (`/admin/promotions`): create (code, coupon link, max redemptions, minimum amount, first-time-only), activate/deactivate toggle, delete (deactivates in Stripe)
+- All operations sync to Stripe in real-time — coupons and promo codes exist in both DB and Stripe
+- Stripe API: uses `promotion: { type: 'coupon', coupon: stripeCouponId }` for promo code creation (SDK v20.3.1)
+- Cache: `coupons`, `coupon:{id}`, `promotion-codes`, `promotion-code:{id}` tags with proper invalidation
+- See `docs/promotion-codes.md` for full documentation
 
 **6.3 Wishlist**
 
