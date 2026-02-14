@@ -18,6 +18,7 @@ services:
   stripe-cli:
     image: stripe/stripe-cli:latest
     command: listen --api-key ${STRIPE_SECRET_KEY} --forward-to host.docker.internal:3000/api/webhooks/stripe
+    restart: on-failure
     environment:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
     extra_hosts:

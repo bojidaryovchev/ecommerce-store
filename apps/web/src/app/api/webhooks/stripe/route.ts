@@ -168,7 +168,14 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   await db.insert(schema.orderItems).values(orderItems);
 
   // Send order confirmation email
-  const recipientEmail = customerDetails?.email ?? (userId ? undefined : null);
+  let recipientEmail = customerDetails?.email ?? null;
+  if (!recipientEmail && userId) {
+    const user = await db.query.users.findFirst({
+      where: eq(schema.users.id, userId),
+      columns: { email: true },
+    });
+    recipientEmail = user?.email ?? null;
+  }
   if (recipientEmail) {
     await sendEmail({
       to: recipientEmail,
@@ -219,8 +226,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   // Invalidate order cache so success page can find the new order
   revalidateTag(CACHE_TAGS.orders, "max");
-  revalidateTag(CACHE_TAGS.products, "max");
   revalidateTag(CACHE_TAGS.checkoutSession(session.id), "max");
+  revalidateTag(CACHE_TAGS.products, "max");
   if (userId) {
     revalidateTag(CACHE_TAGS.ordersByUser(userId), "max");
   }
