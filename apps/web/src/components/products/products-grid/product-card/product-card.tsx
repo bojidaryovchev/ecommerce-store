@@ -1,3 +1,4 @@
+import { WishlistButton } from "@/components/products/wishlist-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
@@ -9,9 +10,10 @@ import React from "react";
 interface Props {
   product: ProductWithPrices;
   priority?: boolean;
+  isWishlisted?: boolean;
 }
 
-const ProductCard: React.FC<Props> = ({ product, priority = false }) => {
+const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted }) => {
   const defaultPrice = product.prices.find((p) => p.id === product.defaultPriceId) ?? product.prices[0];
   const productImage = product.images?.[0];
 
@@ -19,6 +21,7 @@ const ProductCard: React.FC<Props> = ({ product, priority = false }) => {
     <Link href={`/products/${product.id}`}>
       <Card className="h-full cursor-pointer transition-transform hover:scale-105">
         <CardContent className="relative overflow-hidden p-0">
+          {isWishlisted !== undefined && <WishlistButton productId={product.id} isWishlisted={isWishlisted} />}
           {productImage ? (
             <Image
               src={productImage}

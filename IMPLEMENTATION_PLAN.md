@@ -348,11 +348,16 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 - Cache: `coupons`, `coupon:{id}`, `promotion-codes`, `promotion-code:{id}` tags with proper invalidation
 - See `docs/promotion-codes.md` for full documentation
 
-**6.3 Wishlist**
+**6.3 Wishlist** ✅ Completed
 
 - Heart toggle on product cards and detail page
 - Action: `toggleWishlist` using existing table
 - Route: `/account/wishlist` — saved items grid
+- Queries: `getWishlistByUserId`, `getWishlistProductIds`, `isProductWishlisted`
+- WishlistButton client component (icon + labeled variants)
+- Wired to all ProductsGrid callers (AllProducts, FilteredProducts, SearchResults, FeaturedProducts, CategoryLoader) and ProductLoader/ProductDetail
+- Account sidebar updated with Wishlist nav item
+- Cache tags: `wishlist:{userId}` with proper invalidation
 
 **6.4 Refund Management**
 

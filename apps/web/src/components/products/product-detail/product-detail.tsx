@@ -1,3 +1,4 @@
+import { WishlistButton } from "@/components/products/wishlist-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -19,9 +20,10 @@ import { ReviewSection } from "./review-section";
 
 interface Props {
   product: ProductWithDetails;
+  isWishlisted?: boolean;
 }
 
-const ProductDetail: React.FC<Props> = ({ product }) => {
+const ProductDetail: React.FC<Props> = ({ product, isWishlisted }) => {
   const defaultPrice = product.prices.find((p) => p.id === product.defaultPriceId) ?? product.prices[0];
   const productImage = product.images?.[0];
 
@@ -143,6 +145,10 @@ const ProductDetail: React.FC<Props> = ({ product }) => {
               trackInventory={product.trackInventory}
               stockQuantity={product.stockQuantity}
             />
+
+            {isWishlisted !== undefined && (
+              <WishlistButton productId={product.id} isWishlisted={isWishlisted} variant="labeled" />
+            )}
           </div>
 
           {/* Product Details */}

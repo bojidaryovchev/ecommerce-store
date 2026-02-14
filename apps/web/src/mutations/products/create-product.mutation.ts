@@ -27,6 +27,9 @@ async function createProduct(
     }
 
     revalidateTag(CACHE_TAGS.products, "max");
+    if (product.categoryId) {
+      revalidateTag(CACHE_TAGS.productsByCategory(product.categoryId), "max");
+    }
 
     return {
       success: true,

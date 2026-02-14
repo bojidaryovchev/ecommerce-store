@@ -13,9 +13,10 @@ import { CategoriesGrid } from "../categories-grid";
 
 interface Props {
   category: CategoryWithProductsAndChildren;
+  wishlistedProductIds?: string[];
 }
 
-const CategoryDetail: React.FC<Props> = ({ category }) => {
+const CategoryDetail: React.FC<Props> = ({ category, wishlistedProductIds }) => {
   return (
     <div className="space-y-8">
       <Breadcrumb>
@@ -58,7 +59,7 @@ const CategoryDetail: React.FC<Props> = ({ category }) => {
         <h2 className="text-xl font-semibold">
           Products {category.products.length > 0 && `(${category.products.length})`}
         </h2>
-        <ProductsGrid products={category.products} />
+        <ProductsGrid products={category.products} wishlistedProductIds={wishlistedProductIds} />
       </section>
     </div>
   );

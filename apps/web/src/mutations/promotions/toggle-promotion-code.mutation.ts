@@ -37,7 +37,6 @@ async function togglePromotionCode(id: string): Promise<ActionResult<PromotionCo
       .returning();
 
     revalidateTag(CACHE_TAGS.promotionCodes, "max");
-    revalidateTag(CACHE_TAGS.promotionCode(id), "max");
 
     return { success: true, data: promotionCode };
   } catch (error) {

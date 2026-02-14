@@ -31,7 +31,6 @@ async function deletePromotionCode(id: string): Promise<ActionResult> {
     await db.delete(schema.promotionCodes).where(eq(schema.promotionCodes.id, id));
 
     revalidateTag(CACHE_TAGS.promotionCodes, "max");
-    revalidateTag(CACHE_TAGS.promotionCode(id), "max");
 
     return { success: true, data: undefined };
   } catch (error) {

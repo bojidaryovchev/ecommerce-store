@@ -9,3 +9,4 @@ export * from "./products";
 export * from "./promotions";
 export * from "./reviews";
 export * from "./uploads";
+export * from "./wishlist";

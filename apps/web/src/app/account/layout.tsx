@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { MapPin, User } from "lucide-react";
+import { Heart, MapPin, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -9,6 +9,7 @@ import React from "react";
 const navItems = [
   { href: "/account/profile", label: "Profile", icon: User },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
+  { href: "/account/wishlist", label: "Wishlist", icon: Heart },
 ];
 
 const AccountLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {

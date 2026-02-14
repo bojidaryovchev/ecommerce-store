@@ -34,6 +34,9 @@ async function deleteProduct(id: string): Promise<ActionResult<void>> {
 
     revalidateTag(CACHE_TAGS.products, "max");
     revalidateTag(CACHE_TAGS.product(id), "max");
+    if (product.categoryId) {
+      revalidateTag(CACHE_TAGS.productsByCategory(product.categoryId), "max");
+    }
 
     return {
       success: true,

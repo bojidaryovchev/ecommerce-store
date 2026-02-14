@@ -173,6 +173,9 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                   <Link href="/account">My Account</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link href="/account/wishlist">Wishlist</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/orders">My Orders</Link>
                 </DropdownMenuItem>
                 {isAdmin && (
