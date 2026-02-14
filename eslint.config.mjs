@@ -1,12 +1,13 @@
 import js from "@eslint/js";
-import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-export default defineConfig([
+export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  globalIgnores(["node_modules/**", "**/dist/**", "**/.next/**", "scripts/**"]),
+  {
+    ignores: ["node_modules/**", "**/dist/**", "**/.next/**", "scripts/**"],
+  },
   {
     files: ["infra/lambdas/**/*.mjs"],
     languageOptions: {
@@ -17,4 +18,4 @@ export default defineConfig([
       },
     },
   },
-]);
+];

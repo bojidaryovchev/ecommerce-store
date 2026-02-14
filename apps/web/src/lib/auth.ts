@@ -1,6 +1,7 @@
 import { mergeGuestCartToUser } from "@/mutations/cart";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { accounts, db, sessions, users, verificationTokens } from "@ecommerce/database";
+import type { UserRole } from "@ecommerce/database/types/enums";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
@@ -39,7 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, account }) {
       // Initial sign in
       if (user) {
-        token.id = user.id;
+        token.id = user.id!;
         token.role = user.role;
       }
       // Add access_token to the token if available
@@ -51,8 +52,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       // Add user id and role to session
       if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
+        session.user.id = token.id as string;
+        session.user.role = token.role as UserRole;
       }
       return session;
     },
