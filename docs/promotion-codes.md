@@ -23,9 +23,9 @@ One coupon can have **many** promotion codes, each with different restrictions:
 ```mermaid
 graph TD
   C["Coupon: Summer Sale — 20% off, once"]
-  C --> S["SUMMER20\n(unlimited uses)"]
-  C --> V["VIP20\n(first-time customers only, max 50 uses)"]
-  C --> I["INFLUENCER20\n(min $50 order, expires Dec 2026)"]
+  C --> S["SUMMER20<br>(unlimited uses)"]
+  C --> V["VIP20<br>(first-time customers only, max 50 uses)"]
+  C --> I["INFLUENCER20<br>(min $50 order, expires Dec 2026)"]
 ```
 
 All three codes apply the same 20% discount but with different constraints.
@@ -50,10 +50,10 @@ flowchart TD
   B1 --> C1[("DB: coupons table")]
 
   A2["Admin creates promo code"] --> B2["stripe.promotionCodes.create()"]
-  B2 --> C2[("DB: promotion_codes table\n(couponId FK)")]
+  B2 --> C2[("DB: promotion_codes table<br>(couponId FK)")]
 
-  A3["Customer at checkout"] --> B3["Stripe Checkout UI\nshows 'Add promo code'"]
-  B3 --> C3["Stripe validates code,\napplies discount"]
+  A3["Customer at checkout"] --> B3["Stripe Checkout UI<br>shows 'Add promo code'"]
+  B3 --> C3["Stripe validates code,<br>applies discount"]
 ```
 
 ### Checkout Integration
