@@ -10,20 +10,64 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 | **Backend**    | Next.js API Routes, Server Actions                          |
 | **Database**   | Neon PostgreSQL, Drizzle ORM                                |
 | **Auth**       | Auth.js (NextAuth v5) with Google OAuth                     |
-| **Storage**    | AWS S3 (via Pulumi IaC)                                     |
-| **Payments**   | Stripe _(planned)_                                          |
-| **Emails**     | Resend _(planned)_                                          |
-| **Search**     | PostgreSQL full-text / Algolia _(TBD)_                      |
+| **Payments**   | Stripe (Checkout Sessions, webhooks, refunds, promo codes)  |
+| **Emails**     | Resend (order confirmation, shipping notification)          |
+| **Storage**    | AWS S3 (presigned uploads, orphan cleanup via Lambda)       |
 | **Deployment** | Vercel (web), Pulumi (infra)                                |
+
+## Features
+
+### Storefront
+
+- **Product catalog** — grid/list views, image galleries, breadcrumb navigation
+- **Search** — real-time product search from the navbar
+- **Filtering & sorting** — by category, price range, sort order
+- **Pagination** — cursor-based across all list views
+- **Product reviews** — star ratings, text reviews, purchase-gated submissions
+- **Wishlist** — save/remove products, dedicated wishlist page
+
+### Shopping & Checkout
+
+- **Cart** — add/update/remove items, persisted via cookies (guest + authenticated)
+- **Stripe Checkout** — hosted payment page with promotion code support
+- **Order confirmation** — success page with order summary, confirmation email via Resend
+- **Promotion codes** — admin-managed coupons and promo codes applied at checkout
+
+### Customer Account (`/account`)
+
+- **Profile** — view Google-linked account info
+- **Addresses** — CRUD for shipping/billing addresses
+- **Wishlist** — saved products
+- **Orders** — order history, order detail with status timeline
+
+### Admin Panel (`/admin`)
+
+- **Dashboard** — live stats (revenue, orders, products, users)
+- **Products** — CRUD with multi-image S3 uploads, pricing, stock management
+- **Categories** — CRUD with slug generation
+- **Orders** — list with status filters, detail view with status transitions
+- **Coupons** — create/edit/delete discount rules (percent or fixed amount)
+- **Promo codes** — create/toggle/delete customer-facing codes linked to coupons
+- **Refunds** — issue full/partial Stripe refunds from order detail
+- **Reviews** — moderate (approve/reject/delete) customer reviews
+- **Order audit trail** — status history with actor tracking (admin, webhook, system)
+
+### Infrastructure
+
+- **Image uploads** — presigned S3 URLs, client-side upload, orphan cleanup via EventBridge + Lambda
+- **Stripe webhooks** — `checkout.session.completed` handler for order creation + email
+- **Caching** — `"use cache"` + `cacheTag()` / `revalidateTag()` across all queries
+- **Auth middleware** — route protection via `proxy.ts`, role-based admin guards
 
 ## Project Structure
 
 ```
 ├── apps/
-│   └── web/              # Next.js frontend
+│   └── web/              # Next.js frontend + admin panel
 ├── packages/
-│   └── database/         # Drizzle schema & client
-├── infra/                # Pulumi AWS infrastructure
+│   └── database/         # Drizzle schema, validators & client
+├── infra/                # Pulumi AWS infrastructure + Lambda
+├── docs/                 # Reference documentation
 └── scripts/              # Utility scripts
 ```
 
@@ -33,7 +77,7 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 
 - Node.js 20+
 - pnpm 9+
-- Docker (for local database)
+- Docker (for local database + Stripe CLI)
 
 ### Setup
 
@@ -41,11 +85,8 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 # Install dependencies
 pnpm install
 
-# Start local PostgreSQL
+# Start local PostgreSQL + Stripe CLI (webhook forwarding)
 docker compose up -d
-
-# Generate database types
-pnpm db:generate
 
 # Push schema to database
 pnpm db:push
@@ -69,6 +110,13 @@ AUTH_GOOGLE_SECRET=your-google-client-secret
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...    # From Stripe CLI or dashboard
+
+# Resend (email)
+RESEND_API_KEY=re_...
 
 # AWS S3 (for file uploads)
 AWS_REGION=eu-central-1
@@ -112,8 +160,14 @@ pnpm dev
 
 AWS resources managed with Pulumi:
 
-- **S3 Bucket** - Product images and file uploads
-- **IAM User** - Application access credentials
+- **S3 Bucket** — Product images and file uploads
+- **IAM User** — Application access credentials
+- **Lambda** — Orphan upload cleanup (triggered by EventBridge schedule)
+
+### Docker Compose (Local Development)
+
+- **PostgreSQL 17** — local database
+- **Stripe CLI** — webhook forwarding to `localhost:3000/api/webhooks/stripe` (auto-restarts on failure)
 
 ### Prerequisites
 
@@ -257,6 +311,9 @@ Add these environment variables in Vercel (Settings → Environment Variables):
 | `AUTH_SECRET`              | Random secret (`openssl rand -base64 32`) | Per env      |
 | `AUTH_GOOGLE_ID`           | Google OAuth client ID                    | All          |
 | `AUTH_GOOGLE_SECRET`       | Google OAuth client secret                | All          |
+| `STRIPE_SECRET_KEY`        | Stripe secret key                         | Per env      |
+| `STRIPE_WEBHOOK_SECRET`    | Stripe webhook signing secret             | Per env      |
+| `RESEND_API_KEY`           | Resend API key                            | All          |
 | `AWS_REGION`               | `eu-central-1`                            | All          |
 | `AWS_S3_BUCKET_NAME`       | From `bucketName` output                  | Per env      |
 | `AWS_S3_ACCESS_KEY_ID`     | From `accessKeyId` output                 | Per env      |
@@ -276,6 +333,11 @@ Add these environment variables in Vercel (Settings → Environment Variables):
 | `AUTH_SECRET`              | ✅                   | ❌                  | ✅     |
 | `AUTH_GOOGLE_ID`           | ✅                   | ❌                  | ✅     |
 | `AUTH_GOOGLE_SECRET`       | ✅                   | ❌                  | ✅     |
+| **Stripe**                 |                      |                     |        |
+| `STRIPE_SECRET_KEY`        | ✅                   | ❌                  | ✅     |
+| `STRIPE_WEBHOOK_SECRET`    | ✅                   | ❌                  | ✅     |
+| **Email**                  |                      |                     |        |
+| `RESEND_API_KEY`           | ✅                   | ❌                  | ✅     |
 | **AWS S3 (Web App)**       |                      |                     |        |
 | `AWS_REGION`               | ✅                   | ❌                  | ✅     |
 | `AWS_S3_BUCKET_NAME`       | ✅                   | ❌                  | ✅     |
@@ -289,32 +351,15 @@ Add these environment variables in Vercel (Settings → Environment Variables):
 
 ### CI/CD Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         GitHub Repository                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Push to main (infra/**)     Push to main (apps/**)             │
-│         │                            │                           │
-│         ▼                            ▼                           │
-│  ┌─────────────────┐          ┌─────────────────┐               │
-│  │ GitHub Actions  │          │  Vercel CI/CD   │               │
-│  │ (infra-deploy)  │          │  (auto-deploy)  │               │
-│  └────────┬────────┘          └────────┬────────┘               │
-│           │                            │                         │
-│           │ Uses:                      │ Uses:                   │
-│           │ • AWS_ROLE_ARN             │ • DATABASE_URL          │
-│           │ • PULUMI_CONFIG_PASSPHRASE │ • AUTH_*                │
-│           │ • PULUMI_BACKEND_URL       │ • AWS_S3_*              │
-│           │                            │                         │
-│           ▼                            ▼                         │
-│  ┌─────────────────┐          ┌─────────────────┐               │
-│  │   AWS (Pulumi)  │          │  Vercel (Web)   │               │
-│  │   • S3 Bucket   │─────────▶│  • Next.js App  │               │
-│  │   • IAM User    │ outputs  │                 │               │
-│  └─────────────────┘          └─────────────────┘               │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+  subgraph GitHub Repository
+    Apps[apps/**]
+    Infra[infra/**]
+  end
+
+  Apps -->|push to main| Vercel[Vercel CI/CD] --> Web[Next.js App]
+  Infra -->|push to main| GA[GitHub Actions] --> AWS[S3 + Lambda + IAM]
 ```
 
 ### Workflow
@@ -325,10 +370,21 @@ Add these environment variables in Vercel (Settings → Environment Variables):
 
 ## Roadmap
 
-- [ ] Stripe integration for payments
-- [ ] Resend for transactional emails
-- [ ] Product catalog schema
-- [ ] Shopping cart & checkout
-- [ ] Order management
-- [ ] Search (evaluate Algolia vs PostgreSQL full-text)
-- [ ] Admin dashboard
+- [x] Stripe integration for payments
+- [x] Resend for transactional emails
+- [x] Product catalog schema
+- [x] Shopping cart & checkout
+- [x] Order management (customer + admin)
+- [x] Product search and filtering
+- [x] Admin dashboard with live stats
+- [x] Promotion codes & coupons
+- [x] Refund management
+- [x] Product reviews
+- [x] Wishlist
+- [x] User account (profile, addresses, orders)
+- [x] Order audit trail (status history)
+- [ ] SEO metadata fields
+- [ ] Product variants (size, color, options)
+- [ ] Multi-currency support
+- [ ] Shipping tracking (carrier, tracking number)
+- [ ] Rate limiting
