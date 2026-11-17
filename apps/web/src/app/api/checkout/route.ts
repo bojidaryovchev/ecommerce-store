@@ -93,8 +93,11 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // Get the origin for success/cancel URLs
+    // Get the origin for success/cancel URLs, in the shopper's language (Bulgarian URLs have no prefix)
     const origin = request.headers.get("origin") ?? "http://localhost:3000";
+    const body = (await request.json().catch(() => ({}))) as { locale?: unknown };
+    const locale = body.locale === "en" ? "en" : "bg";
+    const localePrefix = locale === "en" ? "/en" : "";
 
     // Resolve Stripe Customer for authenticated users
     let stripeCustomerId: string | undefined;
@@ -106,8 +109,9 @@ export async function POST(request: NextRequest) {
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems,
-      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout/cancel`,
+      success_url: `${origin}${localePrefix}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}${localePrefix}/checkout/cancel`,
+      locale,
       // Use Stripe Customer when available; fall back to email-only for guests
       ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: session?.user?.email ?? undefined }),
       allow_promotion_codes: true,
@@ -115,8 +119,9 @@ export async function POST(request: NextRequest) {
         cartId: cart.id,
         userId: session?.user?.id ?? "",
       },
+      // We deliver and install in Bulgaria only.
       shipping_address_collection: {
-        allowed_countries: ["US", "CA", "GB", "AU", "DE", "FR", "NL", "BE"],
+        allowed_countries: ["BG"],
       },
       billing_address_collection: "required",
     });

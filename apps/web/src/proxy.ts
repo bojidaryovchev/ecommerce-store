@@ -1,56 +1,65 @@
+import { routing } from "@/i18n/routing";
 import { auth } from "@/lib/auth";
 import { UserRole } from "@ecommerce/database/schema";
 import { NextAuthRequest } from "next-auth";
+import createIntlMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 import { setSecurityHeaders } from "./lib/headers";
 
-const setPathnameHeader = (res: NextResponse, pathname: string) => {
+const intlMiddleware = createIntlMiddleware(routing);
+
+/** "/en/account/orders" → { prefix: "/en", path: "/account/orders" }; Bulgarian URLs have no prefix. */
+const splitLocalePrefix = (pathname: string) => {
+  for (const locale of routing.locales) {
+    if (locale === routing.defaultLocale) continue;
+    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
+      return { prefix: `/${locale}`, path: pathname.slice(locale.length + 1) || "/" };
+    }
+  }
+  return { prefix: "", path: pathname };
+};
+
+const finish = (res: NextResponse, pathname: string) => {
   res.headers.set("x-pathname", pathname);
+  setSecurityHeaders(res);
+  return res;
 };
 
-const protectAuthRoutes = (req: NextAuthRequest, pathname: string) => {
-  if (pathname.startsWith("/orders") || pathname.startsWith("/account")) {
-    const session = req.auth;
-
-    if (!session?.user) {
-      const signInUrl = new URL("/login", req.url);
-      signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
-    }
-  }
-};
-
-const protectAdminRoutes = (req: NextAuthRequest, pathname: string) => {
-  if (pathname.startsWith("/admin")) {
-    const session = req.auth;
-
-    // Check if user is authenticated
-    if (!session?.user) {
-      const signInUrl = new URL("/login", req.url);
-      signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
-    }
-
-    // Check if user has admin role
-    const userRole = session.user.role;
-    const isAdmin = userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
-
-    if (!isAdmin) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-  }
+const redirectToLogin = (req: NextAuthRequest, prefix: string, callbackPath: string) => {
+  const signInUrl = new URL(`${prefix}/login`, req.url);
+  signInUrl.searchParams.set("callbackUrl", callbackPath);
+  return NextResponse.redirect(signInUrl);
 };
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const res = NextResponse.next();
+  const user = req.auth?.user;
 
-  setPathnameHeader(res, pathname);
-  setSecurityHeaders(res);
+  // Admin: English only, outside the storefront's locale routing.
+  if (pathname.startsWith("/admin")) {
+    if (!user) {
+      return finish(redirectToLogin(req, "", pathname), pathname);
+    }
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+    if (!isAdmin) {
+      return finish(NextResponse.redirect(new URL("/", req.url)), pathname);
+    }
+    // Shared components (order badges, summaries…) read their language from next-intl: English here.
+    const headers = new Headers(req.headers);
+    headers.set("X-NEXT-INTL-LOCALE", "en");
+    return finish(NextResponse.next({ request: { headers } }), pathname);
+  }
 
-  return protectAuthRoutes(req, pathname) ?? protectAdminRoutes(req, pathname) ?? res;
+  // Storefront: account pages need a signed-in user; then let next-intl resolve the locale.
+  const { prefix, path } = splitLocalePrefix(pathname);
+  if (!user && (path.startsWith("/account") || path.startsWith("/orders"))) {
+    return finish(redirectToLogin(req, prefix, pathname), pathname);
+  }
+
+  return finish(intlMiddleware(req), pathname);
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // Everything except API routes, Next internals and files with an extension (images, robots.txt…).
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };

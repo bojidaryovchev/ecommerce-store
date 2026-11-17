@@ -11,6 +11,8 @@ allowBuilds:
   esbuild: true # native binary check for tsx / drizzle-kit
   unrs-resolver: true # native resolver used by eslint-import-resolver-typescript (eslint-config-next)
   protobufjs: false # pulled in by @pulumi/pulumi; its postinstall is not needed
+  "@parcel/watcher": false # optional file watcher for next-intl's message extractor; not used
+  "@swc/core": false # next-intl extractor; its binaries come from optional dependencies
 
 overrides:
   # Keep one @auth/core shared by next-auth@5.0.0-beta.32 and @auth/drizzle-adapter (both pin 0.41.3);
