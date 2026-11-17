@@ -105,10 +105,14 @@ export async function updateFromSupplier(
   const restored = existing.removedAt !== null;
 
   if (existing.contentHash === item.hash && !restored) {
-    await ctx.db
-      .update(supplierProducts)
-      .set({ data: item.raw, supplierModifiedAt: modifiedAt, lastSeenAt: ctx.now, missingCount: 0, updatedAt: ctx.now })
-      .where(eq(supplierProducts.id, existing.id));
+    // Nothing we use changed. Only remember a new edit time (so incremental runs stop re-downloading
+    // it); last-seen bookkeeping for every listed product happens in one query in handleMissingProducts.
+    if (existing.supplierModifiedAt?.getTime() !== modifiedAt?.getTime()) {
+      await ctx.db
+        .update(supplierProducts)
+        .set({ data: item.raw, supplierModifiedAt: modifiedAt, updatedAt: ctx.now })
+        .where(eq(supplierProducts.id, existing.id));
+    }
     ctx.stats.unchanged += 1;
     return;
   }
