@@ -64,6 +64,13 @@
       "when": 1794942908074,
       "tag": "0008_supplier_catalog_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794949167190,
+      "tag": "0009_product_search",
+      "breakpoints": true
     }
   ]
 }

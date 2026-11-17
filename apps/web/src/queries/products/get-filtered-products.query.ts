@@ -2,9 +2,10 @@
 
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { db, schema } from "@ecommerce/database";
-import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, lte, sql, type SQL } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 import { getCategorySubtreeIds } from "../categories/get-category-subtree-ids";
+import { productSearchCondition, productSearchRank } from "./product-search";
 
 type SortOption = "newest" | "oldest" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
 
@@ -62,15 +63,10 @@ async function getFilteredProducts(filters: ProductFilters = {}) {
 
   const conditions: SQL[] = [eq(schema.products.active, true)];
 
-  // Search filter
-  if (filters.query?.trim()) {
-    const searchPattern = `%${filters.query.trim()}%`;
-    conditions.push(
-      or(
-        ilike(schema.products.name, searchPattern),
-        ilike(sql`COALESCE(${schema.products.description}, '')`, searchPattern),
-      )!,
-    );
+  // Search filter (name/brand in either alphabet, typos, description)
+  const searchCondition = filters.query ? productSearchCondition(filters.query) : undefined;
+  if (searchCondition) {
+    conditions.push(searchCondition);
   }
 
   // Category filter (the category and its subcategories)
@@ -100,8 +96,11 @@ async function getFilteredProducts(filters: ProductFilters = {}) {
     return { data: [], total: 0, page, pageSize, pageCount: 0 };
   }
 
-  // Sorting
-  const orderBy = getOrderBy(filters.sort);
+  // Sorting: by relevance when searching without an explicit sort
+  const orderBy =
+    searchCondition && !filters.sort
+      ? [desc(productSearchRank(filters.query!)), desc(schema.products.createdAt)]
+      : getOrderBy(filters.sort);
 
   const products = await db.query.products.findMany({
     where: whereClause,
