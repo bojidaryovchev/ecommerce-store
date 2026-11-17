@@ -8,6 +8,7 @@ export const MESSAGE_NAMESPACES = [
   "navigation",
   "home",
   "products",
+  "catalog",
   "categories",
   "cart",
   "checkout",

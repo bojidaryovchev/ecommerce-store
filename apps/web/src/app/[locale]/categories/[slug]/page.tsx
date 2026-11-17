@@ -1,5 +1,6 @@
 import { CategoryLoader } from "@/components/categories";
 import { CategoryDetailSkeleton } from "@/components/common";
+import type { SearchParamsInput } from "@/lib/catalog-filters";
 import { getCategories, getCategoryBySlug } from "@/queries/categories";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -7,6 +8,7 @@ import React, { Suspense } from "react";
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<SearchParamsInput>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -41,14 +43,14 @@ export async function generateStaticParams({ params }: { params: { locale: strin
   }));
 }
 
-const CategoryPage: React.FC<Props> = async ({ params }) => {
+const CategoryPage: React.FC<Props> = async ({ params, searchParams }) => {
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
   return (
     <main className="max-w-container py-8">
       <Suspense fallback={<CategoryDetailSkeleton />}>
-        <CategoryLoader slug={slug} />
+        <CategoryLoader slug={slug} searchParams={searchParams} />
       </Suspense>
     </main>
   );

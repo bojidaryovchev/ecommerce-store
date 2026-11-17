@@ -1,0 +1,32 @@
+{
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear filters",
+    "categories": "Categories",
+    "subcategories": "Subcategories",
+    "availability": "Availability",
+    "inStockOnly": "In stock only",
+    "price": "Price (€)",
+    "brand": "Brand",
+    "from": "From",
+    "to": "To",
+    "showMore": "Show more ({count})",
+    "showLess": "Show less",
+    "showResults": "{count, plural, =0 {No results} one {Show # product} other {Show # products}}"
+  },
+  "toolbar": {
+    "count": "{count, plural, =0 {No products} one {# product} other {# products}}",
+    "sortLabel": "Sort by",
+    "openFilters": "Filters",
+    "activeFilters": "{count, plural, one {# active filter} other {# active filters}}",
+    "sort": {
+      "relevance": "Best match",
+      "newest": "Newest",
+      "priceAsc": "Price: low to high",
+      "priceDesc": "Price: high to low",
+      "nameAsc": "Name: A–Z",
+      "nameDesc": "Name: Z–A"
+    }
+  },
+  "empty": "No products match the selected filters."
+}

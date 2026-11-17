@@ -10,29 +10,8 @@
     "searchTitle": "Търсене: „{query}“",
     "searchResultsFor": "Резултати за „{query}“"
   },
-  "filters": {
-    "category": "Категория",
-    "allCategories": "Всички категории",
-    "minPrice": "Мин. цена",
-    "maxPrice": "Макс. цена",
-    "maxPricePlaceholder": "Без лимит",
-    "sortBy": "Сортиране",
-    "clearFilters": "Изчисти филтрите",
-    "sort": {
-      "newest": "Най-нови",
-      "oldest": "Най-стари",
-      "priceAsc": "Цена: възходяща",
-      "priceDesc": "Цена: низходяща",
-      "nameAsc": "Име: А–Я",
-      "nameDesc": "Име: Я–А"
-    }
-  },
   "grid": {
     "empty": "Няма намерени продукти"
-  },
-  "filteredProducts": {
-    "empty": "Няма намерени продукти.",
-    "emptyFiltered": "Няма продукти, които отговарят на филтрите. Опитайте с друго търсене или други филтри."
   },
   "searchResults": {
     "empty": "Няма намерени продукти за „{query}“. Опитайте с друга дума за търсене."

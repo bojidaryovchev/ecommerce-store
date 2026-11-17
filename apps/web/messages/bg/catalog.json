@@ -1,0 +1,32 @@
+{
+  "filters": {
+    "title": "Филтри",
+    "clearAll": "Изчисти филтрите",
+    "categories": "Категории",
+    "subcategories": "Подкатегории",
+    "availability": "Наличност",
+    "inStockOnly": "Само налични",
+    "price": "Цена (€)",
+    "brand": "Марка",
+    "from": "От",
+    "to": "До",
+    "showMore": "Покажи още ({count})",
+    "showLess": "Покажи по-малко",
+    "showResults": "{count, plural, =0 {Няма резултати} one {Покажи # продукт} other {Покажи # продукта}}"
+  },
+  "toolbar": {
+    "count": "{count, plural, =0 {Няма продукти} one {# продукт} other {# продукта}}",
+    "sortLabel": "Подреди по",
+    "openFilters": "Филтри",
+    "activeFilters": "{count, plural, one {# активен филтър} other {# активни филтъра}}",
+    "sort": {
+      "relevance": "Най-подходящи",
+      "newest": "Най-нови",
+      "priceAsc": "Цена: възходяща",
+      "priceDesc": "Цена: низходяща",
+      "nameAsc": "Име: А–Я",
+      "nameDesc": "Име: Я–А"
+    }
+  },
+  "empty": "Няма продукти, които отговарят на избраните филтри."
+}

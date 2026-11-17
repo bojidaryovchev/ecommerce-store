@@ -10,29 +10,8 @@
     "searchTitle": "Search: “{query}”",
     "searchResultsFor": "Showing results for “{query}”"
   },
-  "filters": {
-    "category": "Category",
-    "allCategories": "All categories",
-    "minPrice": "Min price",
-    "maxPrice": "Max price",
-    "maxPricePlaceholder": "Any",
-    "sortBy": "Sort by",
-    "clearFilters": "Clear filters",
-    "sort": {
-      "newest": "Newest",
-      "oldest": "Oldest",
-      "priceAsc": "Price: Low → High",
-      "priceDesc": "Price: High → Low",
-      "nameAsc": "Name: A → Z",
-      "nameDesc": "Name: Z → A"
-    }
-  },
   "grid": {
     "empty": "No products found"
-  },
-  "filteredProducts": {
-    "empty": "No products found.",
-    "emptyFiltered": "No products match your filters. Try adjusting your search or filters."
   },
   "searchResults": {
     "empty": "No products found for “{query}”. Try a different search term."

@@ -24,3 +24,8 @@ export type CategoryWithProductsAndChildren = Category & {
 export type CategoryTree = Category & {
   children: CategoryTree[];
 };
+
+export type CategoryWithChildrenAndParent = Category & {
+  children: Category[];
+  parent: Category | null;
+};

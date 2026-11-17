@@ -1,4 +1,3 @@
-import { ProductsGrid } from "@/components/products";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,17 +7,17 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Link } from "@/i18n/navigation";
-import type { CategoryWithProductsAndChildren } from "@/types/category.type";
+import type { CategoryWithChildrenAndParent } from "@/types/category.type";
 import { useTranslations } from "next-intl";
 import React from "react";
-import { CategoriesGrid } from "../categories-grid";
 
 interface Props {
-  category: CategoryWithProductsAndChildren;
-  wishlistedProductIds?: string[];
+  category: CategoryWithChildrenAndParent;
+  /** The product listing (filters and grid). */
+  children: React.ReactNode;
 }
 
-const CategoryDetail: React.FC<Props> = ({ category, wishlistedProductIds }) => {
+const CategoryDetail: React.FC<Props> = ({ category, children }) => {
   const t = useTranslations("categories.categoryDetail");
 
   return (
@@ -59,16 +58,20 @@ const CategoryDetail: React.FC<Props> = ({ category, wishlistedProductIds }) => 
       </div>
 
       {category.children.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold">{t("subcategories")}</h2>
-          <CategoriesGrid categories={category.children} />
-        </section>
+        <nav aria-label={t("subcategories")} className="flex flex-wrap gap-2 lg:hidden">
+          {category.children.map((child) => (
+            <Link
+              key={child.id}
+              href={`/categories/${child.slug}`}
+              className="border-border hover:bg-accent rounded-full border px-3 py-1 text-sm"
+            >
+              {child.name}
+            </Link>
+          ))}
+        </nav>
       )}
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold">{t("products", { count: category.products.length })}</h2>
-        <ProductsGrid products={category.products} wishlistedProductIds={wishlistedProductIds} />
-      </section>
+      {children}
     </div>
   );
 };
