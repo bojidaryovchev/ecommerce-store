@@ -4,6 +4,7 @@ import { CACHE_TAGS } from "@/lib/cache-tags";
 import { db, schema } from "@ecommerce/database";
 import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or, sql, type SQL } from "drizzle-orm";
 import { cacheTag } from "next/cache";
+import { getCategorySubtreeIds } from "../categories/get-category-subtree-ids";
 
 type SortOption = "newest" | "oldest" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
 
@@ -72,9 +73,9 @@ async function getFilteredProducts(filters: ProductFilters = {}) {
     );
   }
 
-  // Category filter
+  // Category filter (the category and its subcategories)
   if (filters.categoryId) {
-    conditions.push(eq(schema.products.categoryId, filters.categoryId));
+    conditions.push(inArray(schema.products.categoryId, await getCategorySubtreeIds(filters.categoryId)));
   }
 
   // Price range filter — pre-query qualifying product IDs

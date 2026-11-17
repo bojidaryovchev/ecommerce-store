@@ -21,3 +21,6 @@ export { AdminCouponsHeader, CouponFormLoader, CouponsTableLoader } from "./coup
 
 // Promotions
 export { AdminPromotionsHeader, PromotionFormLoader, PromotionsTableLoader } from "./promotions";
+
+// Supplier sync
+export { SupplierProductPanel, SupplierSyncHeader, SupplierSyncOverview, SyncChangesLoader } from "./supplier-sync";

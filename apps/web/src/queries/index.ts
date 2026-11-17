@@ -8,4 +8,5 @@ export * from "./products";
 export * from "./promotions";
 export * from "./refunds";
 export * from "./reviews";
+export * from "./supplier-sync";
 export * from "./wishlist";

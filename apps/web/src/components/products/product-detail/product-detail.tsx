@@ -131,7 +131,7 @@ const ProductDetail: React.FC<Props> = ({ product, isWishlisted }) => {
           {product.description && (
             <div className="space-y-2">
               <h2 className="font-semibold">Description</h2>
-              <p className="text-muted-foreground">{product.description}</p>
+              <p className="text-muted-foreground whitespace-pre-line">{product.description}</p>
             </div>
           )}
 

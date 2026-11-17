@@ -42,6 +42,9 @@ export const CACHE_TAGS = {
   // Order Status History
   orderStatusHistory: (orderId: string) => `order-status-history:${orderId}`,
 
+  // Supplier sync (admin review queue and run log)
+  supplierSync: "supplier-sync",
+
   // Cart is user-specific and changes frequently - no caching
   // Wishlists are also uncached — user-specific, frequent changes, always fetched with auth()
 } as const;

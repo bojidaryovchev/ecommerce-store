@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
 
   // Transpile workspace packages
-  transpilePackages: ["@ecommerce/database"],
+  transpilePackages: ["@ecommerce/database", "@ecommerce/supplier-sync"],
 
   // Allow S3 images
   images: {
@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "*.s3.amazonaws.com",
+      },
+      // Supplier product photos, until they are copied to our own storage.
+      {
+        protocol: "https",
+        hostname: "hydrotermbg.com",
+        pathname: "/wp-content/uploads/**",
       },
     ],
   },

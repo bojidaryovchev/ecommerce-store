@@ -44,6 +44,7 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 
 - **Dashboard** — live stats (revenue, orders, products, users)
 - **Products** — CRUD with multi-image S3 uploads, pricing, stock management
+- **Supplier sync** — catalog imported from hydrotermbg.com and kept in sync every 4 h; review queue for new products and big price moves; edited fields stop following the supplier ([docs](docs/supplier-sync.md))
 - **Categories** — CRUD with slug generation
 - **Orders** — list with status filters, detail view with status transitions
 - **Coupons** — create/edit/delete discount rules (percent or fixed amount)
@@ -55,6 +56,7 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 ### Infrastructure
 
 - **Image uploads** — presigned S3 URLs, client-side upload, orphan cleanup via EventBridge + Lambda
+- **Supplier sync** — EventBridge + Lambda call `/api/supplier-sync` every 4 h, with a full refresh nightly
 - **Stripe webhooks** — `checkout.session.completed` handler for order creation + email
 - **Caching** — `"use cache"` + `cacheTag()` / `revalidateTag()` across all queries
 - **Auth middleware** — route protection via `proxy.ts`, role-based admin guards
@@ -65,7 +67,8 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 ├── apps/
 │   └── web/              # Next.js frontend + admin panel
 ├── packages/
-│   └── database/         # Drizzle schema, validators & client
+│   ├── database/         # Drizzle schema, validators & client
+│   └── supplier-sync/    # Supplier catalog import & sync (WooCommerce)
 ├── infra/                # Pulumi AWS infrastructure + Lambda
 ├── docs/                 # Reference documentation
 └── scripts/              # Utility scripts
@@ -118,6 +121,9 @@ STRIPE_WEBHOOK_SECRET=whsec_...    # From Stripe CLI or dashboard
 # Resend (email)
 RESEND_API_KEY=re_...
 
+# Supplier sync (shared with the supplier-sync Lambda)
+SUPPLIER_SYNC_SECRET=long-random-string
+
 # AWS S3 (for file uploads)
 AWS_REGION=eu-central-1
 AWS_S3_BUCKET_NAME=ecommerce-uploads-<account-id>-dev
@@ -142,19 +148,20 @@ pnpm dev
 
 ## Available Scripts
 
-| Script               | Description                                   |
-| -------------------- | --------------------------------------------- |
-| `pnpm dev`           | Start Next.js dev server (includes SSO check) |
-| `pnpm build`         | Build for production                          |
-| `pnpm lint`          | Run ESLint across all packages                |
-| `pnpm type-check`    | Run TypeScript type checking                  |
-| `pnpm format`        | Format code with Prettier                     |
-| `pnpm db:generate`   | Generate Drizzle migrations                   |
-| `pnpm db:push`       | Push schema to database                       |
-| `pnpm db:migrate`    | Run migrations                                |
-| `pnpm db:studio`     | Open Drizzle Studio                           |
-| `pnpm infra:preview` | Preview infrastructure changes                |
-| `pnpm infra:up`      | Deploy infrastructure                         |
+| Script               | Description                                                                  |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `pnpm dev`           | Start Next.js dev server (includes SSO check)                                |
+| `pnpm build`         | Build for production                                                         |
+| `pnpm lint`          | Run ESLint across all packages                                               |
+| `pnpm type-check`    | Run TypeScript type checking                                                 |
+| `pnpm format`        | Format code with Prettier                                                    |
+| `pnpm db:generate`   | Generate Drizzle migrations                                                  |
+| `pnpm db:push`       | Push schema to database                                                      |
+| `pnpm db:migrate`    | Run migrations                                                               |
+| `pnpm db:studio`     | Open Drizzle Studio                                                          |
+| `pnpm sync:supplier` | Sync the supplier catalog (`pnpm sync:supplier --full` downloads everything) |
+| `pnpm infra:preview` | Preview infrastructure changes                                               |
+| `pnpm infra:up`      | Deploy infrastructure                                                        |
 
 ## Infrastructure
 
@@ -338,6 +345,8 @@ Add these environment variables in Vercel (Settings → Environment Variables). 
 | `STRIPE_WEBHOOK_SECRET`    | ✅                   | ❌                  | ✅     |
 | **Email**                  |                      |                     |        |
 | `RESEND_API_KEY`           | ✅                   | ❌                  | ✅     |
+| **Supplier sync**          |                      |                     |        |
+| `SUPPLIER_SYNC_SECRET`     | ✅                   | ❌                  | ✅     |
 | **AWS S3 (Web App)**       |                      |                     |        |
 | `AWS_REGION`               | ✅                   | ❌                  | ✅     |
 | `AWS_S3_BUCKET_NAME`       | ✅                   | ❌                  | ✅     |

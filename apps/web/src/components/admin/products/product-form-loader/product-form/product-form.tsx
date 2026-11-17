@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { createPrice } from "@/mutations/prices";
+import { createPrice, setProductPrice } from "@/mutations/prices";
 import { createProduct, updateProduct } from "@/mutations/products";
 import type { ProductWithDetails } from "@/types/product.type";
 import type { Category } from "@ecommerce/database/schema";
@@ -25,6 +25,7 @@ const formSchema = insertProductSchema.pick({
   description: true,
   active: true,
   categoryId: true,
+  brand: true,
   shippable: true,
   trackInventory: true,
   stockQuantity: true,
@@ -51,7 +52,8 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
   const [price, setPrice] = useState<string>(
     defaultPrice?.unitAmount ? (defaultPrice.unitAmount / 100).toFixed(2) : "",
   );
-  const [currency, setCurrency] = useState<string>(defaultPrice?.currency ?? "usd");
+  const [currency, setCurrency] = useState<string>(defaultPrice?.currency ?? "eur");
+  const initialPrice = defaultPrice?.active && defaultPrice.unitAmount ? defaultPrice.unitAmount : null;
 
   const {
     control,
@@ -64,6 +66,7 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
       description: product?.description ?? "",
       active: product?.active ?? true,
       categoryId: product?.categoryId ?? null,
+      brand: product?.brand ?? "",
       shippable: product?.shippable ?? true,
       trackInventory: product?.trackInventory ?? false,
       stockQuantity: product?.stockQuantity ?? null,
@@ -110,6 +113,7 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
         description: data.description,
         active: data.active,
         categoryId: data.categoryId || null,
+        brand: data.brand?.trim() || null,
         shippable: data.shippable,
         trackInventory: data.trackInventory,
         stockQuantity: data.trackInventory ? data.stockQuantity : null,
@@ -122,6 +126,19 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
 
       if (isEditing) {
         const result = await updateProduct(product.id, productData);
+
+        const priceInCents = price ? Math.round(parseFloat(price) * 100) : 0;
+        if (
+          result.success &&
+          priceInCents > 0 &&
+          (priceInCents !== initialPrice || currency !== defaultPrice?.currency)
+        ) {
+          const priceResult = await setProductPrice(product.id, priceInCents, currency);
+          if (!priceResult.success) {
+            toast.error(priceResult.error);
+            return;
+          }
+        }
 
         if (result.success) {
           toast.success("Product updated successfully");
@@ -249,38 +266,54 @@ const ProductForm: React.FC<Props> = ({ product, categories }) => {
         {errors.categoryId && <p className="text-destructive text-sm">{errors.categoryId.message}</p>}
       </div>
 
-      {!isEditing && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="price">Price</Label>
+      <div className="space-y-2">
+        <Label htmlFor="brand">Brand</Label>
+        <Controller
+          name="brand"
+          control={control}
+          render={({ field }) => (
             <Input
-              id="price"
-              type="number"
-              min={0}
-              step={0.01}
-              placeholder="e.g., 23.99"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              {...field}
+              id="brand"
+              value={field.value ?? ""}
+              placeholder="e.g., Artel"
+              aria-invalid={!!errors.brand}
             />
-          </div>
+          )}
+        />
+        {errors.brand && <p className="text-destructive text-sm">{errors.brand.message}</p>}
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
-            <Select value={currency} onValueChange={setCurrency}>
-              <SelectTrigger id="currency">
-                <SelectValue placeholder="Select currency" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="usd">USD</SelectItem>
-                <SelectItem value="eur">EUR</SelectItem>
-                <SelectItem value="gbp">GBP</SelectItem>
-                <SelectItem value="cad">CAD</SelectItem>
-                <SelectItem value="aud">AUD</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="price">Price (VAT included)</Label>
+          <Input
+            id="price"
+            type="number"
+            min={0}
+            step={0.01}
+            placeholder="e.g., 23.99"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+          />
         </div>
-      )}
+
+        <div className="space-y-2">
+          <Label htmlFor="currency">Currency</Label>
+          <Select value={currency} onValueChange={setCurrency}>
+            <SelectTrigger id="currency">
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="usd">USD</SelectItem>
+              <SelectItem value="eur">EUR</SelectItem>
+              <SelectItem value="gbp">GBP</SelectItem>
+              <SelectItem value="cad">CAD</SelectItem>
+              <SelectItem value="aud">AUD</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       <div className="flex items-center gap-4">
         <div className="flex items-center space-x-2">

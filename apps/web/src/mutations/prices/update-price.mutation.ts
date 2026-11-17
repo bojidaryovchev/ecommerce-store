@@ -5,6 +5,7 @@ import { CACHE_TAGS } from "@/lib/cache-tags";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Price } from "@ecommerce/database";
 import { db, schema } from "@ecommerce/database";
+import { addLocks } from "@ecommerce/supplier-sync";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 
@@ -32,6 +33,21 @@ async function updatePrice(
         success: false,
         error: "Price not found",
       };
+    }
+
+    // Editing the price customers pay on a supplier-synced product stops it following the supplier.
+    if (data.unitAmount !== undefined) {
+      const product = await db.query.products.findFirst({
+        where: eq(schema.products.id, price.productId),
+        columns: { id: true, defaultPriceId: true, lockedFields: true },
+        with: { supplierProduct: { columns: { id: true } } },
+      });
+      if (product?.supplierProduct && product.defaultPriceId === price.id) {
+        await db
+          .update(schema.products)
+          .set({ lockedFields: addLocks(product.lockedFields, ["price"]), updatedAt: new Date() })
+          .where(eq(schema.products.id, product.id));
+      }
     }
 
     revalidateTag(CACHE_TAGS.products, "max");
