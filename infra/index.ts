@@ -164,52 +164,62 @@ new aws.cloudwatch.EventTarget("cleanup-target", {
 // Calls POST /api/supplier-sync: incremental every 4 hours, full refresh nightly.
 // The secret must match SUPPLIER_SYNC_SECRET in the web app's environment.
 
-const supplierSyncSecret = config.requireSecret("supplierSyncSecret");
+const supplierSyncSecret = config.getSecret("supplierSyncSecret");
 
-const supplierSyncLambda = new aws.lambda.Function("supplier-sync-lambda", {
-  name: `ecommerce-supplier-sync-${stack}`,
-  runtime: "nodejs24.x",
-  handler: "supplier-sync.handler",
-  role: cleanupLambdaRole.arn, // only needs to write logs, like the cleanup Lambda
-  timeout: 300, // the API route may run for up to 300 s
-  memorySize: 256,
-  environment: {
-    variables: {
-      APP_URL: appUrl,
-      SUPPLIER_SYNC_SECRET: supplierSyncSecret,
+// Optional until the stack has the secret (pulumi config set --secret supplierSyncSecret …).
+const supplierSyncLambda = supplierSyncSecret ? createSupplierSync(supplierSyncSecret) : undefined;
+if (!supplierSyncLambda) {
+  pulumi.log.warn("supplierSyncSecret is not set: skipping the supplier sync Lambda and schedules");
+}
+
+function createSupplierSync(secret: pulumi.Output<string>) {
+  const lambda = new aws.lambda.Function("supplier-sync-lambda", {
+    name: `ecommerce-supplier-sync-${stack}`,
+    runtime: "nodejs24.x",
+    handler: "supplier-sync.handler",
+    role: cleanupLambdaRole.arn, // only needs to write logs, like the cleanup Lambda
+    timeout: 300, // the API route may run for up to 300 s
+    memorySize: 256,
+    environment: {
+      variables: {
+        APP_URL: appUrl,
+        SUPPLIER_SYNC_SECRET: secret,
+      },
     },
-  },
-  code: new pulumi.asset.AssetArchive({
-    "supplier-sync.mjs": new pulumi.asset.FileAsset("./lambdas/supplier-sync.mjs"),
-  }),
-});
-
-const supplierSyncSchedules = [
-  // 00:15, 04:15, 08:15 … UTC
-  { name: "incremental", scheduleExpression: "cron(15 0/4 * * ? *)", mode: "incremental" },
-  // 01:30 UTC = 03:30/04:30 in Sofia; catches stock changes that don't touch a product's edit time
-  { name: "full", scheduleExpression: "cron(30 1 * * ? *)", mode: "full" },
-];
-
-for (const schedule of supplierSyncSchedules) {
-  const rule = new aws.cloudwatch.EventRule(`supplier-sync-${schedule.name}-schedule`, {
-    name: `ecommerce-supplier-sync-${schedule.name}-${stack}`,
-    description: `Trigger a ${schedule.mode} supplier sync`,
-    scheduleExpression: schedule.scheduleExpression,
+    code: new pulumi.asset.AssetArchive({
+      "supplier-sync.mjs": new pulumi.asset.FileAsset("./lambdas/supplier-sync.mjs"),
+    }),
   });
 
-  new aws.lambda.Permission(`supplier-sync-${schedule.name}-permission`, {
-    action: "lambda:InvokeFunction",
-    function: supplierSyncLambda.name,
-    principal: "events.amazonaws.com",
-    sourceArn: rule.arn,
-  });
+  const schedules = [
+    // 00:15, 04:15, 08:15 … UTC
+    { name: "incremental", scheduleExpression: "cron(15 0/4 * * ? *)", mode: "incremental" },
+    // 01:30 UTC = 03:30/04:30 in Sofia; catches stock changes that don't touch a product's edit time
+    { name: "full", scheduleExpression: "cron(30 1 * * ? *)", mode: "full" },
+  ];
 
-  new aws.cloudwatch.EventTarget(`supplier-sync-${schedule.name}-target`, {
-    rule: rule.name,
-    arn: supplierSyncLambda.arn,
-    input: JSON.stringify({ mode: schedule.mode }),
-  });
+  for (const schedule of schedules) {
+    const rule = new aws.cloudwatch.EventRule(`supplier-sync-${schedule.name}-schedule`, {
+      name: `ecommerce-supplier-sync-${schedule.name}-${stack}`,
+      description: `Trigger a ${schedule.mode} supplier sync`,
+      scheduleExpression: schedule.scheduleExpression,
+    });
+
+    new aws.lambda.Permission(`supplier-sync-${schedule.name}-permission`, {
+      action: "lambda:InvokeFunction",
+      function: lambda.name,
+      principal: "events.amazonaws.com",
+      sourceArn: rule.arn,
+    });
+
+    new aws.cloudwatch.EventTarget(`supplier-sync-${schedule.name}-target`, {
+      rule: rule.name,
+      arn: lambda.arn,
+      input: JSON.stringify({ mode: schedule.mode }),
+    });
+  }
+
+  return lambda;
 }
 
 // Exports
@@ -219,4 +229,4 @@ export const accessKeyId = uploadsAccessKey.id;
 export const secretAccessKey = uploadsAccessKey.secret;
 export const cleanupLambdaArn = cleanupLambda.arn;
 export const cleanupScheduleArn = cleanupSchedule.arn;
-export const supplierSyncLambdaArn = supplierSyncLambda.arn;
+export const supplierSyncLambdaArn = supplierSyncLambda?.arn;
