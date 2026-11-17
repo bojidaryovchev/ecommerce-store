@@ -1,6 +1,7 @@
-import { productHref } from "@/lib/routes";
+import { categoryTrail } from "@/lib/category-tree";
+import { categoryHref, productHref } from "@/lib/routes";
 import { SITE_URL } from "@/lib/site-url";
-import { getCategories } from "@/queries/categories";
+import { getCategoryIndex } from "@/queries/categories";
 import { getProducts } from "@/queries/products";
 import type { MetadataRoute } from "next";
 
@@ -9,7 +10,7 @@ import type { MetadataRoute } from "next";
  * in English (the UI pages); product and category content is Bulgarian-only for now.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [products, { data: categories }] = await Promise.all([getProducts(), getCategories({ pageSize: 1000 })]);
+  const [products, categories] = await Promise.all([getProducts(), getCategoryIndex()]);
 
   const page = (path: string, withEnglish: boolean): MetadataRoute.Sitemap[number] => ({
     url: `${SITE_URL}${path}`,
@@ -23,8 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { ...page("/products", true), changeFrequency: "daily", priority: 0.8 },
     { ...page("/categories", true), changeFrequency: "weekly", priority: 0.7 },
     ...categories.map((category) => ({
-      ...page(`/categories/${category.slug}`, false),
-      lastModified: category.updatedAt,
+      ...page(categoryHref(categoryTrail(categories, category.id)), false),
       changeFrequency: "weekly" as const,
       priority: 0.7,
     })),

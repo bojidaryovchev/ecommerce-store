@@ -1,3 +1,4 @@
+import { SiteFooter } from "@/components/common";
 import Providers from "@/components/providers";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site-url";
@@ -36,7 +37,12 @@ const LocaleLayout: React.FC<Props> = async ({ children, params }) => {
   // Lets next-intl read the locale without request headers, so pages can be prerendered.
   setRequestLocale(locale);
 
-  return <Providers locale={locale}>{children}</Providers>;
+  return (
+    <Providers locale={locale}>
+      {children}
+      <SiteFooter />
+    </Providers>
+  );
 };
 
 export default LocaleLayout;

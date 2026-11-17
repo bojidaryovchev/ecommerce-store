@@ -8,8 +8,7 @@ export function productHref(product: { id: string; slug: string | null }): strin
   return product.slug ? `/produkt/${product.slug}` : `/products/${product.id}`;
 }
 
-/** A category page from its trail (root first, the category last). */
+/** A category page from its trail (root first, the category last): /peletni-kamini/s-vodna-riza. */
 export function categoryHref(trail: ReadonlyArray<{ slug: string }>): string {
-  const category = trail[trail.length - 1];
-  return category ? `/categories/${category.slug}` : "/categories";
+  return trail.length > 0 ? `/${trail.map((category) => category.slug).join("/")}` : "/categories";
 }

@@ -14,22 +14,23 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/cart-context";
 import { Link } from "@/i18n/navigation";
-import type { Category } from "@ecommerce/database/schema";
+import type { CategoryMenuItem } from "@/lib/category-tree";
 import { Menu, ShoppingCart } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import NextLink from "next/link";
 import React, { useState } from "react";
+import { CategoriesMenu } from "./categories-menu";
 import { LocaleSwitcher } from "./locale-switcher";
 import { SearchBar } from "./search-bar";
 
 interface Props {
-  categories: Category[];
+  menu: CategoryMenuItem[];
   session: Session | null;
 }
 
-const Navbar: React.FC<Props> = ({ categories, session }) => {
+const Navbar: React.FC<Props> = ({ menu, session }) => {
   const t = useTranslations("navigation.navbar");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { summary, openCart } = useCart();
@@ -75,15 +76,22 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                 <Link href="/categories" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
                   {t("allCategories")}
                 </Link>
-                {categories.map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/categories/${category.slug}`}
-                    className="text-muted-foreground pl-4"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {category.name}
-                  </Link>
+                {menu.map((root) => (
+                  <div key={root.id} className="flex flex-col gap-2 pl-4">
+                    <Link href={root.href} className="font-medium" onClick={() => setMobileMenuOpen(false)}>
+                      {root.name}
+                    </Link>
+                    {root.children.map((child) => (
+                      <Link
+                        key={child.id}
+                        href={child.href}
+                        className="text-muted-foreground pl-4 text-sm"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
                 ))}
                 {session && (
                   <>
@@ -145,24 +153,7 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
           <Link href="/products" className="hover:text-primary text-sm font-medium transition-colors">
             {t("products")}
           </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="text-sm font-medium">
-                {t("categories")}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center">
-              <DropdownMenuItem asChild>
-                <Link href="/categories">{t("allCategories")}</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {categories.map((category) => (
-                <DropdownMenuItem key={category.id} asChild>
-                  <Link href={`/categories/${category.slug}`}>{category.name}</Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <CategoriesMenu menu={menu} />
           <SearchBar className="hidden lg:block" />
         </nav>
 

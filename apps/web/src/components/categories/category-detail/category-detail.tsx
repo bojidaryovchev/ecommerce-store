@@ -7,18 +7,24 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Link } from "@/i18n/navigation";
-import type { CategoryWithChildrenAndParent } from "@/types/category.type";
+import type { CategoryNode } from "@/lib/category-tree";
+import { categoryHref } from "@/lib/routes";
+import type { Category } from "@ecommerce/database/schema";
 import { useTranslations } from "next-intl";
 import React from "react";
 
 interface Props {
-  category: CategoryWithChildrenAndParent;
+  category: Category;
+  /** The category's ancestors and itself, root first. */
+  trail: CategoryNode[];
+  subcategories: Array<{ href: string; label: string }>;
   /** The product listing (filters and grid). */
   children: React.ReactNode;
 }
 
-const CategoryDetail: React.FC<Props> = ({ category, children }) => {
+const CategoryDetail: React.FC<Props> = ({ category, trail, subcategories, children }) => {
   const t = useTranslations("categories.categoryDetail");
+  const ancestors = trail.slice(0, -1);
 
   return (
     <div className="space-y-8">
@@ -29,22 +35,16 @@ const CategoryDetail: React.FC<Props> = ({ category, children }) => {
               <Link href="/">{t("home")}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/categories">{t("categories")}</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          {category.parent && (
-            <>
+          {ancestors.map((ancestor, index) => (
+            <React.Fragment key={ancestor.id}>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href={`/categories/${category.parent.slug}`}>{category.parent.name}</Link>
+                  <Link href={categoryHref(ancestors.slice(0, index + 1))}>{ancestor.name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
-            </>
-          )}
+            </React.Fragment>
+          ))}
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>{category.name}</BreadcrumbPage>
@@ -57,15 +57,15 @@ const CategoryDetail: React.FC<Props> = ({ category, children }) => {
         {category.description && <p className="text-muted-foreground text-lg">{category.description}</p>}
       </div>
 
-      {category.children.length > 0 && (
+      {subcategories.length > 0 && (
         <nav aria-label={t("subcategories")} className="flex flex-wrap gap-2 lg:hidden">
-          {category.children.map((child) => (
+          {subcategories.map((subcategory) => (
             <Link
-              key={child.id}
-              href={`/categories/${child.slug}`}
+              key={subcategory.href}
+              href={subcategory.href}
               className="border-border hover:bg-accent rounded-full border px-3 py-1 text-sm"
             >
-              {child.name}
+              {subcategory.label}
             </Link>
           ))}
         </nav>

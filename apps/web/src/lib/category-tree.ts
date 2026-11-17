@@ -19,3 +19,26 @@ export function categoryTrail<T extends CategoryNode>(categories: readonly T[], 
   }
   return trail;
 }
+
+export type CategoryMenuItem = {
+  id: string;
+  name: string;
+  href: string;
+  children: Array<{ id: string; name: string; href: string }>;
+};
+
+/** Top-level categories with their direct subcategories and their URLs, for the navigation menu. */
+export function buildCategoryMenu(
+  categories: readonly CategoryNode[],
+  href: (trail: CategoryNode[]) => string,
+): CategoryMenuItem[] {
+  const roots = categories.filter((category) => category.parentId === null);
+  return roots.map((root) => ({
+    id: root.id,
+    name: root.name,
+    href: href([root]),
+    children: categories
+      .filter((category) => category.parentId === root.id)
+      .map((child) => ({ id: child.id, name: child.name, href: href([root, child]) })),
+  }));
+}

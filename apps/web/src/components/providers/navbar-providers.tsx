@@ -1,5 +1,7 @@
 import { Navbar } from "@/components/common/navbar";
-import { getRootCategories } from "@/queries/categories";
+import { buildCategoryMenu } from "@/lib/category-tree";
+import { categoryHref } from "@/lib/routes";
+import { getCategoryIndex } from "@/queries/categories";
 import type { Session } from "next-auth";
 import React, { PropsWithChildren } from "react";
 
@@ -8,11 +10,11 @@ interface Props extends PropsWithChildren {
 }
 
 const NavbarProviders: React.FC<Props> = async ({ session, children }) => {
-  const { data: categories } = await getRootCategories({ pageSize: 100 });
+  const menu = buildCategoryMenu(await getCategoryIndex(), categoryHref);
 
   return (
     <>
-      <Navbar categories={categories} session={session} />
+      <Navbar menu={menu} session={session} />
       {children}
     </>
   );

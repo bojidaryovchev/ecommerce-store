@@ -1,6 +1,8 @@
 import { CatalogView } from "@/components/catalog";
 import { parseCatalogFilters, type SearchParamsInput } from "@/lib/catalog-filters";
-import { getRootCategories } from "@/queries/categories";
+import { categoryTrail } from "@/lib/category-tree";
+import { categoryHref } from "@/lib/routes";
+import { getCategoryIndex } from "@/queries/categories";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import React from "react";
@@ -24,9 +26,9 @@ const ProductsPage: React.FC<ProductsPageProps> = async ({ params, searchParams 
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [search, { data: categories }, t] = await Promise.all([
+  const [search, categories, t] = await Promise.all([
     searchParams,
-    getRootCategories({ pageSize: 100 }),
+    getCategoryIndex(),
     getTranslations("products.page"),
   ]);
   const filters = parseCatalogFilters(search);
@@ -41,7 +43,9 @@ const ProductsPage: React.FC<ProductsPageProps> = async ({ params, searchParams 
       <CatalogView
         filters={filters}
         basePath="/products"
-        links={categories.map((category) => ({ href: `/categories/${category.slug}`, label: category.name }))}
+        links={categories
+          .filter((category) => category.parentId === null)
+          .map((category) => ({ href: categoryHref(categoryTrail(categories, category.id)), label: category.name }))}
       />
     </main>
   );

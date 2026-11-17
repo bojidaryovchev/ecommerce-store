@@ -25,5 +25,15 @@
   },
   "localeSwitcher": {
     "label": "Language"
+  },
+  "footer": {
+    "categories": "Categories",
+    "shop": "Shop",
+    "allProducts": "All products",
+    "allCategories": "All categories",
+    "orders": "My orders",
+    "delivery": "Delivery and installation across Bulgaria.",
+    "prices": "All prices are in euros and include VAT.",
+    "rights": "© {name}. All rights reserved."
   }
 }
