@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "title": "Products",
+    "description": "Browse our products",
+    "productNotFound": "Product not found",
+    "productDescription": "View details of {name}"
+  },
+  "page": {
+    "title": "Products",
+    "searchTitle": "Search: “{query}”",
+    "searchResultsFor": "Showing results for “{query}”"
+  },
+  "filters": {
+    "category": "Category",
+    "allCategories": "All categories",
+    "minPrice": "Min price",
+    "maxPrice": "Max price",
+    "maxPricePlaceholder": "Any",
+    "sortBy": "Sort by",
+    "clearFilters": "Clear filters",
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "priceAsc": "Price: Low → High",
+      "priceDesc": "Price: High → Low",
+      "nameAsc": "Name: A → Z",
+      "nameDesc": "Name: Z → A"
+    }
+  },
+  "grid": {
+    "empty": "No products found"
+  },
+  "filteredProducts": {
+    "empty": "No products found.",
+    "emptyFiltered": "No products match your filters. Try adjusting your search or filters."
+  },
+  "searchResults": {
+    "empty": "No products found for “{query}”. Try a different search term."
+  },
+  "productCard": {
+    "unavailable": "Unavailable",
+    "priceOnRequest": "Price on request",
+    "outOfStock": "Out of stock"
+  },
+  "wishlist": {
+    "add": "Add to wishlist",
+    "remove": "Remove from wishlist",
+    "added": "Added to wishlist",
+    "removed": "Removed from wishlist",
+    "updateFailed": "Failed to update wishlist"
+  },
+  "detail": {
+    "breadcrumb": {
+      "home": "Home",
+      "products": "Products"
+    },
+    "imageAlt": "{name} image {number}",
+    "unavailable": "Unavailable",
+    "outOfStock": "Out of stock",
+    "lowStock": "Low stock — only {count} left",
+    "inStock": "In stock",
+    "description": "Description",
+    "details": "Product details",
+    "shipping": "Shipping",
+    "physicalProduct": "Physical product",
+    "digitalProduct": "Digital product",
+    "unit": "Unit",
+    "priceOptions": "Price options",
+    "priceOptionsAvailable": "{count} available",
+    "features": "Features"
+  },
+  "productAddToCart": {
+    "priceOnRequest": "Price on request",
+    "currentlyUnavailable": "Currently unavailable",
+    "outOfStock": "Out of stock"
+  },
+  "addToCartButton": {
+    "label": "Add to cart"
+  },
+  "reviews": {
+    "title": "Customer reviews",
+    "loading": "Loading reviews…",
+    "summary": "{rating} ({count, plural, one {# review} other {# reviews}})",
+    "writeReview": "Write a review",
+    "alreadyReviewed": "You have already reviewed this product. Delete your review below to leave a new one.",
+    "signInToReview": "Sign in and purchase this product to leave a review.",
+    "purchaseToReview": "Purchase this product to leave a review."
+  },
+  "reviewForm": {
+    "ratingRequired": "Please select a rating",
+    "submitted": "Review submitted successfully!",
+    "rating": "Rating",
+    "rateStars": "{count, plural, one {Rate # star} other {Rate # stars}}",
+    "content": "Review (optional)",
+    "contentPlaceholder": "Share your thoughts about this product…",
+    "submitting": "Submitting…",
+    "submit": "Submit review"
+  },
+  "reviewList": {
+    "deleted": "Review deleted",
+    "empty": "No reviews yet. Be the first to review this product!",
+    "user": "User",
+    "anonymous": "Anonymous",
+    "you": "(You)",
+    "deleteOwn": "Delete my review"
+  },
+  "notFound": {
+    "title": "Product not found",
+    "description": "The product you’re looking for doesn’t exist or has been removed.",
+    "browseProducts": "Browse products"
+  }
+}

@@ -2,11 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-context";
-import { formatCurrency } from "@/lib/utils";
+import { priceFormat } from "@/i18n/format";
+import { Link } from "@/i18n/navigation";
 import type { CartItemWithProduct } from "@/types/cart.type";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { useFormatter } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 
 const CartItem: React.FC<Props> = ({ item }) => {
   const { updateQuantity, removeItem, isLoading } = useCart();
+  const format = useFormatter();
   const productImage = item.product.images?.[0];
 
   const handleIncrement = () => {
@@ -35,6 +37,7 @@ const CartItem: React.FC<Props> = ({ item }) => {
 
   const unitAmount = item.price.unitAmount ?? 0;
   const lineTotal = unitAmount * item.quantity;
+  const formatPrice = (cents: number) => format.number(cents / 100, priceFormat(item.price.currency));
 
   return (
     <div className="flex gap-4 py-4">
@@ -63,7 +66,7 @@ const CartItem: React.FC<Props> = ({ item }) => {
           <Link href={`/products/${item.product.id}`}>
             <h4 className="line-clamp-1 text-sm font-medium hover:underline">{item.product.name}</h4>
           </Link>
-          <p className="text-muted-foreground text-sm">{formatCurrency(unitAmount, item.price.currency)}</p>
+          <p className="text-muted-foreground text-sm">{formatPrice(unitAmount)}</p>
         </div>
 
         <div className="flex items-center justify-between">
@@ -80,7 +83,7 @@ const CartItem: React.FC<Props> = ({ item }) => {
 
           {/* Line Total & Remove */}
           <div className="flex items-center gap-3">
-            <span className="text-sm font-medium">{formatCurrency(lineTotal, item.price.currency)}</span>
+            <span className="text-sm font-medium">{formatPrice(lineTotal)}</span>
             <Button
               variant="ghost"
               size="icon"

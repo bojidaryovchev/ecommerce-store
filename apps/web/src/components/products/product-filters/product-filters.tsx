@@ -4,25 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from "@/i18n/navigation";
 import type { Category } from "@ecommerce/database/schema";
 import { X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import React, { useCallback, useTransition } from "react";
 
 type ProductFiltersProps = {
   categories: Category[];
 };
 
+/** `labelKey` is the option's message key under `products.filters.sort`. */
 const SORT_OPTIONS = [
-  { value: "newest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
-  { value: "price-asc", label: "Price: Low → High" },
-  { value: "price-desc", label: "Price: High → Low" },
-  { value: "name-asc", label: "Name: A → Z" },
-  { value: "name-desc", label: "Name: Z → A" },
+  { value: "newest", labelKey: "newest" },
+  { value: "oldest", labelKey: "oldest" },
+  { value: "price-asc", labelKey: "priceAsc" },
+  { value: "price-desc", labelKey: "priceDesc" },
+  { value: "name-asc", labelKey: "nameAsc" },
+  { value: "name-desc", labelKey: "nameDesc" },
 ] as const;
 
 const ProductFilters: React.FC<ProductFiltersProps> = ({ categories }) => {
+  const t = useTranslations("products.filters");
+  // Locale-aware: "/products" keeps the /en prefix for English.
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -106,14 +111,14 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ categories }) => {
         {/* Category filter */}
         <div className="w-44 space-y-1.5">
           <Label htmlFor="category-filter" className="text-xs font-medium">
-            Category
+            {t("category")}
           </Label>
           <Select value={currentCategory || "all"} onValueChange={handleCategoryChange}>
             <SelectTrigger id="category-filter" className="h-9 w-full">
-              <SelectValue placeholder="All Categories" />
+              <SelectValue placeholder={t("allCategories")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="all">{t("allCategories")}</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
@@ -127,14 +132,14 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ categories }) => {
         <div className="flex items-end gap-2">
           <div className="w-28 space-y-1.5">
             <Label htmlFor="min-price" className="text-xs font-medium">
-              Min Price
+              {t("minPrice")}
             </Label>
             <Input
               id="min-price"
               type="number"
               min={0}
               step={0.01}
-              placeholder="$0"
+              placeholder="0"
               defaultValue={currentMinPrice ? (Number(currentMinPrice) / 100).toFixed(2) : ""}
               onBlur={handleMinPriceBlur}
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
@@ -144,14 +149,14 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ categories }) => {
           <span className="text-muted-foreground pb-2 text-sm">–</span>
           <div className="w-28 space-y-1.5">
             <Label htmlFor="max-price" className="text-xs font-medium">
-              Max Price
+              {t("maxPrice")}
             </Label>
             <Input
               id="max-price"
               type="number"
               min={0}
               step={0.01}
-              placeholder="Any"
+              placeholder={t("maxPricePlaceholder")}
               defaultValue={currentMaxPrice ? (Number(currentMaxPrice) / 100).toFixed(2) : ""}
               onBlur={handleMaxPriceBlur}
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
@@ -163,16 +168,16 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ categories }) => {
         {/* Sort */}
         <div className="w-44 space-y-1.5">
           <Label htmlFor="sort-select" className="text-xs font-medium">
-            Sort By
+            {t("sortBy")}
           </Label>
           <Select value={currentSort || "newest"} onValueChange={handleSortChange}>
             <SelectTrigger id="sort-select" className="h-9 w-full">
-              <SelectValue placeholder="Newest" />
+              <SelectValue placeholder={t("sort.newest")} />
             </SelectTrigger>
             <SelectContent>
               {SORT_OPTIONS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                  {t(`sort.${option.labelKey}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -183,7 +188,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ categories }) => {
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={handleClearFilters} className="h-9 gap-1.5">
             <X className="h-3.5 w-3.5" />
-            Clear filters
+            {t("clearFilters")}
           </Button>
         )}
       </div>

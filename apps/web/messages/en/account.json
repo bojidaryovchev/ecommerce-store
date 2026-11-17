@@ -1,0 +1,127 @@
+{
+  "layout": {
+    "title": "My account",
+    "nav": {
+      "profile": "Profile",
+      "addresses": "Addresses",
+      "wishlist": "Wishlist",
+      "orders": "Orders"
+    }
+  },
+  "profile": {
+    "metadata": {
+      "title": "Profile | My account",
+      "description": "View your profile information"
+    },
+    "title": "Profile",
+    "description": "Your account information from Google.",
+    "avatarAlt": "User",
+    "initialsFallback": "U",
+    "unknownName": "Unknown",
+    "signedInWithGoogle": "Signed in with Google",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role"
+    },
+    "roles": {
+      "USER": "User",
+      "ADMIN": "Admin",
+      "SUPER_ADMIN": "Super admin"
+    },
+    "managedByGoogle": "Profile information is managed by your Google account and cannot be edited here."
+  },
+  "addresses": {
+    "metadata": {
+      "title": "Addresses | My account",
+      "description": "Manage your shipping and billing addresses"
+    },
+    "title": "Addresses",
+    "description": "Manage your shipping and billing addresses.",
+    "add": "Add address"
+  },
+  "address": {
+    "types": {
+      "shipping": "Shipping",
+      "billing": "Billing"
+    },
+    "countries": {
+      "BG": "Bulgaria",
+      "US": "United States",
+      "CA": "Canada",
+      "GB": "United Kingdom",
+      "AU": "Australia",
+      "DE": "Germany",
+      "FR": "France",
+      "NL": "Netherlands",
+      "BE": "Belgium"
+    }
+  },
+  "addressList": {
+    "emptyTitle": "No addresses yet",
+    "emptyDescription": "Add a shipping or billing address to get started.",
+    "default": "Default",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleted": "Address deleted",
+    "deleteDialog": {
+      "title": "Delete address",
+      "description": "Are you sure you want to delete this address? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    }
+  },
+  "addressForm": {
+    "addTitle": "Add address",
+    "editTitle": "Edit address",
+    "addDescription": "Add a new shipping or billing address.",
+    "editDescription": "Update your address details.",
+    "fields": {
+      "name": "Full name",
+      "line1": "Address line 1",
+      "line2": "Address line 2",
+      "city": "City",
+      "state": "State / Province",
+      "postalCode": "Postal code",
+      "country": "Country",
+      "phone": "Phone",
+      "type": "Type",
+      "isDefault": "Set as default"
+    },
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save changes",
+    "add": "Add address",
+    "added": "Address added",
+    "updated": "Address updated"
+  },
+  "orders": {
+    "metadata": {
+      "title": "Orders | My account",
+      "description": "View your order history"
+    },
+    "title": "Orders",
+    "description": "View and track your order history."
+  },
+  "orderDetail": {
+    "metadata": {
+      "title": "Order #{number} | My account",
+      "description": "View order details"
+    }
+  },
+  "orderNotFound": {
+    "title": "Order not found",
+    "description": "The order you're looking for doesn't exist or you don't have permission to view it.",
+    "backToOrders": "Back to orders"
+  },
+  "wishlist": {
+    "metadata": {
+      "title": "Wishlist",
+      "description": "View and manage your wishlist"
+    },
+    "title": "Wishlist",
+    "empty": "Your wishlist is empty. Browse products and click the heart icon to save items.",
+    "count": "{count, plural, one {You have # item in your wishlist.} other {You have # items in your wishlist.}}"
+  }
+}

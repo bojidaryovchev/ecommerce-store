@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "title": "Категории",
+    "description": "Разгледайте нашите продуктови категории",
+    "notFoundTitle": "Категорията не е намерена",
+    "categoryDescription": "Разгледайте продуктите в категория „{name}“"
+  },
+  "page": {
+    "title": "Категории"
+  },
+  "categoriesGrid": {
+    "empty": "Няма намерени категории"
+  },
+  "categoryDetail": {
+    "breadcrumb": "Навигационна пътека",
+    "home": "Начало",
+    "categories": "Категории",
+    "subcategories": "Подкатегории",
+    "products": "{count, plural, =0 {Продукти} other {Продукти (#)}}"
+  },
+  "notFound": {
+    "title": "Категорията не е намерена",
+    "description": "Категорията, която търсите, не съществува или е премахната.",
+    "browseAll": "Разгледайте всички категории"
+  }
+}

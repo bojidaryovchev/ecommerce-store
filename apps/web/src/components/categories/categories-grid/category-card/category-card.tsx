@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Link } from "@/i18n/navigation";
 import type { Category } from "@ecommerce/database/schema";
 import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 
 interface Props {

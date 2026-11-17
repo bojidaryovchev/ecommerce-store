@@ -1,0 +1,49 @@
+{
+  "status": {
+    "pending": "Pending",
+    "paid": "Paid",
+    "processing": "Processing",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded"
+  },
+  "summary": {
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "tax": "Tax",
+    "discount": "Discount",
+    "total": "Total"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "from": "from {status}",
+    "ordered": "Ordered"
+  },
+  "list": {
+    "emptyTitle": "No orders yet",
+    "emptyDescription": "When you place an order, it will appear here.",
+    "startShopping": "Start shopping",
+    "columns": {
+      "order": "Order",
+      "date": "Date",
+      "status": "Status",
+      "items": "Items",
+      "total": "Total"
+    },
+    "number": "#{number}",
+    "itemCount": "{count, plural, one {# item} other {# items}}",
+    "view": "View"
+  },
+  "detail": {
+    "backToOrders": "Back to orders",
+    "title": "Order #{number}",
+    "placedOn": "Placed on {date}",
+    "items": "Items",
+    "itemsInOrder": "{count, plural, one {# item in this order} other {# items in this order}}",
+    "quantity": "Qty: {quantity} × {price}",
+    "summary": "Summary",
+    "shippingAddress": "Shipping address",
+    "billingAddress": "Billing address"
+  }
+}

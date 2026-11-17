@@ -1,0 +1,34 @@
+{
+  "success": {
+    "metadata": {
+      "title": "Order confirmed",
+      "description": "Your order has been placed successfully"
+    },
+    "pendingTitle": "Payment successful!",
+    "pendingDescription": "Your order is being processed. You will receive a confirmation email shortly.",
+    "title": "Order confirmed!",
+    "description": "Thank you for your purchase. Your order has been placed successfully.",
+    "orderDetails": "Order details",
+    "orderMeta": "Order #{number} • {date}",
+    "items": "Items",
+    "quantity": "Qty: {quantity} × {price}",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "tax": "Tax",
+    "discount": "Discount",
+    "total": "Total",
+    "shippingAddress": "Shipping address",
+    "continueShopping": "Continue shopping",
+    "viewOrders": "View my orders"
+  },
+  "cancel": {
+    "metadata": {
+      "title": "Checkout cancelled",
+      "description": "Your checkout was cancelled"
+    },
+    "title": "Checkout cancelled",
+    "description": "Your checkout was cancelled. No payment was processed. Your items are still in your cart.",
+    "continueShopping": "Continue shopping",
+    "backHome": "Back to home"
+  }
+}

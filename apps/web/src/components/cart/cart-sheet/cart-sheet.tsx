@@ -3,9 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/cart-context";
-import { formatCurrency } from "@/lib/utils";
+import { priceFormat } from "@/i18n/format";
+import { Link } from "@/i18n/navigation";
 import { Loader2, ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { CartItem } from "./cart-item";
@@ -13,7 +14,10 @@ import { CartItem } from "./cart-item";
 const CartSheet: React.FC = () => {
   const { cart, summary, isOpen, closeCart, isLoading, clear } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const t = useTranslations("cart.sheet");
+  const format = useFormatter();
 
+  const locale = useLocale();
   const items = cart?.items ?? [];
   const isEmpty = items.length === 0;
 
@@ -23,19 +27,20 @@ const CartSheet: React.FC = () => {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale }),
       });
 
       const data = await response.json<{ url?: string; error?: string }>();
 
       if (!response.ok) {
-        throw new Error(data.error || "Checkout failed");
+        throw new Error(data.error || t("checkoutFailed"));
       }
 
       if (data.url) {
         window.location.href = data.url;
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Checkout failed");
+      toast.error(error instanceof Error ? error.message : t("checkoutFailed"));
       setIsCheckingOut(false);
     }
   };
@@ -46,16 +51,14 @@ const CartSheet: React.FC = () => {
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ShoppingBag className="h-5 w-5" />
-            Shopping Cart
+            {t("title")}
             {summary.itemCount > 0 && (
               <span className="text-muted-foreground text-sm font-normal">
-                ({summary.itemCount} {summary.itemCount === 1 ? "item" : "items"})
+                {t("itemCount", { count: summary.itemCount })}
               </span>
             )}
           </SheetTitle>
-          <SheetDescription>
-            {isEmpty ? "Your cart is empty" : "Review your items and proceed to checkout"}
-          </SheetDescription>
+          <SheetDescription>{isEmpty ? t("emptyDescription") : t("description")}</SheetDescription>
         </SheetHeader>
 
         {/* Cart Items */}
@@ -64,12 +67,12 @@ const CartSheet: React.FC = () => {
             <div className="flex h-full flex-col items-center justify-center gap-4 py-8">
               <ShoppingBag className="text-muted-foreground h-16 w-16" />
               <p className="text-muted-foreground text-center">
-                Your cart is empty.
+                {t("emptyTitle")}
                 <br />
-                Start shopping to add items!
+                {t("emptyHint")}
               </p>
               <Button asChild onClick={closeCart}>
-                <Link href="/products">Browse Products</Link>
+                <Link href="/products">{t("browseProducts")}</Link>
               </Button>
             </div>
           ) : (
@@ -86,22 +89,24 @@ const CartSheet: React.FC = () => {
           <SheetFooter className="flex-col gap-4 border-t pt-4">
             {/* Subtotal */}
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="text-lg font-semibold">{formatCurrency(summary.subtotal, summary.currency)}</span>
+              <span className="text-muted-foreground">{t("subtotal")}</span>
+              <span className="text-lg font-semibold">
+                {format.number(summary.subtotal / 100, priceFormat(summary.currency))}
+              </span>
             </div>
 
-            <p className="text-muted-foreground text-xs">Shipping and taxes calculated at checkout.</p>
+            <p className="text-muted-foreground text-xs">{t("shippingNote")}</p>
 
             {/* Actions */}
             <div className="flex flex-col gap-2">
               <Button size="lg" className="w-full" disabled={isLoading || isCheckingOut} onClick={handleCheckout}>
                 {isCheckingOut && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Proceed to Checkout
+                {t("checkout")}
               </Button>
 
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={closeCart}>
-                  Continue Shopping
+                  {t("continueShopping")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -109,7 +114,7 @@ const CartSheet: React.FC = () => {
                   onClick={() => clear()}
                   disabled={isLoading || isCheckingOut}
                 >
-                  Clear Cart
+                  {t("clearCart")}
                 </Button>
               </div>
             </div>

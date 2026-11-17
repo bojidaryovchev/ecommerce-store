@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createReview } from "@/mutations/reviews";
+import { useTranslations } from "next-intl";
 import React, { useCallback, useState, useTransition } from "react";
 import toast from "react-hot-toast";
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 const ReviewForm: React.FC<Props> = ({ productId }) => {
+  const t = useTranslations("products.reviewForm");
   const [isPending, startTransition] = useTransition();
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -22,7 +24,7 @@ const ReviewForm: React.FC<Props> = ({ productId }) => {
       e.preventDefault();
 
       if (rating === 0) {
-        toast.error("Please select a rating");
+        toast.error(t("ratingRequired"));
         return;
       }
 
@@ -34,7 +36,7 @@ const ReviewForm: React.FC<Props> = ({ productId }) => {
         });
 
         if (result.success) {
-          toast.success("Review submitted successfully!");
+          toast.success(t("submitted"));
           setRating(0);
           setContent("");
         } else {
@@ -42,14 +44,14 @@ const ReviewForm: React.FC<Props> = ({ productId }) => {
         }
       });
     },
-    [productId, rating, content],
+    [productId, rating, content, t],
   );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Star Rating */}
       <div className="space-y-2">
-        <Label>Rating</Label>
+        <Label>{t("rating")}</Label>
         <div className="flex items-center gap-1">
           {Array.from({ length: 5 }).map((_, i) => {
             const starValue = i + 1;
@@ -61,7 +63,7 @@ const ReviewForm: React.FC<Props> = ({ productId }) => {
                 onClick={() => setRating(starValue)}
                 onMouseEnter={() => setHoveredRating(starValue)}
                 onMouseLeave={() => setHoveredRating(0)}
-                aria-label={`Rate ${starValue} star${starValue > 1 ? "s" : ""}`}
+                aria-label={t("rateStars", { count: starValue })}
               >
                 <span className={starValue <= (hoveredRating || rating) ? "text-yellow-400" : "text-gray-300"}>★</span>
               </button>
@@ -73,19 +75,19 @@ const ReviewForm: React.FC<Props> = ({ productId }) => {
 
       {/* Review Text */}
       <div className="space-y-2">
-        <Label htmlFor="review-content">Review (optional)</Label>
+        <Label htmlFor="review-content">{t("content")}</Label>
         <Textarea
           id="review-content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Share your thoughts about this product..."
+          placeholder={t("contentPlaceholder")}
           rows={3}
           maxLength={2000}
         />
       </div>
 
       <Button type="submit" disabled={isPending || rating === 0}>
-        {isPending ? "Submitting..." : "Submit Review"}
+        {isPending ? t("submitting") : t("submit")}
       </Button>
     </form>
   );

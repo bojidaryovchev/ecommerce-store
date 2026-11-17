@@ -2,8 +2,10 @@
 
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { Search, X } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 type SearchBarProps = {
@@ -13,7 +15,9 @@ type SearchBarProps = {
 const DEBOUNCE_MS = 300;
 
 const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
+  const t = useTranslations("navigation.searchBar");
   const router = useRouter();
+  // Without the locale prefix: "/products" in both languages.
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -79,7 +83,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
         <Input
           ref={inputRef}
           type="search"
-          placeholder="Search products..."
+          placeholder={t("placeholder")}
           value={query}
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
@@ -93,7 +97,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
             className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 transition-colors"
           >
             <X className="h-4 w-4" />
-            <span className="sr-only">Clear search</span>
+            <span className="sr-only">{t("clear")}</span>
           </button>
         )}
       </div>

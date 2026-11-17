@@ -13,12 +13,15 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/cart-context";
+import { Link } from "@/i18n/navigation";
 import type { Category } from "@ecommerce/database/schema";
 import { Menu, ShoppingCart } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import NextLink from "next/link";
 import React, { useState } from "react";
+import { LocaleSwitcher } from "./locale-switcher";
 import { SearchBar } from "./search-bar";
 
 interface Props {
@@ -27,12 +30,13 @@ interface Props {
 }
 
 const Navbar: React.FC<Props> = ({ categories, session }) => {
+  const t = useTranslations("navigation.navbar");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { summary, openCart } = useCart();
   const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
 
   const getInitials = (name: string | null | undefined) => {
-    if (!name) return "U";
+    if (!name) return t("userInitialsFallback");
     return name
       .split(" ")
       .map((n) => n[0])
@@ -51,24 +55,25 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
             <SheetTrigger asChild className="sm:hidden">
               <Button variant="ghost" size="icon">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
+                <span className="sr-only">{t("toggleMenu")}</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left">
+            <SheetContent side="left" className="overflow-y-auto">
               <SheetHeader>
-                <SheetTitle>Navigation</SheetTitle>
+                <SheetTitle>{t("menuTitle")}</SheetTitle>
               </SheetHeader>
               <nav className="mt-6 flex flex-col gap-4">
                 <SearchBar className="sm:hidden" />
+                <LocaleSwitcher className="sm:hidden" onLocaleChange={() => setMobileMenuOpen(false)} />
                 <Link href="/" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                  Home
+                  {t("home")}
                 </Link>
                 <Link href="/products" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                  Products
+                  {t("products")}
                 </Link>
                 <Separator />
                 <Link href="/categories" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                  All Categories
+                  {t("allCategories")}
                 </Link>
                 {categories.map((category) => (
                   <Link
@@ -88,37 +93,38 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                       className="text-lg font-medium"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      Profile
+                      {t("profile")}
                     </Link>
                     <Link
                       href="/account/addresses"
                       className="text-lg font-medium"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      Addresses
+                      {t("addresses")}
                     </Link>
                     <Link
                       href="/account/wishlist"
                       className="text-lg font-medium"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      Wishlist
+                      {t("wishlist")}
                     </Link>
                     <Link
                       href="/account/orders"
                       className="text-lg font-medium"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      Orders
+                      {t("orders")}
                     </Link>
                   </>
                 )}
                 {session && isAdmin && (
                   <>
                     <Separator />
-                    <Link href="/admin" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                      Admin
-                    </Link>
+                    {/* The admin is outside the locale routing, so its links never get a locale prefix. */}
+                    <NextLink href="/admin" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+                      {t("admin")}
+                    </NextLink>
                   </>
                 )}
               </nav>
@@ -127,27 +133,27 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
 
           {/* Logo */}
           <Link href="/" className="text-xl font-bold">
-            Ecommerce Store
+            {t("brand")}
           </Link>
         </div>
 
         {/* Center - Desktop navigation */}
         <nav className="hidden items-center gap-6 sm:flex">
           <Link href="/" className="hover:text-primary text-sm font-medium transition-colors">
-            Home
+            {t("home")}
           </Link>
           <Link href="/products" className="hover:text-primary text-sm font-medium transition-colors">
-            Products
+            {t("products")}
           </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="text-sm font-medium">
-                Categories
+                {t("categories")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center">
               <DropdownMenuItem asChild>
-                <Link href="/categories">All Categories</Link>
+                <Link href="/categories">{t("allCategories")}</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {categories.map((category) => (
@@ -164,6 +170,8 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
         <div className="flex items-center gap-2">
           {/* Mobile/Tablet search toggle */}
           <SearchBar className="hidden sm:block lg:hidden" />
+          {/* Language switcher (on mobile it is in the menu sheet) */}
+          <LocaleSwitcher className="hidden sm:flex" />
           {/* Cart Button */}
           <Button variant="ghost" size="icon" className="relative" onClick={openCart}>
             <ShoppingCart className="h-5 w-5" />
@@ -172,7 +180,7 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
                 {summary.itemCount > 99 ? "99+" : summary.itemCount}
               </span>
             )}
-            <span className="sr-only">Open cart</span>
+            <span className="sr-only">{t("openCart")}</span>
           </Button>
 
           {session ? (
@@ -180,42 +188,45 @@ const Navbar: React.FC<Props> = ({ categories, session }) => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={session.user?.image ?? undefined} alt={session.user?.name ?? "User"} />
+                    <AvatarImage
+                      src={session.user?.image ?? undefined}
+                      alt={session.user?.name ?? t("userAvatarAlt")}
+                    />
                     <AvatarFallback>{getInitials(session.user?.name)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>
-                  <p className="text-sm font-medium">Signed in as</p>
+                  <p className="text-sm font-medium">{t("signedInAs")}</p>
                   <p className="text-muted-foreground text-xs">{session.user?.email}</p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/account/profile">Profile</Link>
+                  <Link href="/account/profile">{t("profile")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/account/addresses">Addresses</Link>
+                  <Link href="/account/addresses">{t("addresses")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/account/wishlist">Wishlist</Link>
+                  <Link href="/account/wishlist">{t("wishlist")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/account/orders">Orders</Link>
+                  <Link href="/account/orders">{t("orders")}</Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
-                    <Link href="/admin">Admin</Link>
+                    <NextLink href="/admin">{t("admin")}</NextLink>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => signOut()}>
-                  Sign Out
+                  {t("signOut")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <Button asChild variant="secondary">
-              <Link href="/login">Sign In</Link>
+              <Link href="/login">{t("signIn")}</Link>
             </Button>
           )}
         </div>

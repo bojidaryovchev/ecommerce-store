@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { auth } from "@/lib/auth";
 import { checkUserAlreadyReviewed, checkUserPurchasedProduct, getReviewsByProductId } from "@/queries/reviews";
+import { getFormatter, getTranslations } from "next-intl/server";
 import React from "react";
 import { ReviewForm } from "../review-form";
 import { ReviewList } from "../review-list";
@@ -12,6 +13,8 @@ interface Props {
 
 const ReviewSection: React.FC<Props> = async ({ productId }) => {
   const [reviews, session] = await Promise.all([getReviewsByProductId(productId), auth()]);
+  const t = await getTranslations("products.reviews");
+  const format = await getFormatter();
 
   const userId = session?.user?.id;
 
@@ -32,7 +35,7 @@ const ReviewSection: React.FC<Props> = async ({ productId }) => {
   return (
     <section className="space-y-6">
       <div className="flex items-center gap-4">
-        <h2 className="text-xl font-semibold">Customer Reviews</h2>
+        <h2 className="text-xl font-semibold">{t("title")}</h2>
         {reviews.length > 0 && (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-0.5">
@@ -46,7 +49,10 @@ const ReviewSection: React.FC<Props> = async ({ productId }) => {
               ))}
             </div>
             <span className="text-muted-foreground text-sm">
-              {averageRating.toFixed(1)} ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
+              {t("summary", {
+                rating: format.number(averageRating, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+                count: reviews.length,
+              })}
             </span>
           </div>
         )}
@@ -57,7 +63,7 @@ const ReviewSection: React.FC<Props> = async ({ productId }) => {
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Write a Review</CardTitle>
+              <CardTitle className="text-lg">{t("writeReview")}</CardTitle>
             </CardHeader>
             <CardContent>
               <ReviewForm productId={productId} />
@@ -67,17 +73,11 @@ const ReviewSection: React.FC<Props> = async ({ productId }) => {
         </>
       )}
 
-      {alreadyReviewed && (
-        <p className="text-muted-foreground text-sm">
-          You have already reviewed this product. Delete your review below to leave a new one.
-        </p>
-      )}
+      {alreadyReviewed && <p className="text-muted-foreground text-sm">{t("alreadyReviewed")}</p>}
 
-      {!userId && <p className="text-muted-foreground text-sm">Sign in and purchase this product to leave a review.</p>}
+      {!userId && <p className="text-muted-foreground text-sm">{t("signInToReview")}</p>}
 
-      {userId && !hasPurchased && (
-        <p className="text-muted-foreground text-sm">Purchase this product to leave a review.</p>
-      )}
+      {userId && !hasPurchased && <p className="text-muted-foreground text-sm">{t("purchaseToReview")}</p>}
 
       {/* Reviews List */}
       <ReviewList reviews={reviews} currentUserId={userId} />

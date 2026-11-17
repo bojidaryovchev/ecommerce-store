@@ -1,0 +1,19 @@
+{
+  "notFound": {
+    "title": "Page not found",
+    "description": "The address may be wrong, or the page may have moved.",
+    "backHome": "Back to the home page"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "first": "First page",
+    "previous": "Previous page",
+    "page": "Page {page}",
+    "next": "Next page",
+    "last": "Last page"
+  },
+  "sectionHeader": {
+    "viewAll": "View All"
+  },
+  "close": "Close"
+}

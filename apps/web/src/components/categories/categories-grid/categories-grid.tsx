@@ -1,4 +1,5 @@
 import type { Category } from "@ecommerce/database/schema";
+import { useTranslations } from "next-intl";
 import React from "react";
 import { CategoryCard } from "./category-card";
 
@@ -7,10 +8,12 @@ interface Props {
 }
 
 const CategoriesGrid: React.FC<Props> = ({ categories }) => {
+  const t = useTranslations("categories.categoriesGrid");
+
   if (categories.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-muted-foreground">No categories found</p>
+        <p className="text-muted-foreground">{t("empty")}</p>
       </div>
     );
   }

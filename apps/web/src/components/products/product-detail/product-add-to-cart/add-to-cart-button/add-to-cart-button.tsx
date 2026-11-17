@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-context";
 import { cn } from "@/lib/utils";
 import { Loader2, ShoppingCart } from "lucide-react";
+import { useTranslations } from "next-intl";
 import React from "react";
 
 interface Props {
@@ -23,6 +24,7 @@ const AddToCartButton: React.FC<Props> = ({
   size = "lg",
   variant = "default",
 }) => {
+  const t = useTranslations("products.addToCartButton");
   const { addItem, isLoading } = useCart();
 
   const handleClick = async () => {
@@ -38,7 +40,7 @@ const AddToCartButton: React.FC<Props> = ({
       disabled={disabled || isLoading}
     >
       {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="mr-2 h-4 w-4" />}
-      Add to Cart
+      {t("label")}
     </Button>
   );
 };

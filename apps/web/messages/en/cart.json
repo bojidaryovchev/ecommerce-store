@@ -1,0 +1,22 @@
+{
+  "sheet": {
+    "title": "Shopping cart",
+    "itemCount": "({count, plural, one {# item} other {# items}})",
+    "description": "Review your items and proceed to checkout",
+    "emptyDescription": "Your cart is empty",
+    "emptyTitle": "Your cart is empty.",
+    "emptyHint": "Start shopping to add items!",
+    "browseProducts": "Browse products",
+    "subtotal": "Subtotal",
+    "shippingNote": "Shipping and taxes calculated at checkout.",
+    "checkout": "Proceed to checkout",
+    "continueShopping": "Continue shopping",
+    "clearCart": "Clear cart",
+    "checkoutFailed": "Checkout failed"
+  },
+  "toasts": {
+    "added": "Added to cart",
+    "removed": "Removed from cart",
+    "cleared": "Cart cleared"
+  }
+}

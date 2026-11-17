@@ -3,6 +3,7 @@
 import { calculateCartSummary } from "@/lib/cart-utils";
 import { addToCart, clearCart, getCart, removeFromCart, updateCartItemQuantity } from "@/mutations/cart";
 import type { CartSummary, CartWithItems } from "@/types/cart.type";
+import { useTranslations } from "next-intl";
 import React, { createContext, PropsWithChildren, useCallback, useContext, useState, useTransition } from "react";
 import toast from "react-hot-toast";
 
@@ -38,6 +39,7 @@ export const CartProvider: React.FC<PropsWithChildren<Props>> = ({ initialCart, 
   const [cart, setCart] = useState<CartWithItems | null>(initialCart);
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations("cart.toasts");
 
   const summary = calculateCartSummary(cart);
 
@@ -58,14 +60,14 @@ export const CartProvider: React.FC<PropsWithChildren<Props>> = ({ initialCart, 
 
         if (result.success) {
           setCart(result.data);
-          toast.success("Added to cart");
+          toast.success(t("added"));
           openCart();
         } else {
           toast.error(result.error);
         }
       });
     },
-    [openCart],
+    [openCart, t],
   );
 
   const updateQuantity = useCallback(async (cartItemId: string, quantity: number) => {
@@ -80,18 +82,21 @@ export const CartProvider: React.FC<PropsWithChildren<Props>> = ({ initialCart, 
     });
   }, []);
 
-  const removeItem = useCallback(async (cartItemId: string) => {
-    startTransition(async () => {
-      const result = await removeFromCart(cartItemId);
+  const removeItem = useCallback(
+    async (cartItemId: string) => {
+      startTransition(async () => {
+        const result = await removeFromCart(cartItemId);
 
-      if (result.success) {
-        setCart(result.data);
-        toast.success("Removed from cart");
-      } else {
-        toast.error(result.error);
-      }
-    });
-  }, []);
+        if (result.success) {
+          setCart(result.data);
+          toast.success(t("removed"));
+        } else {
+          toast.error(result.error);
+        }
+      });
+    },
+    [t],
+  );
 
   const clear = useCallback(async () => {
     startTransition(async () => {
@@ -99,12 +104,12 @@ export const CartProvider: React.FC<PropsWithChildren<Props>> = ({ initialCart, 
 
       if (result.success) {
         setCart((prev) => (prev ? { ...prev, items: [] } : null));
-        toast.success("Cart cleared");
+        toast.success(t("cleared"));
       } else {
         toast.error(result.error);
       }
     });
-  }, []);
+  }, [t]);
 
   return (
     <CartContext.Provider

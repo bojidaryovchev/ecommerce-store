@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { toggleWishlist } from "@/mutations/wishlist";
 import { Heart } from "lucide-react";
+import { useTranslations } from "next-intl";
 import React, { useState, useTransition } from "react";
 import toast from "react-hot-toast";
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 const WishlistButton: React.FC<Props> = ({ productId, isWishlisted, variant = "icon" }) => {
+  const t = useTranslations("products.wishlist");
   const [isPending, startTransition] = useTransition();
   const [wishlisted, setWishlisted] = useState(isWishlisted);
 
@@ -38,11 +40,11 @@ const WishlistButton: React.FC<Props> = ({ productId, isWishlisted, variant = "i
       if (!result.success) {
         // Roll back on failure
         setWishlisted(!newValue);
-        toast.error(result.error ?? "Failed to update wishlist");
+        toast.error(result.error ?? t("updateFailed"));
       } else if (result.data.wishlisted) {
-        toast.success("Added to wishlist");
+        toast.success(t("added"));
       } else {
-        toast.success("Removed from wishlist");
+        toast.success(t("removed"));
       }
     });
   };
@@ -51,7 +53,7 @@ const WishlistButton: React.FC<Props> = ({ productId, isWishlisted, variant = "i
     return (
       <Button variant="outline" onClick={handleToggle} disabled={isPending} className="gap-2">
         <Heart className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : ""}`} />
-        {wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+        {wishlisted ? t("remove") : t("add")}
       </Button>
     );
   }
@@ -63,7 +65,7 @@ const WishlistButton: React.FC<Props> = ({ productId, isWishlisted, variant = "i
       onClick={handleToggle}
       disabled={isPending}
       className="absolute top-2 left-2 z-10 h-8 w-8 rounded-full bg-white/80 shadow-sm backdrop-blur-sm hover:bg-white"
-      aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+      aria-label={wishlisted ? t("remove") : t("add")}
     >
       <Heart className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
     </Button>

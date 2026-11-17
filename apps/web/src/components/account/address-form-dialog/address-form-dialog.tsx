@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { createAddress, updateAddress } from "@/mutations/addresses";
 import type { Address } from "@ecommerce/database";
+import { useTranslations } from "next-intl";
 import React, { useState, useTransition } from "react";
 import toast from "react-hot-toast";
 
@@ -23,20 +24,14 @@ interface Props {
   trigger: React.ReactNode;
 }
 
-const COUNTRIES = [
-  { code: "US", name: "United States" },
-  { code: "CA", name: "Canada" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "AU", name: "Australia" },
-  { code: "DE", name: "Germany" },
-  { code: "FR", name: "France" },
-  { code: "NL", name: "Netherlands" },
-  { code: "BE", name: "Belgium" },
-];
+/** Country names live in the `account.address.countries` messages. We deliver in Bulgaria only. */
+const COUNTRY_CODES = ["BG"];
 
 const AddressFormDialog: React.FC<Props> = ({ address, trigger }) => {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations("account.addressForm");
+  const tAddress = useTranslations("account.address");
 
   const isEditing = !!address;
 
@@ -61,7 +56,7 @@ const AddressFormDialog: React.FC<Props> = ({ address, trigger }) => {
       const result = isEditing ? await updateAddress(address.id, data) : await createAddress(data);
 
       if (result.success) {
-        toast.success(isEditing ? "Address updated" : "Address added");
+        toast.success(isEditing ? t("updated") : t("added"));
         setOpen(false);
       } else {
         toast.error(result.error);
@@ -74,79 +69,77 @@ const AddressFormDialog: React.FC<Props> = ({ address, trigger }) => {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Address" : "Add Address"}</DialogTitle>
-          <DialogDescription>
-            {isEditing ? "Update your address details." : "Add a new shipping or billing address."}
-          </DialogDescription>
+          <DialogTitle>{isEditing ? t("editTitle") : t("addTitle")}</DialogTitle>
+          <DialogDescription>{isEditing ? t("editDescription") : t("addDescription")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t("fields.name")}</Label>
               <Input id="name" name="name" required defaultValue={address?.name ?? ""} />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="line1">Address Line 1</Label>
+              <Label htmlFor="line1">{t("fields.line1")}</Label>
               <Input id="line1" name="line1" required defaultValue={address?.line1 ?? ""} />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="line2">Address Line 2</Label>
+              <Label htmlFor="line2">{t("fields.line2")}</Label>
               <Input id="line2" name="line2" defaultValue={address?.line2 ?? ""} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="city">{t("fields.city")}</Label>
               <Input id="city" name="city" required defaultValue={address?.city ?? ""} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="state">State / Province</Label>
+              <Label htmlFor="state">{t("fields.state")}</Label>
               <Input id="state" name="state" defaultValue={address?.state ?? ""} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="postalCode">Postal Code</Label>
+              <Label htmlFor="postalCode">{t("fields.postalCode")}</Label>
               <Input id="postalCode" name="postalCode" required defaultValue={address?.postalCode ?? ""} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
-              <Select name="country" defaultValue={address?.country ?? "US"}>
+              <Label htmlFor="country">{t("fields.country")}</Label>
+              <Select name="country" defaultValue={address?.country ?? "BG"}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.name}
+                  {[...new Set([...COUNTRY_CODES, ...(address?.country ? [address.country] : [])])].map((code) => (
+                    <SelectItem key={code} value={code}>
+                      {tAddress(`countries.${code}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t("fields.phone")}</Label>
               <Input id="phone" name="phone" type="tel" defaultValue={address?.phone ?? ""} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
+              <Label htmlFor="type">{t("fields.type")}</Label>
               <Select name="type" defaultValue={address?.type ?? "shipping"}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="shipping">Shipping</SelectItem>
-                  <SelectItem value="billing">Billing</SelectItem>
+                  <SelectItem value="shipping">{tAddress("types.shipping")}</SelectItem>
+                  <SelectItem value="billing">{tAddress("types.billing")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center gap-2 self-end">
               <Switch id="isDefault" name="isDefault" defaultChecked={address?.isDefault ?? false} />
-              <Label htmlFor="isDefault">Set as default</Label>
+              <Label htmlFor="isDefault">{t("fields.isDefault")}</Label>
             </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : isEditing ? "Save Changes" : "Add Address"}
+              {isPending ? t("saving") : isEditing ? t("save") : t("add")}
             </Button>
           </div>
         </form>

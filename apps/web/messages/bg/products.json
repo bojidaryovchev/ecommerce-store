@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "title": "Продукти",
+    "description": "Разгледайте нашите продукти",
+    "productNotFound": "Продуктът не е намерен",
+    "productDescription": "Вижте подробности за {name}"
+  },
+  "page": {
+    "title": "Продукти",
+    "searchTitle": "Търсене: „{query}“",
+    "searchResultsFor": "Резултати за „{query}“"
+  },
+  "filters": {
+    "category": "Категория",
+    "allCategories": "Всички категории",
+    "minPrice": "Мин. цена",
+    "maxPrice": "Макс. цена",
+    "maxPricePlaceholder": "Без лимит",
+    "sortBy": "Сортиране",
+    "clearFilters": "Изчисти филтрите",
+    "sort": {
+      "newest": "Най-нови",
+      "oldest": "Най-стари",
+      "priceAsc": "Цена: възходяща",
+      "priceDesc": "Цена: низходяща",
+      "nameAsc": "Име: А–Я",
+      "nameDesc": "Име: Я–А"
+    }
+  },
+  "grid": {
+    "empty": "Няма намерени продукти"
+  },
+  "filteredProducts": {
+    "empty": "Няма намерени продукти.",
+    "emptyFiltered": "Няма продукти, които отговарят на филтрите. Опитайте с друго търсене или други филтри."
+  },
+  "searchResults": {
+    "empty": "Няма намерени продукти за „{query}“. Опитайте с друга дума за търсене."
+  },
+  "productCard": {
+    "unavailable": "Не се предлага",
+    "priceOnRequest": "Цена по запитване",
+    "outOfStock": "Изчерпан"
+  },
+  "wishlist": {
+    "add": "Добави в любими",
+    "remove": "Премахни от любими",
+    "added": "Добавено в любими",
+    "removed": "Премахнато от любими",
+    "updateFailed": "Неуспешно обновяване на любимите"
+  },
+  "detail": {
+    "breadcrumb": {
+      "home": "Начало",
+      "products": "Продукти"
+    },
+    "imageAlt": "{name} — снимка {number}",
+    "unavailable": "Не се предлага",
+    "outOfStock": "Изчерпан",
+    "lowStock": "{count, plural, one {Ограничена наличност — остава само # бр.} other {Ограничена наличност — остават само # бр.}}",
+    "inStock": "В наличност",
+    "description": "Описание",
+    "details": "Информация за продукта",
+    "shipping": "Доставка",
+    "physicalProduct": "Физически продукт",
+    "digitalProduct": "Дигитален продукт",
+    "unit": "Мерна единица",
+    "priceOptions": "Ценови варианти",
+    "priceOptionsAvailable": "{count, plural, one {# наличен} other {# налични}}",
+    "features": "Предимства"
+  },
+  "productAddToCart": {
+    "priceOnRequest": "Цена по запитване",
+    "currentlyUnavailable": "В момента не се предлага",
+    "outOfStock": "Изчерпан"
+  },
+  "addToCartButton": {
+    "label": "Добави в количката"
+  },
+  "reviews": {
+    "title": "Отзиви от клиенти",
+    "loading": "Зареждане на отзивите…",
+    "summary": "{rating} ({count, plural, one {# отзив} other {# отзива}})",
+    "writeReview": "Напишете отзив",
+    "alreadyReviewed": "Вече сте оценили този продукт. Изтрийте отзива си по-долу, за да напишете нов.",
+    "signInToReview": "Влезте в профила си и купете продукта, за да оставите отзив.",
+    "purchaseToReview": "Купете продукта, за да оставите отзив."
+  },
+  "reviewForm": {
+    "ratingRequired": "Моля, изберете оценка",
+    "submitted": "Отзивът е изпратен успешно!",
+    "rating": "Оценка",
+    "rateStars": "{count, plural, one {Оцени с # звезда} other {Оцени с # звезди}}",
+    "content": "Отзив (по желание)",
+    "contentPlaceholder": "Споделете мнението си за продукта…",
+    "submitting": "Изпращане…",
+    "submit": "Изпрати отзива"
+  },
+  "reviewList": {
+    "deleted": "Отзивът е изтрит",
+    "empty": "Все още няма отзиви. Напишете първия отзив за този продукт!",
+    "user": "Потребител",
+    "anonymous": "Анонимен",
+    "you": "(вие)",
+    "deleteOwn": "Изтрий отзива ми"
+  },
+  "notFound": {
+    "title": "Продуктът не е намерен",
+    "description": "Продуктът, който търсите, не съществува или е премахнат.",
+    "browseProducts": "Към продуктите"
+  }
+}

@@ -1,17 +1,29 @@
 import { signInWithGoogle } from "@/mutations/auth";
+import { useTranslations } from "next-intl";
 
-const GoogleSignIn: React.FC = () => {
+type Props = {
+  /**
+   * Same-site path to return to after signing in, posted as `redirectTo`
+   * (the field name next-auth's `signIn(provider, formData)` reads).
+   */
+  redirectTo?: string;
+};
+
+const GoogleSignIn: React.FC<Props> = ({ redirectTo }) => {
+  const t = useTranslations("auth.googleSignIn");
+
   return (
     <form action={signInWithGoogle} className="w-full">
+      {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
       <button
-        aria-label="Sign in with Google"
+        aria-label={t("label")}
         type="submit"
         className="flex w-full items-center justify-center rounded-md border border-[#5b5e81] p-0.5 pr-2.5 transition-all hover:bg-[#5b5e81]"
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-l">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5">
-            <title>Sign in with Google</title>
-            <desc>Google G Logo</desc>
+            <title>{t("label")}</title>
+            <desc>{t("logoDescription")}</desc>
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               className="fill-google-logo-blue"
@@ -30,7 +42,7 @@ const GoogleSignIn: React.FC = () => {
             ></path>
           </svg>
         </div>
-        <span className="text-sm tracking-wide text-white">Sign in with Google</span>
+        <span className="text-sm tracking-wide text-white">{t("label")}</span>
       </button>
     </form>
   );

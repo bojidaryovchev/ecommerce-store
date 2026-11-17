@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useTransition } from "react";
 
@@ -42,6 +43,8 @@ function getPageNumbers(page: number, pageCount: number): (number | "ellipsis")[
 }
 
 const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
+  const t = useTranslations("common.pagination");
+  // Plain next/navigation on purpose: this is also used in the admin, which is outside the locale routing.
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -57,6 +60,7 @@ const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
       }
 
       const queryString = params.toString();
+      // Stays on the current path, so a storefront URL keeps its locale prefix (/en/…).
       startTransition(() => {
         router.push(queryString ? `?${queryString}` : window.location.pathname);
       });
@@ -71,14 +75,14 @@ const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
   const pages = getPageNumbers(page, pageCount);
 
   return (
-    <nav aria-label="Pagination" className="mt-8 flex items-center justify-center gap-1">
+    <nav aria-label={t("label")} className="mt-8 flex items-center justify-center gap-1">
       {/* First page */}
       <Button
         variant="ghost"
         size="icon"
         disabled={page <= 1 || isPending}
         onClick={() => navigate(1)}
-        aria-label="First page"
+        aria-label={t("first")}
       >
         <ChevronsLeft className="h-4 w-4" />
       </Button>
@@ -89,7 +93,7 @@ const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
         size="icon"
         disabled={page <= 1 || isPending}
         onClick={() => navigate(page - 1)}
-        aria-label="Previous page"
+        aria-label={t("previous")}
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -107,7 +111,7 @@ const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
             size="icon"
             disabled={isPending}
             onClick={() => navigate(p)}
-            aria-label={`Page ${p}`}
+            aria-label={t("page", { page: p })}
             aria-current={p === page ? "page" : undefined}
           >
             {p}
@@ -121,7 +125,7 @@ const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
         size="icon"
         disabled={page >= pageCount || isPending}
         onClick={() => navigate(page + 1)}
-        aria-label="Next page"
+        aria-label={t("next")}
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
@@ -132,7 +136,7 @@ const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
         size="icon"
         disabled={page >= pageCount || isPending}
         onClick={() => navigate(pageCount)}
-        aria-label="Last page"
+        aria-label={t("last")}
       >
         <ChevronsRight className="h-4 w-4" />
       </Button>

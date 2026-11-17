@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDate } from "@/lib/utils";
 import type { OrderStatusHistoryEntry } from "@/queries/orders";
 import { Clock } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
 import React from "react";
 
 type TimestampFallback = {
@@ -22,12 +22,16 @@ type Props = {
 };
 
 const OrderTimeline: React.FC<Props> = ({ statusHistory, timestamps, showActor = false }) => {
+  const t = useTranslations("orders");
+  const format = useFormatter();
+  const formatDate = (date: Date) => format.dateTime(new Date(date), { dateStyle: "long" });
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5" />
-          Timeline
+          {t("timeline.title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -40,9 +44,11 @@ const OrderTimeline: React.FC<Props> = ({ statusHistory, timestamps, showActor =
                 <div className="bg-primary relative z-10 mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-current" />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium capitalize">{entry.toStatus.replace(/_/g, " ")}</span>
+                    <span className="font-medium">{t(`status.${entry.toStatus}`)}</span>
                     {showActor && entry.fromStatus && (
-                      <span className="text-muted-foreground text-xs">from {entry.fromStatus.replace(/_/g, " ")}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {t("timeline.from", { status: t(`status.${entry.fromStatus}`) })}
+                      </span>
                     )}
                   </div>
                   <div className="text-muted-foreground text-xs">
@@ -64,30 +70,30 @@ const OrderTimeline: React.FC<Props> = ({ statusHistory, timestamps, showActor =
         ) : (
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Ordered</span>
+              <span className="text-muted-foreground">{t("timeline.ordered")}</span>
               <span>{formatDate(timestamps.createdAt)}</span>
             </div>
             {timestamps.paidAt && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Paid</span>
+                <span className="text-muted-foreground">{t("status.paid")}</span>
                 <span>{formatDate(timestamps.paidAt)}</span>
               </div>
             )}
             {timestamps.shippedAt && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipped</span>
+                <span className="text-muted-foreground">{t("status.shipped")}</span>
                 <span>{formatDate(timestamps.shippedAt)}</span>
               </div>
             )}
             {timestamps.deliveredAt && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Delivered</span>
+                <span className="text-muted-foreground">{t("status.delivered")}</span>
                 <span>{formatDate(timestamps.deliveredAt)}</span>
               </div>
             )}
             {timestamps.cancelledAt && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Cancelled</span>
+                <span className="text-muted-foreground">{t("status.cancelled")}</span>
                 <span>{formatDate(timestamps.cancelledAt)}</span>
               </div>
             )}

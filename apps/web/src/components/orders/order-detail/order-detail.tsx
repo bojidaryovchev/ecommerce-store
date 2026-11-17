@@ -4,11 +4,12 @@ import { OrderSummary } from "@/components/orders/order-summary";
 import { OrderTimeline } from "@/components/orders/order-timeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { priceFormat } from "@/i18n/format";
+import { Link } from "@/i18n/navigation";
 import type { OrderStatusHistoryEntry, OrderWithItems } from "@/queries/orders";
 import { ArrowLeft, Package } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 
 type Props = {
@@ -16,6 +17,8 @@ type Props = {
 };
 
 const OrderDetail: React.FC<Props> = ({ order }) => {
+  const t = useTranslations("orders.detail");
+  const format = useFormatter();
   const statusHistory = order.statusHistory ?? [];
 
   return (
@@ -24,15 +27,17 @@ const OrderDetail: React.FC<Props> = ({ order }) => {
         <Button asChild variant="ghost" size="sm">
           <Link href="/account/orders">
             <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to Orders
+            {t("backToOrders")}
           </Link>
         </Button>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Order #{order.id.slice(0, 8).toUpperCase()}</h1>
-          <p className="text-muted-foreground mt-1">Placed on {formatDate(order.createdAt)}</p>
+          <h1 className="text-3xl font-bold">{t("title", { number: order.id.slice(0, 8).toUpperCase() })}</h1>
+          <p className="text-muted-foreground mt-1">
+            {t("placedOn", { date: format.dateTime(new Date(order.createdAt), { dateStyle: "long" }) })}
+          </p>
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
@@ -43,11 +48,9 @@ const OrderDetail: React.FC<Props> = ({ order }) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              Items
+              {t("items")}
             </CardTitle>
-            <CardDescription>
-              {order.items.length} {order.items.length === 1 ? "item" : "items"} in this order
-            </CardDescription>
+            <CardDescription>{t("itemsInOrder", { count: order.items.length })}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="divide-border divide-y">
@@ -75,11 +78,18 @@ const OrderDetail: React.FC<Props> = ({ order }) => {
                           )}
                         </p>
                         <p className="text-muted-foreground text-sm">
-                          Qty: {item.quantity} ×{" "}
-                          {formatCurrency(item.priceSnapshot.unitAmount, item.priceSnapshot.currency)}
+                          {t("quantity", {
+                            quantity: item.quantity,
+                            price: format.number(
+                              item.priceSnapshot.unitAmount / 100,
+                              priceFormat(item.priceSnapshot.currency),
+                            ),
+                          })}
                         </p>
                       </div>
-                      <p className="font-medium">{formatCurrency(item.totalAmount, item.priceSnapshot.currency)}</p>
+                      <p className="font-medium">
+                        {format.number(item.totalAmount / 100, priceFormat(item.priceSnapshot.currency))}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -92,7 +102,7 @@ const OrderDetail: React.FC<Props> = ({ order }) => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Summary</CardTitle>
+              <CardTitle>{t("summary")}</CardTitle>
             </CardHeader>
             <CardContent>
               <OrderSummary
@@ -109,7 +119,7 @@ const OrderDetail: React.FC<Props> = ({ order }) => {
           {order.shippingAddress && (
             <Card>
               <CardHeader>
-                <CardTitle>Shipping Address</CardTitle>
+                <CardTitle>{t("shippingAddress")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <AddressDisplay address={order.shippingAddress} />
@@ -120,7 +130,7 @@ const OrderDetail: React.FC<Props> = ({ order }) => {
           {order.billingAddress && (
             <Card>
               <CardHeader>
-                <CardTitle>Billing Address</CardTitle>
+                <CardTitle>{t("billingAddress")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <AddressDisplay address={order.billingAddress} />

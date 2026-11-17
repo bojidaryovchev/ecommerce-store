@@ -1,0 +1,29 @@
+{
+  "navbar": {
+    "brand": "Ecommerce Store",
+    "toggleMenu": "Toggle menu",
+    "menuTitle": "Navigation",
+    "home": "Home",
+    "products": "Products",
+    "categories": "Categories",
+    "allCategories": "All Categories",
+    "profile": "Profile",
+    "addresses": "Addresses",
+    "wishlist": "Wishlist",
+    "orders": "Orders",
+    "admin": "Admin",
+    "openCart": "Open cart",
+    "signedInAs": "Signed in as",
+    "userAvatarAlt": "User",
+    "userInitialsFallback": "U",
+    "signIn": "Sign In",
+    "signOut": "Sign Out"
+  },
+  "searchBar": {
+    "placeholder": "Search products...",
+    "clear": "Clear search"
+  },
+  "localeSwitcher": {
+    "label": "Language"
+  }
+}

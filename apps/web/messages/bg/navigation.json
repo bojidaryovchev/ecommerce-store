@@ -1,0 +1,29 @@
+{
+  "navbar": {
+    "brand": "Ecommerce Store",
+    "toggleMenu": "Отвори менюто",
+    "menuTitle": "Меню",
+    "home": "Начало",
+    "products": "Продукти",
+    "categories": "Категории",
+    "allCategories": "Всички категории",
+    "profile": "Профил",
+    "addresses": "Адреси",
+    "wishlist": "Любими",
+    "orders": "Поръчки",
+    "admin": "Админ панел",
+    "openCart": "Отвори количката",
+    "signedInAs": "Влезли сте като",
+    "userAvatarAlt": "Потребител",
+    "userInitialsFallback": "П",
+    "signIn": "Вход",
+    "signOut": "Изход"
+  },
+  "searchBar": {
+    "placeholder": "Търси продукти…",
+    "clear": "Изчисти търсенето"
+  },
+  "localeSwitcher": {
+    "label": "Език"
+  }
+}

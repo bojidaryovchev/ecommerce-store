@@ -1,0 +1,49 @@
+{
+  "status": {
+    "pending": "В очакване",
+    "paid": "Платена",
+    "processing": "В обработка",
+    "shipped": "Изпратена",
+    "delivered": "Доставена",
+    "cancelled": "Анулирана",
+    "refunded": "Възстановена сума"
+  },
+  "summary": {
+    "subtotal": "Междинна сума",
+    "shipping": "Доставка",
+    "tax": "ДДС",
+    "discount": "Отстъпка",
+    "total": "Общо"
+  },
+  "timeline": {
+    "title": "История",
+    "from": "от {status}",
+    "ordered": "Поръчана"
+  },
+  "list": {
+    "emptyTitle": "Все още нямате поръчки",
+    "emptyDescription": "Когато направите поръчка, тя ще се появи тук.",
+    "startShopping": "Започни пазаруването",
+    "columns": {
+      "order": "Поръчка",
+      "date": "Дата",
+      "status": "Статус",
+      "items": "Продукти",
+      "total": "Общо"
+    },
+    "number": "№{number}",
+    "itemCount": "{count, plural, one {# продукт} other {# продукта}}",
+    "view": "Преглед"
+  },
+  "detail": {
+    "backToOrders": "Към поръчките",
+    "title": "Поръчка №{number}",
+    "placedOn": "Направена на {date}",
+    "items": "Продукти",
+    "itemsInOrder": "{count, plural, one {# продукт в тази поръчка} other {# продукта в тази поръчка}}",
+    "quantity": "Количество: {quantity} × {price}",
+    "summary": "Обобщение",
+    "shippingAddress": "Адрес за доставка",
+    "billingAddress": "Адрес за фактуриране"
+  }
+}
