@@ -25,4 +25,5 @@ export {
   type SyncRunResult,
   type SyncTrigger,
 } from "./sync/run";
+export { uniqueProductSlug } from "./sync/shared";
 export type { Database } from "./types";

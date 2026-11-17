@@ -1,3 +1,4 @@
+import { productHref } from "@/lib/routes";
 import { SITE_URL } from "@/lib/site-url";
 import { getCategories } from "@/queries/categories";
 import { getProducts } from "@/queries/products";
@@ -28,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     })),
     ...products.map((product) => ({
-      ...page(`/products/${product.id}`, false),
+      ...page(productHref(product), false),
       lastModified: product.updatedAt,
       changeFrequency: "daily" as const,
       priority: 0.6,

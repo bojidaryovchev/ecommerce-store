@@ -33,20 +33,23 @@
       "home": "Начало",
       "products": "Продукти"
     },
-    "imageAlt": "{name} — снимка {number}",
     "unavailable": "Не се предлага",
     "outOfStock": "Изчерпан",
-    "lowStock": "{count, plural, one {Ограничена наличност — остава само # бр.} other {Ограничена наличност — остават само # бр.}}",
     "inStock": "В наличност",
     "description": "Описание",
-    "details": "Информация за продукта",
-    "shipping": "Доставка",
-    "physicalProduct": "Физически продукт",
-    "digitalProduct": "Дигитален продукт",
-    "unit": "Мерна единица",
-    "priceOptions": "Ценови варианти",
-    "priceOptionsAvailable": "{count, plural, one {# наличен} other {# налични}}",
-    "features": "Предимства"
+    "brand": "Марка",
+    "vatIncluded": "Цената е с включен ДДС.",
+    "priceOnRequest": "Цена по запитване",
+    "specifications": "Характеристики",
+    "similar": "Подобни продукти",
+    "gallery": {
+      "zoom": "Увеличи снимката",
+      "alt": "{name} — снимка {number}",
+      "show": "Покажи снимка {number}",
+      "previous": "Предишна снимка",
+      "next": "Следваща снимка",
+      "position": "Снимка {current} от {total}"
+    }
   },
   "productAddToCart": {
     "priceOnRequest": "Цена по запитване",

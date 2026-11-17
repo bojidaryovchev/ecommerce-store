@@ -33,20 +33,23 @@
       "home": "Home",
       "products": "Products"
     },
-    "imageAlt": "{name} image {number}",
     "unavailable": "Unavailable",
     "outOfStock": "Out of stock",
-    "lowStock": "Low stock — only {count} left",
     "inStock": "In stock",
     "description": "Description",
-    "details": "Product details",
-    "shipping": "Shipping",
-    "physicalProduct": "Physical product",
-    "digitalProduct": "Digital product",
-    "unit": "Unit",
-    "priceOptions": "Price options",
-    "priceOptionsAvailable": "{count} available",
-    "features": "Features"
+    "brand": "Brand",
+    "vatIncluded": "Price includes VAT.",
+    "priceOnRequest": "Price on request",
+    "specifications": "Specifications",
+    "similar": "Similar products",
+    "gallery": {
+      "zoom": "Zoom in",
+      "alt": "{name} — photo {number}",
+      "show": "Show photo {number}",
+      "previous": "Previous photo",
+      "next": "Next photo",
+      "position": "Photo {current} of {total}"
+    }
   },
   "productAddToCart": {
     "priceOnRequest": "Price on request",

@@ -3,6 +3,8 @@ export { getCatalogFacets, type CatalogFacets, type RangeFacet, type ValueFacet 
 export { getCatalogPage } from "./get-catalog-page.query";
 export { getFeaturedProducts } from "./get-featured-products.query";
 export { getProductById } from "./get-product-by-id.query";
+export { getProductBySlug } from "./get-product-by-slug.query";
 export { getProductsByCategoryId } from "./get-products-by-category-id.query";
 export { getProducts } from "./get-products.query";
+export { getSimilarProducts } from "./get-similar-products.query";
 export { searchProducts } from "./search-products.query";

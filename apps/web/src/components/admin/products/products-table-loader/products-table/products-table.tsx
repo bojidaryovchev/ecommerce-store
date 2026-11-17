@@ -13,6 +13,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDisclosure } from "@/hooks/use-disclosure";
+import { productHref } from "@/lib/routes";
 import { formatCurrency } from "@/lib/utils";
 import { deleteProduct, restoreProduct } from "@/mutations/products";
 import type { ProductWithPricesAndCategory } from "@/types/product.type";
@@ -178,7 +179,7 @@ const ProductsTable: React.FC<Props> = ({ products }) => {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button asChild size="sm" variant="ghost">
-                          <Link href={`/products/${product.id}`} target="_blank">
+                          <Link href={productHref(product)} target="_blank">
                             View
                           </Link>
                         </Button>

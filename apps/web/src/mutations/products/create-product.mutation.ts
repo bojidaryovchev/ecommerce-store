@@ -6,6 +6,7 @@ import { linkUploads } from "@/mutations/uploads";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Product } from "@ecommerce/database";
 import { db, insertProductSchema, schema } from "@ecommerce/database";
+import { uniqueProductSlug } from "@ecommerce/supplier-sync";
 import { revalidateTag } from "next/cache";
 
 /**
@@ -19,7 +20,11 @@ async function createProduct(
 
     const validated = insertProductSchema.parse(data);
 
-    const [product] = await db.insert(schema.products).values(validated).returning();
+    const slug = validated.slug || (await uniqueProductSlug(db, validated.name));
+    const [product] = await db
+      .insert(schema.products)
+      .values({ ...validated, slug })
+      .returning();
 
     // Link the uploaded images if present
     if (product.images && product.images.length > 0) {

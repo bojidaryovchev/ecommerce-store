@@ -7,11 +7,12 @@ import {
   type SyncRunError,
   type SyncRunStats,
 } from "@ecommerce/database/schema";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, like, or } from "drizzle-orm";
 import type { ImageStore } from "../images";
 import type { Logger } from "../logger";
 import type { NormalizedAttribute } from "../normalize/product";
 import { normalizeWooProduct, type NormalizedProduct } from "../normalize/product";
+import { slugify } from "../normalize/transliterate";
 import type { Database, DbExecutor } from "../types";
 import { wooProductSchema } from "../woocommerce/schemas";
 
@@ -274,4 +275,23 @@ export async function dismissOpenPriceChanges(tx: DbExecutor, supplierProductId:
         eq(syncChanges.status, "pending"),
       ),
     );
+}
+
+/**
+ * A free URL slug for a product named `name`: "Пелетна камина ARTEL" → "peletna-kamina-artel",
+ * or "…-2", "…-3" when taken. Slugs never change afterwards, so product URLs stay stable.
+ */
+export async function uniqueProductSlug(db: DbExecutor, name: string): Promise<string> {
+  const base = slugify(name) || "product";
+  const taken = new Set(
+    (
+      await db
+        .select({ slug: products.slug })
+        .from(products)
+        .where(or(eq(products.slug, base), like(products.slug, `${base}-%`)))
+    ).map((row) => row.slug),
+  );
+  let slug = base;
+  for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
+  return slug;
 }

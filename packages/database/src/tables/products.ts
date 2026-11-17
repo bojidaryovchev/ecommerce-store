@@ -12,6 +12,8 @@ export const products = pgTable(
     stripeProductId: text("stripe_product_id").unique(),
     object: text("object").default("product"),
     name: text("name").notNull(),
+    /** URL slug for /produkt/{slug}: transliterated from the name once, then stable. */
+    slug: text("slug").unique(),
     description: text("description"),
     active: boolean("active").default(true).notNull(),
     images: text("images").array().notNull().default([]),

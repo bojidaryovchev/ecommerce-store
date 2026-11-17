@@ -12,6 +12,7 @@ import {
   resolveCategoryId,
   setProductPrice,
   stockFields,
+  uniqueProductSlug,
   writeSupplierAttributeValues,
   type SyncContext,
 } from "./shared";
@@ -57,6 +58,7 @@ export async function createFromSupplier(ctx: SyncContext, item: FetchedProduct,
       .insert(products)
       .values({
         name: p.name,
+        slug: await uniqueProductSlug(tx, p.name),
         description: p.description,
         images,
         categoryId,

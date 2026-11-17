@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-context";
 import { priceFormat } from "@/i18n/format";
 import { Link } from "@/i18n/navigation";
+import { productHref } from "@/lib/routes";
 import type { CartItemWithProduct } from "@/types/cart.type";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useFormatter } from "next-intl";
@@ -42,7 +43,7 @@ const CartItem: React.FC<Props> = ({ item }) => {
   return (
     <div className="flex gap-4 py-4">
       {/* Product Image */}
-      <Link href={`/products/${item.product.id}`} className="shrink-0">
+      <Link href={productHref(item.product)} className="shrink-0">
         <div className="bg-muted h-20 w-20 overflow-hidden rounded-lg">
           {productImage ? (
             <Image
@@ -63,7 +64,7 @@ const CartItem: React.FC<Props> = ({ item }) => {
       {/* Product Details */}
       <div className="flex flex-1 flex-col justify-between">
         <div className="space-y-1">
-          <Link href={`/products/${item.product.id}`}>
+          <Link href={productHref(item.product)}>
             <h4 className="line-clamp-1 text-sm font-medium hover:underline">{item.product.name}</h4>
           </Link>
           <p className="text-muted-foreground text-sm">{formatPrice(unitAmount)}</p>

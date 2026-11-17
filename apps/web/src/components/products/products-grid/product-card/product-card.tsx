@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { priceFormat } from "@/i18n/format";
 import { Link } from "@/i18n/navigation";
+import { productHref } from "@/lib/routes";
 import type { ProductWithPrices } from "@/types/product.type";
 import { useFormatter, useTranslations } from "next-intl";
 import Image from "next/image";
@@ -22,7 +23,7 @@ const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted 
   const isOutOfStock = product.trackInventory && (product.stockQuantity ?? 0) <= 0;
 
   return (
-    <Link href={`/products/${product.id}`}>
+    <Link href={productHref(product)}>
       <Card className="h-full cursor-pointer transition-transform hover:scale-105">
         <CardContent className="relative overflow-hidden p-0">
           {isWishlisted !== undefined && <WishlistButton productId={product.id} isWishlisted={isWishlisted} />}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { priceFormat } from "@/i18n/format";
 import { Link } from "@/i18n/navigation";
+import { productHref } from "@/lib/routes";
 import type { OrderStatusHistoryEntry, OrderWithItems } from "@/queries/orders";
 import { ArrowLeft, Package } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
@@ -70,7 +71,7 @@ const OrderDetail: React.FC<Props> = ({ order }) => {
                       <div>
                         <p className="font-medium">
                           {item.product ? (
-                            <Link href={`/products/${item.product.id}`} className="hover:underline">
+                            <Link href={productHref(item.product)} className="hover:underline">
                               {item.productSnapshot.name}
                             </Link>
                           ) : (

@@ -1,5 +1,6 @@
 import Providers from "@/components/providers";
 import { routing } from "@/i18n/routing";
+import { SITE_URL } from "@/lib/site-url";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -20,8 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: "metadata" });
 
   return {
+    metadataBase: new URL(SITE_URL),
     title: { default: t("siteTitle"), template: `%s | ${t("siteTitle")}` },
     description: t("siteDescription"),
+    openGraph: { siteName: t("siteTitle"), locale: locale === "bg" ? "bg_BG" : "en_GB", type: "website" },
   };
 }
 
