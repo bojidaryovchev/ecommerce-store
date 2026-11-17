@@ -61,6 +61,18 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 - **Caching** — `"use cache"` + `cacheTag()` / `revalidateTag()` across all queries
 - **Auth middleware** — route protection via `proxy.ts`, role-based admin guards
 
+## Languages
+
+The storefront is Bulgarian first: Bulgarian pages live at the root (`/products`) and English under `/en` (`/en/products`). The admin is English-only at `/admin`. Translations use [next-intl](https://next-intl.dev):
+
+- UI text lives in `apps/web/messages/<locale>/<area>.json` (`bg` and `en` must have the same keys). Areas are listed in `apps/web/src/i18n/messages.ts`.
+- Client components: `useTranslations("area.component")`. Server components: `await getTranslations("area.component")`.
+- Pages and layouts under `src/app/[locale]` call `setRequestLocale(locale)` so they can be prerendered.
+- Use `Link`, `useRouter`, `usePathname` and `redirect` from `@/i18n/navigation` (they keep the `/en` prefix), and format prices with `format.number(cents / 100, priceFormat(currency))` from `next-intl` + `@/i18n/format`.
+- Product, category and brand names come from the database in Bulgarian and are not translated.
+
+Search matches product names, brands and categories in either alphabet ("kamina" finds "камина") and tolerates typos and plural forms (Postgres `pg_trgm` + `bg_translit`, migration 0009).
+
 ## Project Structure
 
 ```

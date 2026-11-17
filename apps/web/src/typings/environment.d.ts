@@ -28,5 +28,13 @@ declare namespace NodeJS {
     // Email (Resend)
     RESEND_API_KEY: string;
     EMAIL_FROM: string;
+
+    // Public origin for sitemap, robots and absolute URLs, e.g. https://example.bg (see lib/site-url.ts)
+    NEXT_PUBLIC_SITE_URL?: string;
+    // Set by Vercel
+    VERCEL_PROJECT_PRODUCTION_URL?: string;
+
+    // Supplier sync: Bearer secret for POST /api/supplier-sync
+    SUPPLIER_SYNC_SECRET?: string;
   }
 }
