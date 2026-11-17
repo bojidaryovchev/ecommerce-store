@@ -33,8 +33,6 @@ export const subscriptions = pgTable("subscription", {
   }>(),
   billingCycleAnchor: timestamp("billing_cycle_anchor", { mode: "date" }),
   collectionMethod: subscriptionCollectionMethodEnum("collection_method").default("charge_automatically"),
-  currentPeriodStart: timestamp("current_period_start", { mode: "date" }),
-  currentPeriodEnd: timestamp("current_period_end", { mode: "date" }),
   trialStart: timestamp("trial_start", { mode: "date" }),
   trialEnd: timestamp("trial_end", { mode: "date" }),
   canceledAt: timestamp("canceled_at", { mode: "date" }),
@@ -117,6 +115,9 @@ export const subscriptions = pgTable("subscription", {
     };
   }>(),
   livemode: boolean("livemode").default(false).notNull(),
+  billingSchedules: jsonb("billing_schedules").$type<Array<Record<string, unknown>>>(),
+  managedPayments: jsonb("managed_payments").$type<Record<string, unknown>>(),
+  statusDetails: jsonb("status_details").$type<Record<string, unknown>>(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

@@ -92,15 +92,6 @@ export const customers = pgTable("customer", {
   }>(),
   taxExempt: customerTaxExemptEnum("tax_exempt").default("none"),
   testClockId: text("test_clock_id"),
-  // Connect Platform fields
-  application: text("application"),
-  applicationFeePercent: text("application_fee_percent"),
-  onBehalfOf: text("on_behalf_of"),
-  // Multi-party fields
-  accountCountry: text("account_country"),
-  accountName: text("account_name"),
-  // Additional fields
-  defaultTaxRates: text("default_tax_rates").array(),
   taxIds: text("tax_ids").array(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),

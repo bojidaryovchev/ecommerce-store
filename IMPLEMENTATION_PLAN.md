@@ -31,7 +31,7 @@ ecommerce-store/
 
 ### Database (packages/database)
 
-Full Stripe 1:1 parity — 25 Stripe entities mirrored with all fields, enums, and relations:
+Full Stripe 1:1 parity — 25 Stripe entities mirrored with all fields, enums, and relations (re-verified against API `2026-10-28.endive` on 2026-11-17; see `docs/stripe-full-parity.md` and migration `0007`):
 
 | Stripe Entity      | Table                 | Status |
 | ------------------ | --------------------- | ------ |
@@ -149,7 +149,7 @@ Protected by middleware (ADMIN/SUPER_ADMIN roles only). Sidebar layout.
 | ------------------- | ------------------------------------------- |
 | S3 Bucket           | Product/category images (public read)       |
 | IAM User + Policy   | App ↔ S3 access credentials                 |
-| Lambda (Node.js 20) | Calls cleanup API to purge orphaned uploads |
+| Lambda (Node.js 24) | Calls cleanup API to purge orphaned uploads |
 | EventBridge Rule    | Daily cron trigger for cleanup Lambda       |
 | CORS Configuration  | Allows uploads from app origin              |
 
@@ -313,7 +313,7 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 
 **5.1 Email Service** ✅ Completed
 
-- Integrated **Resend** (`resend@6.9.2`) with `@react-email/components` for templated transactional emails
+- Integrated **Resend** (now `resend@6.38.1`) with `react-email` components (moved from the deprecated `@react-email/components` on 2026-11-17) for templated transactional emails
 - Created `src/lib/email.ts` — `sendEmail()` helper with lazy Resend client init. Gracefully skips if `RESEND_API_KEY` is not set (safe for local dev)
 - Added `RESEND_API_KEY` and `EMAIL_FROM` to `environment.d.ts`
 - Three React Email templates in `src/emails/`:
@@ -344,7 +344,7 @@ The core flow (browse → cart → pay → track) is broken after payment. Fix i
 - Admin coupon management (`/admin/coupons`): create (percent/amount off, duration, max redemptions), edit (name only — Stripe limitation), delete (cascade to promo codes)
 - Admin promotion code management (`/admin/promotions`): create (code, coupon link, max redemptions, minimum amount, first-time-only), activate/deactivate toggle, delete (deactivates in Stripe)
 - All operations sync to Stripe in real-time — coupons and promo codes exist in both DB and Stripe
-- Stripe API: uses `promotion: { type: 'coupon', coupon: stripeCouponId }` for promo code creation (SDK v20.3.1)
+- Stripe API: uses `promotion: { type: 'coupon', coupon: stripeCouponId }` for promo code creation (stripe-node v23.1.0, API `2026-10-28.endive`)
 - Cache: `coupons`, `coupon:{id}`, `promotion-codes`, `promotion-code:{id}` tags with proper invalidation
 - See `docs/promotion-codes.md` for full documentation
 

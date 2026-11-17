@@ -2,3 +2,22 @@ packages:
   - "apps/*"
   - "packages/*"
   - "infra"
+
+# pnpm 11+ reads its settings only from this file (the package.json "pnpm" field is ignored,
+# and .npmrc is used only for auth/registry). pnpm 11+ also refuses to run dependency
+# install scripts that are not listed here (strictDepBuilds) and skips releases younger
+# than 24h (minimumReleaseAge: 1440, the default).
+allowBuilds:
+  esbuild: true # native binary check for tsx / drizzle-kit
+  unrs-resolver: true # native resolver used by eslint-import-resolver-typescript (eslint-config-next)
+  protobufjs: false # pulled in by @pulumi/pulumi; its postinstall is not needed
+
+overrides:
+  # Keep one @auth/core shared by next-auth@5.0.0-beta.32 and @auth/drizzle-adapter (both pin 0.41.3);
+  # two copies cause adapter type mismatches. Bump together with next-auth.
+  "@auth/core": "0.41.3"
+  # Dev-tooling security patches (remove once the parents ship fixed ranges):
+  # GHSA-g3hv-75wg-m249 (minimatch <11.0.1) via typescript-eslint 8.72 (8.73 bumps it, but is <24h old today).
+  "@typescript-eslint/typescript-estree>minimatch": "11.0.2"
+  # GHSA-67mh-4wv8-2f99 (esbuild <=0.24.2) via drizzle-kit > @esbuild-kit/core-utils (pins esbuild ~0.18).
+  "@esbuild-kit/core-utils>esbuild": "0.25.12"

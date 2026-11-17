@@ -3,7 +3,9 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    // TypeScript 6 no longer auto-includes every @types/* package (`types` defaults to []).
+    "types": ["node"]
   },
   "exclude": ["node_modules"]
 }

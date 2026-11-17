@@ -1,5 +1,5 @@
-import { Body, Container, Head, Heading, Hr, Html, Preview, Text } from "@react-email/components";
 import React from "react";
+import { Body, Container, Head, Heading, Hr, Html, Preview, Text } from "react-email";
 
 type OrderShippedEmailProps = {
   orderId: string;

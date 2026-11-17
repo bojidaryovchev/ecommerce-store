@@ -130,7 +130,7 @@ Unlinks all uploads from an entity (marks as pending for cleanup).
 
 #### Lambda Function
 
-- **Runtime:** Node.js 20.x
+- **Runtime:** Node.js 24.x (`nodejs24.x`; `nodejs20.x` was deprecated by AWS on 2026-04-30)
 - **Handler:** `upload-cleanup.handler`
 - **Timeout:** 60 seconds
 - **Memory:** 256 MB

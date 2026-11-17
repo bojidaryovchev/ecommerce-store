@@ -98,7 +98,7 @@ The checkout route (`/api/checkout`) passes `allow_promotion_codes: true` to `st
 
 ### Creating Promotion Codes
 
-The Stripe SDK (v20.3.1, API version `2026-01-28.clover`) uses a nested `promotion` parameter:
+The Stripe SDK (v23.1.0, API version `2026-10-28.endive`) uses a nested `promotion` parameter:
 
 ```typescript
 await stripe.promotionCodes.create({

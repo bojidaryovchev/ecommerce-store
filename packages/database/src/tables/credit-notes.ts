@@ -2,7 +2,6 @@ import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/p
 import { creditNoteReasonEnum, creditNoteStatusEnum, creditNoteTypeEnum } from "../enums";
 import { customers } from "./customers";
 import { invoices } from "./invoices";
-import { refunds } from "./refunds";
 
 export const creditNotes = pgTable("credit_note", {
   id: text("id")
@@ -14,7 +13,6 @@ export const creditNotes = pgTable("credit_note", {
   invoiceId: text("invoice_id")
     .notNull()
     .references(() => invoices.id, { onDelete: "cascade" }),
-  refundId: text("refund_id").references(() => refunds.id, { onDelete: "set null" }),
   amount: integer("amount").notNull(),
   amountShipping: integer("amount_shipping").default(0),
   currency: text("currency").notNull(),
@@ -79,19 +77,17 @@ export const creditNotes = pgTable("credit_note", {
   status: creditNoteStatusEnum("status").notNull(),
   subtotal: integer("subtotal").notNull(),
   subtotalExcludingTax: integer("subtotal_excluding_tax"),
-  taxAmounts: jsonb("tax_amounts").$type<
-    Array<{
-      amount?: number;
-      inclusive?: boolean;
-      taxRate?: string;
-      taxabilityReason?: string;
-    }>
-  >(),
   total: integer("total").notNull(),
   totalExcludingTax: integer("total_excluding_tax"),
   type: creditNoteTypeEnum("type").notNull(),
   voidedAt: timestamp("voided_at", { mode: "date" }),
   livemode: boolean("livemode").default(false).notNull(),
+  customerAccount: text("customer_account"),
+  postPaymentAmount: integer("post_payment_amount").default(0).notNull(),
+  prePaymentAmount: integer("pre_payment_amount").default(0).notNull(),
+  pretaxCreditAmounts: jsonb("pretax_credit_amounts").$type<Array<Record<string, unknown>>>(),
+  refunds: jsonb("refunds").$type<Array<{ amountRefunded?: number; refund?: string }>>(),
+  totalTaxes: jsonb("total_taxes").$type<Array<Record<string, unknown>>>(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

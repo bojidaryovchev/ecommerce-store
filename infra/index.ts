@@ -121,7 +121,7 @@ new aws.iam.RolePolicyAttachment("cleanup-lambda-basic-execution", {
 // Lambda function for cleanup
 const cleanupLambda = new aws.lambda.Function("cleanup-lambda", {
   name: `ecommerce-upload-cleanup-${stack}`,
-  runtime: "nodejs20.x",
+  runtime: "nodejs24.x", // nodejs20.x was deprecated by AWS on 2026-04-30
   handler: "upload-cleanup.handler",
   role: cleanupLambdaRole.arn,
   timeout: 60, // 1 minute timeout

@@ -1,6 +1,43 @@
 # Stripe Complete Data Model
 
-This document provides a comprehensive overview of Stripe's data model with 1:1 parity based on their official API documentation (as of February 2026).
+This document provides a comprehensive overview of Stripe's data model with 1:1 parity based on their official API documentation (as of 17 November 2026, API version `2026-10-28.endive`, verified programmatically against Stripe's OpenAPI spec release `v2600`).
+
+## Revision 2026-11-17: `2026-01-28.clover` → `2026-10-28.endive`
+
+The app now pins `apiVersion: "2026-10-28.endive"` (stripe-node 23.1.0). The Drizzle mirror in `packages/database` was diffed field-by-field against `spec3.sdk.json` from [stripe/openapi v2600](https://github.com/stripe/openapi/releases/tag/v2600) and migrated in `packages/database/drizzle/0007_stripe_api_2026_10_28_endive.sql`.
+
+API changes since the previous revision that touch the mirrored objects:
+
+- `2026-03-25.dahlia`: Checkout Session `ui_mode` values renamed (`hosted` → `hosted_page`, `embedded` → `embedded_page`, `custom` → `elements`, new `form`).
+- `2026-09-30.endive`: `payment_method_types` removed as a **request parameter** on Checkout Sessions, PaymentIntents and SetupIntents (use dynamic payment methods / `excluded_payment_method_types`); objects now expose `allowed_payment_method_types`.
+- Fields removed from objects in `2025-03-31.basil` that the old mirror still carried were dropped (e.g. `invoice.payment_intent`, `payment_intent.invoice`, `subscription.current_period_*`, line item `type`/`proration`/`tax_rates`/`subscription_item`, credit note `refund`/`tax_amounts`).
+
+Diagram field changes in this revision:
+
+| Entity           | Added                                                                          | Removed                                      |
+| ---------------- | ------------------------------------------------------------------------------ | -------------------------------------------- |
+| Product          | `tax_details`, `type`                                                          | —                                            |
+| PaymentIntent    | `allowed_payment_method_types`, `managed_payments`, `payment_record`, `source` | —                                            |
+| Charge           | `authorization_code`, `level3`, `source`                                       | —                                            |
+| PaymentMethod    | `bizum`, `customer_account`, `scalapay`, `sequra`, `sunbit`, `upi`             | —                                            |
+| Refund           | `customer`, `customer_account`, `payment_method`, `presentment_details`        | —                                            |
+| Dispute          | `intended_submission_method`, `network_reason_code`                            | —                                            |
+| Subscription     | `billing_schedules`, `managed_payments`, `status_details`                      | `current_period_end`, `current_period_start` |
+| SubscriptionItem | `billed_until`, `current_trial`, `plan`                                        | —                                            |
+| Invoice          | `amount_paid_off_stripe`, `status_details`, `subscription`                     | —                                            |
+| InvoiceLineItem  | `quantity_decimal`, `subscription`                                             | —                                            |
+| InvoiceItem      | `frozen_fields`, `invoicing_rules`, `quantity_decimal`                         | —                                            |
+| CheckoutSession  | `allowed_payment_method_types`, `integration_identifier`, `managed_payments`   | —                                            |
+
+Enum changes:
+
+- PaymentMethod Type (59 payment methods): added `bizum`, `scalapay`, `sequra`, `sunbit`, `upi`
+- Dispute Status (10 states): added `appeal_needs_response`, `appeal_under_review`
+- BalanceTransaction Type (52 transaction types): added `fee_credit_funding`, `inbound_transfer`, `inbound_transfer_reversal`, `issuing_dispute_provisional_credit`, `issuing_dispute_provisional_credit_reversal`, `payout_minimum_balance_hold`, `payout_minimum_balance_release`, `reserve_hold`, `reserve_release`, `stripe_balance_payment_debit`, `stripe_balance_payment_debit_reversal`, `tax_fund`
+- TaxId Type: the list is now complete from the spec (136 values; the previous revision listed 27). The database enum `tax_id_type` gained 66 values it was missing.
+- CheckoutSession UI Mode: renamed as above
+
+Local (non-Stripe) columns kept on purpose in the database mirror: `product.category_id`, `product.track_inventory`, `product.stock_quantity`, `refund.order_id`, `promotion_code.coupon_id`, `discount.coupon_id` (derived from `promotion.coupon` / `source.coupon`), plus `id`, `stripe_*_id`, `created_at`, `updated_at` on every table.
 
 ## Data Model Diagram
 
@@ -69,6 +106,8 @@ erDiagram
         object package_dimensions "NULLABLE"
         string unit_label "NULLABLE"
         string url "NULLABLE"
+        object tax_details "NULLABLE"
+        enum type "NOT NULL"
     }
 
     Price ||--o{ SubscriptionItem : "used_in"
@@ -144,6 +183,10 @@ erDiagram
         string statement_descriptor_suffix "NULLABLE"
         object transfer_data "NULLABLE, Connect only"
         string transfer_group "NULLABLE, Connect only"
+        array allowed_payment_method_types "NULLABLE"
+        object managed_payments "NULLABLE"
+        string payment_record "NULLABLE, FK, Expandable"
+        string source "NULLABLE, FK, Expandable"
     }
 
     Charge ||--o| Refund : "refunded_by"
@@ -195,6 +238,9 @@ erDiagram
         string transfer "NULLABLE, FK, Expandable, Connect only"
         object transfer_data "NULLABLE, Connect only"
         string transfer_group "NULLABLE, Connect only"
+        string authorization_code "NULLABLE"
+        object level3 "NULLABLE"
+        object source "NULLABLE"
     }
 
     PaymentMethod ||--o{ PaymentIntent : "used_in"
@@ -263,6 +309,12 @@ erDiagram
         object us_bank_account "NULLABLE"
         object wechat_pay "NULLABLE"
         object zip "NULLABLE"
+        object bizum "NULLABLE"
+        string customer_account "NULLABLE"
+        object scalapay "NULLABLE"
+        object sequra "NULLABLE"
+        object sunbit "NULLABLE"
+        object upi "NULLABLE"
     }
 
     %% Refunds & Disputes
@@ -288,6 +340,10 @@ erDiagram
         string source_transfer_reversal "NULLABLE, FK, Expandable, Connect only"
         enum status "NULLABLE"
         string transfer_reversal "NULLABLE, FK, Expandable, Connect only"
+        string customer "NULLABLE, FK, Expandable"
+        string customer_account "NULLABLE"
+        string payment_method "NULLABLE, FK, Expandable"
+        object presentment_details "NULLABLE"
     }
 
     Dispute {
@@ -308,6 +364,8 @@ erDiagram
         object payment_method_details "NULLABLE"
         enum reason "NOT NULL"
         enum status "NOT NULL"
+        enum intended_submission_method "NULLABLE"
+        string network_reason_code "NULLABLE"
     }
 
     %% Subscriptions & Billing
@@ -330,8 +388,6 @@ erDiagram
         enum collection_method "NOT NULL"
         timestamp created "NOT NULL"
         enum currency "NOT NULL"
-        timestamp current_period_end "NOT NULL"
-        timestamp current_period_start "NOT NULL"
         string customer "NOT NULL, FK, Expandable"
         string customer_account "NULLABLE"
         integer days_until_due "NULLABLE"
@@ -362,6 +418,9 @@ erDiagram
         timestamp trial_end "NULLABLE"
         object trial_settings "NULLABLE"
         timestamp trial_start "NULLABLE"
+        array billing_schedules "NOT NULL"
+        object managed_payments "NULLABLE"
+        object status_details "NULLABLE"
     }
 
     SubscriptionItem {
@@ -377,6 +436,9 @@ erDiagram
         integer quantity "NULLABLE"
         string subscription "NOT NULL, FK"
         array tax_rates "NULLABLE"
+        timestamp billed_until "NULLABLE"
+        object current_trial "NULLABLE"
+        object plan "NOT NULL"
     }
 
     %% Invoices
@@ -460,6 +522,9 @@ erDiagram
         array total_pretax_credit_amounts "NULLABLE"
         array total_taxes "NULLABLE"
         timestamp webhooks_delivered_at "NULLABLE"
+        integer amount_paid_off_stripe "NULLABLE"
+        object status_details "NULLABLE"
+        string subscription "NULLABLE, FK, Expandable"
     }
 
     InvoiceLineItem {
@@ -481,6 +546,8 @@ erDiagram
         integer quantity "NULLABLE"
         integer subtotal "NOT NULL"
         array taxes "NULLABLE"
+        string quantity_decimal "NULLABLE, decimal string"
+        string subscription "NULLABLE, FK, Expandable"
     }
 
     InvoiceItem ||--o| InvoiceLineItem : "becomes"
@@ -507,6 +574,9 @@ erDiagram
         integer quantity "NOT NULL"
         array tax_rates "NULLABLE"
         string test_clock "NULLABLE, FK, Expandable"
+        array frozen_fields "NULLABLE"
+        array invoicing_rules "NULLABLE"
+        string quantity_decimal "NOT NULL, decimal string"
     }
 
     %% Discounts & Coupons
@@ -619,6 +689,9 @@ erDiagram
         enum ui_mode "NULLABLE"
         string url "NULLABLE"
         object wallet_options "NULLABLE"
+        array allowed_payment_method_types "NULLABLE"
+        string integration_identifier "NULLABLE"
+        object managed_payments "NULLABLE"
     }
 
     %% Shipping
@@ -916,9 +989,8 @@ flowchart LR
 - `canceled`
 - `succeeded`
 
-### PaymentMethod Type (50+ payment methods globally)
+### PaymentMethod Type (59 payment methods)
 
-- `card` - Credit/debit cards
 - `acss_debit` - Pre-authorized debit in Canada
 - `affirm` - Buy now, pay later (US)
 - `afterpay_clearpay` - Buy now, pay later
@@ -929,8 +1001,10 @@ flowchart LR
 - `bacs_debit` - BACS Direct Debit (UK)
 - `bancontact` - Bancontact (Belgium)
 - `billie` - B2B buy now, pay later (Germany)
+- `bizum` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `blik` - BLIK (Poland)
 - `boleto` - Boleto (Brazil)
+- `card` - Credit/debit cards
 - `card_present` - In-person card payments
 - `cashapp` - Cash App Pay
 - `crypto` - Cryptocurrency payments
@@ -965,10 +1039,14 @@ flowchart LR
 - `revolut_pay` - Revolut Pay
 - `samsung_pay` - Samsung Pay
 - `satispay` - Satispay (Italy)
+- `scalapay` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `sepa_debit` - SEPA Direct Debit (Europe)
+- `sequra` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `sofort` - Sofort (Europe)
+- `sunbit` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `swish` - Swish (Sweden)
 - `twint` - TWINT (Switzerland)
+- `upi` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `us_bank_account` - ACH Direct Debit (US)
 - `wechat_pay` - WeChat Pay
 - `zip` - Zip buy now, pay later
@@ -1024,9 +1102,12 @@ flowchart LR
 
 ### CheckoutSession UI Mode
 
-- `hosted` - Hosted on Stripe's domain (default)
-- `embedded` - Embedded form on your website
-- `custom` - Custom integration with embedded components
+Renamed in API version `2026-03-25.dahlia`.
+
+- `elements` - Your own UI built with Elements on a Checkout Session (was `custom`)
+- `embedded_page` - Embedded Checkout page on your website (was `embedded`)
+- `form` - Form mode (added in 2026-03-25.dahlia)
+- `hosted_page` - Hosted on Stripe's domain (default; was `hosted`)
 
 ### Charge Status
 
@@ -1049,8 +1130,10 @@ flowchart LR
 - `requested_by_customer` - Customer requested refund
 - `expired_uncaptured_charge` - Charge expired before capture
 
-### Dispute Status (8 states)
+### Dispute Status (10 states)
 
+- `appeal_needs_response` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `appeal_under_review` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `lost` - Dispute was lost
 - `needs_response` - Evidence needed
 - `prevented` - Dispute prevented by Stripe Radar
@@ -1078,7 +1161,7 @@ flowchart LR
 - `subscription_canceled` - Subscription canceled
 - `unrecognized` - Unrecognized charge
 
-### BalanceTransaction Type (46+ transaction types)
+### BalanceTransaction Type (52 transaction types)
 
 - `adjustment` - Balance adjustment
 - `advance` - Advance payment
@@ -1091,9 +1174,14 @@ flowchart LR
 - `climate_order_refund` - Climate order refund
 - `connect_collection_transfer` - Connect collection transfer
 - `contribution` - Contribution
+- `fee_credit_funding` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `inbound_transfer` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `inbound_transfer_reversal` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `issuing_authorization_hold` - Issuing authorization hold
 - `issuing_authorization_release` - Issuing authorization release
 - `issuing_dispute` - Issuing dispute
+- `issuing_dispute_provisional_credit` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `issuing_dispute_provisional_credit_reversal` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `issuing_transaction` - Issuing transaction
 - `obligation_outbound` - Obligation outbound
 - `obligation_reversal_inbound` - Obligation reversal inbound
@@ -1107,13 +1195,20 @@ flowchart LR
 - `payout` - Payout
 - `payout_cancel` - Payout canceled
 - `payout_failure` - Payout failure
+- `payout_minimum_balance_hold` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `payout_minimum_balance_release` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `refund` - Refund
 - `refund_failure` - Refund failure
+- `reserve_hold` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `reserve_release` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `reserve_transaction` - Reserve transaction
 - `reserved_funds` - Reserved funds
+- `stripe_balance_payment_debit` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `stripe_balance_payment_debit_reversal` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `stripe_fee` - Stripe fee
 - `stripe_fx_fee` - Stripe FX fee
 - `tax_fee` - Tax fee
+- `tax_fund` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `topup` - Top-up
 - `topup_reversal` - Top-up reversal
 - `transfer` - Transfer
@@ -1127,36 +1222,144 @@ flowchart LR
 - `exempt` - Tax exempt
 - `reverse` - Reverse charge
 
-### TaxId Type (112+ country-specific tax ID formats)
+### TaxId Type (136 country-specific tax ID formats)
 
 - `ad_nrt` - Andorran NRT number
 - `ae_trn` - UAE TRN
+- `al_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `am_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ao_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `ar_cuit` - Argentina CUIT
 - `au_abn` - Australian ABN
+- `au_acn` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `au_arn` - Australian ARN
+- `au_wpn` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `aw_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `az_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ba_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `bb_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `bd_bin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `bf_ifu` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `bg_uic` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `bh_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `bj_ifu` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `bo_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `br_cnpj` - Brazil CNPJ
 - `br_cpf` - Brazil CPF
+- `bs_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `bw_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `by_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `ca_bn` - Canadian BN
 - `ca_gst_hst` - Canadian GST/HST
+- `ca_pst_bc` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ca_pst_mb` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ca_pst_sk` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ca_qst` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `cd_nif` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ch_uid` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `ch_vat` - Swiss VAT
+- `ci_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `cl_tin` - Chile TIN
+- `cm_niu` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `cn_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `co_nit` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `cr_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `cv_nif` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `cz_dic` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `de_stn` - German Tax ID
+- `do_rcn` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ec_ruc` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `eg_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `es_cif` - Spain CIF
+- `et_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `eu_oss_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `eu_vat` - European VAT
+- `fo_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `fr_siren` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `fr_siret` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `fr_spi` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `gb_vat` - UK VAT
+- `ge_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `gh_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `gi_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `gn_nif` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `hk_br` - Hong Kong BR
+- `hr_oib` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `hu_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ic_nif` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `id_npwp` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `il_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `in_gst` - Indian GST
+- `is_kt` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `is_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `it_cf` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `jp_cn` - Japan Corporate Number
 - `jp_rn` - Japan Registered Number
+- `jp_trn` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ke_pin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `kg_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `kh_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `kr_brn` - Korean BRN
+- `kz_bin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `la_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `li_uid` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `li_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `lk_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ma_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `md_cf` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `md_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `me_pib` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `mk_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `mr_nif` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `mu_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `mx_rfc` - Mexico RFC
+- `my_frp` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `my_itn` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `my_sst` - Malaysian SST
+- `mz_nuit` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ng_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `no_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `no_voec` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `np_pan` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `nz_bn` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `nz_gst` - New Zealand GST
+- `om_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `pe_ruc` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ph_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `pl_nip` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `pt_nif` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `py_ruc` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ro_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `rs_pib` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ru_inn` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ru_kpp` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `sa_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `sg_gst` - Singapore GST
 - `sg_uen` - Singapore UEN
+- `si_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `sm_coe` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `sn_ninea` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `sr_fin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `sv_nit` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `th_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `tj_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `tr_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `tt_bir` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `tt_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `tw_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `tz_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ua_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ug_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `unknown` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `us_ein` - US EIN
+- `uy_ruc` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `uz_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `uz_vat` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `ve_rif` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `vn_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
 - `za_vat` - South Africa VAT
-- _(100+ additional country-specific formats)_
+- `zm_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
+- `zw_tin` - Listed from the `2026-10-28.endive` OpenAPI spec
 
 ### Price Types
 
@@ -1465,7 +1668,7 @@ flowchart TB
 - [Testing Guide](https://docs.stripe.com/testing) - Test card numbers and scenarios
 - [API Versioning](https://docs.stripe.com/upgrades) - Version upgrade guides
 
-_Last Updated: February 13, 2026_  
-_Based on: Stripe API Documentation (docs.stripe.com/api)_  
+_Last Updated: November 17, 2026 (previous revision: February 13, 2026)_  
+_Based on: Stripe API Documentation (docs.stripe.com/api) and the Stripe OpenAPI spec `v2600` (`2026-10-28.endive`)_  
 _Verification: Systematic entity-by-entity comparison completed against live API docs_  
-_Status: ✅ Full 1:1 parity achieved with all 22 core Stripe objects_
+_Status: ✅ Field-level parity re-verified for the 25 mirrored Stripe objects (21 shown in the diagram)_

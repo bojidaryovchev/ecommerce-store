@@ -1,6 +1,6 @@
 import { formatCurrency } from "@/lib/utils";
-import { Body, Column, Container, Head, Heading, Hr, Html, Preview, Row, Section, Text } from "@react-email/components";
 import React from "react";
+import { Body, Column, Container, Head, Heading, Hr, Html, Preview, Row, Section, Text } from "react-email";
 
 type OrderItem = {
   name: string;

@@ -1,8 +1,10 @@
-import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { refundReasonEnum, refundStatusEnum } from "../enums";
 import { charges } from "./charges";
+import { customers } from "./customers";
 import { orders } from "./orders";
 import { paymentIntents } from "./payment-intents";
+import { paymentMethods } from "./payment-methods";
 
 export const refunds = pgTable("refund", {
   id: text("id")
@@ -30,7 +32,10 @@ export const refunds = pgTable("refund", {
   pendingReason: text("pending_reason"),
   sourceTransferReversal: text("source_transfer_reversal"),
   transferReversal: text("transfer_reversal"),
-  livemode: boolean("livemode").default(false).notNull(),
+  customerId: text("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  customerAccount: text("customer_account"),
+  paymentMethodId: text("payment_method_id").references(() => paymentMethods.id, { onDelete: "set null" }),
+  presentmentDetails: jsonb("presentment_details").$type<Record<string, unknown>>(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

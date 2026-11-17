@@ -117,6 +117,9 @@ export const charges = pgTable("charge", {
   transferGroup: text("transfer_group"),
   // Additional field
   review: text("review"),
+  authorizationCode: text("authorization_code"),
+  level3: jsonb("level3").$type<Record<string, unknown>>(),
+  source: jsonb("source").$type<Record<string, unknown>>(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

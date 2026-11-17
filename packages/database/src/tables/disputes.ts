@@ -1,5 +1,5 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { disputeReasonEnum, disputeStatusEnum } from "../enums";
+import { disputeIntendedSubmissionMethodEnum, disputeReasonEnum, disputeStatusEnum } from "../enums";
 import { charges } from "./charges";
 import { paymentIntents } from "./payment-intents";
 
@@ -70,6 +70,8 @@ export const disputes = pgTable("dispute", {
     type?: string;
   }>(),
   livemode: boolean("livemode").default(false).notNull(),
+  intendedSubmissionMethod: disputeIntendedSubmissionMethodEnum("intended_submission_method"),
+  networkReasonCode: text("network_reason_code"),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

@@ -71,7 +71,6 @@ export const paymentIntents = pgTable("payment_intent", {
   livemode: boolean("livemode").default(false).notNull(),
   statementDescriptor: text("statement_descriptor"),
   statementDescriptorSuffix: text("statement_descriptor_suffix"),
-  invoiceId: text("invoice_id"),
   canceledAt: timestamp("canceled_at", { mode: "date" }),
   cancellationReason: text("cancellation_reason"),
   amountDetails: jsonb("amount_details").$type<{
@@ -99,6 +98,10 @@ export const paymentIntents = pgTable("payment_intent", {
     parent?: string;
   }>(),
   presentmentDetails: jsonb("presentment_details").$type<Record<string, unknown>>(),
+  allowedPaymentMethodTypes: text("allowed_payment_method_types").array(),
+  managedPayments: jsonb("managed_payments").$type<Record<string, unknown>>(),
+  paymentRecordId: text("payment_record_id"),
+  sourceId: text("source_id"),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

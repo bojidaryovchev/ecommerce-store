@@ -29,7 +29,7 @@ export const checkoutSessions = pgTable("checkout_session", {
   successUrl: text("success_url"),
   cancelUrl: text("cancel_url"),
   returnUrl: text("return_url"),
-  uiMode: checkoutSessionUiModeEnum("ui_mode").default("hosted"),
+  uiMode: checkoutSessionUiModeEnum("ui_mode").default("hosted_page"),
   url: text("url"),
   subscriptionId: text("subscription_id").references(() => subscriptions.id, { onDelete: "set null" }),
   invoiceId: text("invoice_id").references(() => invoices.id, { onDelete: "set null" }),
@@ -217,6 +217,10 @@ export const checkoutSessions = pgTable("checkout_session", {
     applePay?: string;
     googlePay?: string;
   }>(),
+  allowedPaymentMethodTypes: text("allowed_payment_method_types").array(),
+  discounts: jsonb("discounts").$type<Array<{ coupon?: string | null; promotionCode?: string | null }>>(),
+  integrationIdentifier: text("integration_identifier"),
+  managedPayments: jsonb("managed_payments").$type<Record<string, unknown>>(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

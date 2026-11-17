@@ -10,6 +10,7 @@ export const paymentMethods = pgTable("payment_method", {
   object: text("object").default("payment_method"),
   type: paymentMethodTypeEnum("type").notNull(),
   customerId: text("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  customerAccount: text("customer_account"),
   billingDetails: jsonb("billing_details").$type<{
     address?: {
       line1?: string;
@@ -116,6 +117,11 @@ export const paymentMethods = pgTable("payment_method", {
   sofort: jsonb("sofort").$type<Record<string, unknown>>(),
   swish: jsonb("swish").$type<Record<string, unknown>>(),
   twint: jsonb("twint").$type<Record<string, unknown>>(),
+  bizum: jsonb("bizum").$type<Record<string, unknown>>(),
+  scalapay: jsonb("scalapay").$type<Record<string, unknown>>(),
+  sequra: jsonb("sequra").$type<Record<string, unknown>>(),
+  sunbit: jsonb("sunbit").$type<Record<string, unknown>>(),
+  upi: jsonb("upi").$type<Record<string, unknown>>(),
   // In-person & Special
   cardPresent: jsonb("card_present").$type<Record<string, unknown>>(),
   interacPresent: jsonb("interac_present").$type<Record<string, unknown>>(),
@@ -127,7 +133,6 @@ export const paymentMethods = pgTable("payment_method", {
     session?: string;
   }>(),
   // Generic catch-all for any future payment types
-  paymentMethodData: jsonb("payment_method_data").$type<Record<string, unknown>>(),
   allowRedisplay: text("allow_redisplay"),
   livemode: boolean("livemode").default(false).notNull(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),

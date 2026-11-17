@@ -26,26 +26,29 @@ export const quotes = pgTable("quote", {
     status?: string;
   }>(),
   collectionMethod: quoteCollectionMethodEnum("collection_method").default("charge_automatically"),
-  computedUpfrontTotal: jsonb("computed_upfront_total").$type<{
-    amountSubtotal?: number;
-    amountTotal?: number;
-    totalDetails?: {
-      amountDiscount?: number;
-      amountShipping?: number;
-      amountTax?: number;
+  computed: jsonb("computed").$type<{
+    recurring?: {
+      amountSubtotal?: number;
+      amountTotal?: number;
+      interval?: "day" | "week" | "month" | "year";
+      intervalCount?: number;
+      totalDetails?: {
+        amountDiscount?: number;
+        amountShipping?: number;
+        amountTax?: number;
+      };
+    } | null;
+    upfront?: {
+      amountSubtotal?: number;
+      amountTotal?: number;
+      totalDetails?: {
+        amountDiscount?: number;
+        amountShipping?: number;
+        amountTax?: number;
+      };
     };
   }>(),
-  computedRecurringTotal: jsonb("computed_recurring_total").$type<{
-    amountSubtotal?: number;
-    amountTotal?: number;
-    interval?: "day" | "week" | "month" | "year";
-    intervalCount?: number;
-    totalDetails?: {
-      amountDiscount?: number;
-      amountShipping?: number;
-      amountTax?: number;
-    };
-  }>(),
+  customerAccount: text("customer_account"),
   currency: text("currency"),
   defaultTaxRates: text("default_tax_rates").array(),
   description: text("description"),

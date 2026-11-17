@@ -14,7 +14,7 @@ export const taxIds = pgTable("tax_id", {
   type: taxIdTypeEnum("type").notNull(),
   value: text("value").notNull(),
   country: text("country"),
-  description: text("description"),
+  customerAccount: text("customer_account"),
   owner: jsonb("owner").$type<{
     type?: string;
     customer?: string;

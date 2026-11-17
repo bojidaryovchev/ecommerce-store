@@ -33,24 +33,23 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'dev')
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+        uses: pnpm/action-setup@v6
+        # pnpm version comes from the packageManager field in package.json
 
       - name: Install dependencies
         run: pnpm install
         working-directory: infra
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
@@ -59,7 +58,7 @@ jobs:
         run: pulumi login ${{ secrets.PULUMI_BACKEND_URL }}
 
       - name: Pulumi Up (Dev)
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v7
         with:
           command: up
           stack-name: dev
@@ -74,24 +73,23 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+        uses: pnpm/action-setup@v6
+        # pnpm version comes from the packageManager field in package.json
 
       - name: Install dependencies
         run: pnpm install
         working-directory: infra
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
@@ -100,7 +98,7 @@ jobs:
         run: pulumi login ${{ secrets.PULUMI_BACKEND_URL }}
 
       - name: Pulumi Up (Prod)
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v7
         with:
           command: up
           stack-name: prod

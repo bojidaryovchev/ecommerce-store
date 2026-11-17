@@ -176,7 +176,10 @@ export const paymentLinks = pgTable("payment_link", {
   }>(),
   url: text("url"),
   livemode: boolean("livemode").default(false).notNull(),
-  created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
+  managedPayments: jsonb("managed_payments").$type<Record<string, unknown>>(),
+  nameCollection: jsonb("name_collection").$type<Record<string, unknown>>(),
+  optionalItems: jsonb("optional_items").$type<Array<Record<string, unknown>>>(),
+  paymentMethodOptions: jsonb("payment_method_options").$type<Record<string, unknown>>(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });

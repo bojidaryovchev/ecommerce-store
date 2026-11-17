@@ -1,7 +1,6 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { invoiceLineItemTypeEnum } from "../enums";
 import { invoices } from "./invoices";
-import { subscriptionItems } from "./subscription-items";
+import { subscriptions } from "./subscriptions";
 
 export const invoiceLineItems = pgTable("invoice_line_item", {
   id: text("id")
@@ -12,7 +11,7 @@ export const invoiceLineItems = pgTable("invoice_line_item", {
   invoiceId: text("invoice_id")
     .notNull()
     .references(() => invoices.id, { onDelete: "cascade" }),
-  subscriptionItemId: text("subscription_item_id").references(() => subscriptionItems.id, { onDelete: "set null" }),
+  subscriptionId: text("subscription_id").references(() => subscriptions.id, { onDelete: "set null" }),
   amount: integer("amount").notNull(),
   currency: text("currency").notNull(),
   description: text("description"),
@@ -34,11 +33,8 @@ export const invoiceLineItems = pgTable("invoice_line_item", {
     };
   }>(),
   quantity: integer("quantity"),
-  proration: boolean("proration").default(false),
   discountable: boolean("discountable").default(true),
   discounts: text("discounts").array(),
-  taxRates: text("tax_rates").array(),
-  type: invoiceLineItemTypeEnum("type"),
   // Missing fields
   discountAmounts: jsonb("discount_amounts").$type<
     Array<{
@@ -58,8 +54,6 @@ export const invoiceLineItems = pgTable("invoice_line_item", {
     }>
   >(),
   subtotal: integer("subtotal").default(0).notNull(),
-  amountExcludingTax: integer("amount_excluding_tax"),
-  unitAmountExcludingTax: text("unit_amount_excluding_tax"),
   taxes: jsonb("taxes").$type<
     Array<{
       amount?: number;
@@ -67,6 +61,6 @@ export const invoiceLineItems = pgTable("invoice_line_item", {
       taxabilityReason?: string;
     }>
   >(),
-  created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
+  quantityDecimal: text("quantity_decimal"),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });

@@ -1,4 +1,5 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { productTypeEnum } from "../enums";
 import { categories } from "./categories";
 
 export const products = pgTable("product", {
@@ -36,6 +37,8 @@ export const products = pgTable("product", {
     weight?: number;
     width?: number;
   }>(),
+  taxDetails: jsonb("tax_details").$type<Record<string, unknown>>(),
+  type: productTypeEnum("type").default("service").notNull(),
   updated: timestamp("updated", { mode: "date" }).defaultNow().notNull(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),

@@ -1,7 +1,6 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { customers } from "./customers";
 import { invoices } from "./invoices";
-import { prices } from "./prices";
 
 export const invoiceItems = pgTable("invoice_item", {
   id: text("id")
@@ -13,7 +12,6 @@ export const invoiceItems = pgTable("invoice_item", {
     .notNull()
     .references(() => customers.id, { onDelete: "cascade" }),
   invoiceId: text("invoice_id").references(() => invoices.id, { onDelete: "set null" }),
-  priceId: text("price_id").references(() => prices.id, { onDelete: "set null" }),
   amount: integer("amount").notNull(),
   currency: text("currency").notNull(),
   description: text("description"),
@@ -55,7 +53,9 @@ export const invoiceItems = pgTable("invoice_item", {
     };
   }>(),
   testClock: text("test_clock"),
-  created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
+  frozenFields: text("frozen_fields").array(),
+  invoicingRules: jsonb("invoicing_rules").$type<Array<Record<string, unknown>>>(),
+  quantityDecimal: text("quantity_decimal"),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });

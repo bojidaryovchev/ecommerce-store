@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { toggleWishlist } from "@/mutations/wishlist";
 import { Heart } from "lucide-react";
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -17,10 +17,13 @@ const WishlistButton: React.FC<Props> = ({ productId, isWishlisted, variant = "i
   const [isPending, startTransition] = useTransition();
   const [wishlisted, setWishlisted] = useState(isWishlisted);
 
-  // Sync with server prop when it changes (e.g. after navigation or revalidation)
-  useEffect(() => {
+  // Sync with server prop when it changes (e.g. after navigation or revalidation).
+  // Adjusting state during render (instead of in an effect) avoids an extra render pass.
+  const [prevIsWishlisted, setPrevIsWishlisted] = useState(isWishlisted);
+  if (isWishlisted !== prevIsWishlisted) {
+    setPrevIsWishlisted(isWishlisted);
     setWishlisted(isWishlisted);
-  }, [isWishlisted]);
+  }
 
   const handleToggle = (e: React.MouseEvent) => {
     // Prevent navigation when clicking heart on product cards (which are links)

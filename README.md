@@ -4,16 +4,16 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 
 ## Tech Stack
 
-| Layer          | Technology                                                  |
-| -------------- | ----------------------------------------------------------- |
-| **Frontend**   | Next.js 16 (App Router, Turbopack), React 19, TailwindCSS 4 |
-| **Backend**    | Next.js API Routes, Server Actions                          |
-| **Database**   | Neon PostgreSQL, Drizzle ORM                                |
-| **Auth**       | Auth.js (NextAuth v5) with Google OAuth                     |
-| **Payments**   | Stripe (Checkout Sessions, webhooks, refunds, promo codes)  |
-| **Emails**     | Resend (order confirmation, shipping notification)          |
-| **Storage**    | AWS S3 (presigned uploads, orphan cleanup via Lambda)       |
-| **Deployment** | Vercel (web), Pulumi (infra)                                |
+| Layer          | Technology                                                                         |
+| -------------- | ---------------------------------------------------------------------------------- |
+| **Frontend**   | Next.js 16 (App Router, Turbopack), React 19, TailwindCSS 4                        |
+| **Backend**    | Next.js API Routes, Server Actions                                                 |
+| **Database**   | Neon PostgreSQL, Drizzle ORM                                                       |
+| **Auth**       | Auth.js (NextAuth v5) with Google OAuth                                            |
+| **Payments**   | Stripe API `2026-10-28.endive` (Checkout Sessions, webhooks, refunds, promo codes) |
+| **Emails**     | Resend (order confirmation, shipping notification)                                 |
+| **Storage**    | AWS S3 (presigned uploads, orphan cleanup via Lambda)                              |
+| **Deployment** | Vercel (web), Pulumi (infra)                                                       |
 
 ## Features
 
@@ -75,8 +75,8 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 
 ### Prerequisites
 
-- Node.js 20+
-- pnpm 9+
+- Node.js 24 LTS (`engines.node` is `24.x`; Vercel and the cleanup Lambda run 24 too)
+- pnpm 12 (pinned via `packageManager`: run `corepack enable`, or `npm i -g pnpm@12.21.0`). pnpm 11+ reads its settings (`allowBuilds`, `overrides`) from `pnpm-workspace.yaml` and skips releases younger than 24h.
 - Docker (for local database + Stripe CLI)
 
 ### Setup
@@ -88,7 +88,7 @@ pnpm install
 # Start local PostgreSQL + Stripe CLI (webhook forwarding)
 docker compose up -d
 
-# Push schema to database
+# Push schema to database (throwaway local DB). Shared/prod databases: pnpm db:migrate
 pnpm db:push
 
 # Start development server
@@ -303,7 +303,7 @@ cd infra
 pulumi stack output --show-secrets
 ```
 
-Add these environment variables in Vercel (Settings → Environment Variables):
+Add these environment variables in Vercel (Settings → Environment Variables). Also add `ENABLE_EXPERIMENTAL_COREPACK=1` so Vercel installs with the pinned pnpm 12 instead of guessing pnpm 9/10 from the lockfile:
 
 | Variable                   | Value                                     | Environments |
 | -------------------------- | ----------------------------------------- | ------------ |

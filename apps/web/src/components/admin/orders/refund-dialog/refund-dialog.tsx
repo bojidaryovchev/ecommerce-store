@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatCurrency } from "@/lib/utils";
 import { issueRefund } from "@/mutations/refunds";
 import type { RefundReason } from "@ecommerce/database/schema";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import toast from "react-hot-toast";
 
 type Props = {
@@ -49,14 +49,17 @@ const RefundDialog: React.FC<Props> = ({
   const [isFullRefund, setIsFullRefund] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset form when dialog opens
-  useEffect(() => {
+  // Reset form when the dialog opens. Adjusting state during render (instead of in an
+  // effect) avoids an extra render pass; starting from `false` also covers mounting open.
+  const [wasOpen, setWasOpen] = useState(false);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
     if (isOpen) {
       setAmountStr((maxRefundable / 100).toFixed(2));
       setReason("");
       setIsFullRefund(true);
     }
-  }, [isOpen, maxRefundable]);
+  }
 
   const handleFullRefundToggle = (full: boolean) => {
     setIsFullRefund(full);

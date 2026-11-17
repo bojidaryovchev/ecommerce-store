@@ -9,4 +9,6 @@ export const disputeStatusEnum = pgEnum("dispute_status", [
   "warning_needs_response",
   "warning_under_review",
   "won",
+  "appeal_needs_response",
+  "appeal_under_review",
 ]);

@@ -6,7 +6,6 @@ import {
   subscriptionCollectionMethodEnum,
 } from "../enums";
 import { customers } from "./customers";
-import { paymentIntents } from "./payment-intents";
 import { subscriptions } from "./subscriptions";
 
 export const invoices = pgTable("invoice", {
@@ -19,7 +18,6 @@ export const invoices = pgTable("invoice", {
     .notNull()
     .references(() => customers.id, { onDelete: "cascade" }),
   subscriptionId: text("subscription_id").references(() => subscriptions.id, { onDelete: "set null" }),
-  paymentIntentId: text("payment_intent_id").references(() => paymentIntents.id, { onDelete: "set null" }),
   status: invoiceStatusEnum("status").notNull(),
   currency: text("currency").notNull(),
   description: text("description"),
@@ -205,6 +203,9 @@ export const invoices = pgTable("invoice", {
     }>
   >(),
   webhooksDeliveredAt: timestamp("webhooks_delivered_at"),
+  amountPaidOffStripe: integer("amount_paid_off_stripe").default(0),
+  defaultTaxRates: jsonb("default_tax_rates").$type<Array<Record<string, unknown>>>(),
+  statusDetails: jsonb("status_details").$type<Record<string, unknown>>(),
   created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),

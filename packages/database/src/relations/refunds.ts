@@ -1,7 +1,9 @@
 import { relations } from "drizzle-orm";
 import { charges } from "../tables/charges";
+import { customers } from "../tables/customers";
 import { orders } from "../tables/orders";
 import { paymentIntents } from "../tables/payment-intents";
+import { paymentMethods } from "../tables/payment-methods";
 import { refunds } from "../tables/refunds";
 
 export const refundsRelations = relations(refunds, ({ one }) => ({
@@ -16,5 +18,13 @@ export const refundsRelations = relations(refunds, ({ one }) => ({
   order: one(orders, {
     fields: [refunds.orderId],
     references: [orders.id],
+  }),
+  customer: one(customers, {
+    fields: [refunds.customerId],
+    references: [customers.id],
+  }),
+  paymentMethod: one(paymentMethods, {
+    fields: [refunds.paymentMethodId],
+    references: [paymentMethods.id],
   }),
 }));

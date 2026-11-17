@@ -1,4 +1,4 @@
-import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { coupons } from "./coupons";
 import { customers } from "./customers";
 import { promotionCodes } from "./promotion-codes";
@@ -30,7 +30,5 @@ export const discounts = pgTable("discount", {
     .default({}),
   start: timestamp("start", { mode: "date" }).notNull(),
   end: timestamp("end", { mode: "date" }),
-  livemode: boolean("livemode").default(false).notNull(),
-  created: timestamp("created", { mode: "date" }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
