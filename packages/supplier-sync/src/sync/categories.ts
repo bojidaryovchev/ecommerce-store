@@ -1,8 +1,10 @@
 import { categories, supplierCategories } from "@ecommerce/database/schema";
 import { eq } from "drizzle-orm";
+import { CATEGORY_TREES } from "../curation";
 import { cleanLabel, safeDecodeURIComponent } from "../normalize/text";
 import { slugify } from "../normalize/transliterate";
 import { wooCategorySchema, type WooCategory } from "../woocommerce/schemas";
+import { curatedSlugFor, ensureCuratedCategory } from "./curation";
 import { uniqueSlug, type SyncContext } from "./shared";
 
 const UNCATEGORIZED = new Set(["uncategorized", "без-категория", "без категория"]);
@@ -83,9 +85,14 @@ export async function syncCategories(ctx: SyncContext, rawCategories: unknown[])
 
     takenSlugs ??= new Set((await ctx.db.select({ slug: categories.slug }).from(categories)).map((r) => r.slug));
     const slugs = takenSlugs;
+    const tree = CATEGORY_TREES[ctx.supplier.slug];
+    const curatedSlug = tree ? curatedSlugFor(tree, category.id) : undefined;
     const categoryId = await ctx.db.transaction(async (tx) => {
       let ourId: string | null = null;
-      if (!getsNoCategory({ name, slug })) {
+      if (tree && curatedSlug) {
+        // Listed in our curated tree: map to that category (created on first use).
+        ourId = await ensureCuratedCategory(tx, tree, curatedSlug);
+      } else if (!getsNoCategory({ name, slug })) {
         const parentId = parentExternalId === null ? null : (ctx.categories.get(parentExternalId)?.categoryId ?? null);
         const [created] = await tx
           .insert(categories)

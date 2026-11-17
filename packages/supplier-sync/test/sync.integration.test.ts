@@ -12,6 +12,7 @@ import postgres from "postgres";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { addLocks, editedLockableFields } from "../src/locks";
 import { silentLogger } from "../src/logger";
+import { applyCategoryTree } from "../src/sync/curation";
 import { applySyncChange, followSupplierForField, publishAllNewProducts } from "../src/sync/review";
 import { runSupplierSync, type SyncMode } from "../src/sync/run";
 
@@ -312,6 +313,36 @@ describe.skipIf(!isLocal)("supplier sync (integration)", () => {
     expect(result.message).toMatch(/listed only 0 products/);
     const active = await db.select().from(schema.products).where(eq(schema.products.active, true));
     expect(active).toHaveLength(3);
+  });
+
+  it("applies a curated category tree, reusing mirrored categories, and is idempotent", async () => {
+    await sync("full", true);
+    const tree = [
+      { slug: "kamini", name: "Камини", supplierCategoryIds: [10] },
+      { slug: "s-vodna-riza", name: "Камини с водна риза", parent: "kamini", supplierCategoryIds: [11] },
+      { slug: "aksesoari", name: "Аксесоари", parent: "kamini" },
+    ];
+    const before = await db.select().from(schema.categories);
+    const mirroredChild = before.find((c) => c.slug === "kamini-s-vodna-riza")!;
+
+    const first = await applyCategoryTree(db, "hydroterm", tree);
+    expect(first).toMatchObject({ created: 1, remapped: 0, retired: 0 });
+
+    const after = await db.select().from(schema.categories);
+    const root = after.find((c) => c.slug === "kamini")!;
+    const child = after.find((c) => c.slug === "s-vodna-riza")!;
+    expect(child.id).toBe(mirroredChild.id); // reused, re-slugged
+    expect(child.parentId).toBe(root.id);
+    expect(after.find((c) => c.slug === "aksesoari")?.parentId).toBe(root.id);
+    expect((await productFor(1)).product.categoryId).toBe(child.id);
+
+    expect(await applyCategoryTree(db, "hydroterm", tree)).toEqual({
+      created: 0,
+      updated: 0,
+      remapped: 0,
+      productsMoved: 0,
+      retired: 0,
+    });
   });
 
   it("skips while another run is in progress", async () => {
