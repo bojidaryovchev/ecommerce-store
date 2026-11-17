@@ -3,8 +3,10 @@ import { cartItems } from "../tables/cart-items";
 import { categories } from "../tables/categories";
 import { orderItems } from "../tables/order-items";
 import { prices } from "../tables/prices";
+import { productAttributeValues } from "../tables/product-attribute-values";
 import { products } from "../tables/products";
 import { reviews } from "../tables/reviews";
+import { supplierProducts } from "../tables/supplier-products";
 import { wishlists } from "../tables/wishlists";
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -21,4 +23,6 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   orderItems: many(orderItems),
   reviews: many(reviews),
   wishlists: many(wishlists),
+  attributeValues: many(productAttributeValues),
+  supplierProduct: one(supplierProducts),
 }));

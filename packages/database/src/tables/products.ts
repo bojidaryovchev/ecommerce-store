@@ -19,6 +19,12 @@ export const products = pgTable("product", {
   unitLabel: text("unit_label"),
   url: text("url"),
   categoryId: text("category_id").references(() => categories.id, { onDelete: "set null" }),
+  brand: text("brand"),
+  /**
+   * Fields we edited by hand on a supplier-synced product; the sync leaves these alone.
+   * Values: see LOCKABLE_PRODUCT_FIELDS in @ecommerce/supplier-sync.
+   */
+  lockedFields: text("locked_fields").array().notNull().default([]),
   statementDescriptor: text("statement_descriptor"),
   livemode: boolean("livemode").default(false).notNull(),
   trackInventory: boolean("track_inventory").default(false).notNull(),

@@ -57,6 +57,13 @@
       "when": 1794921509739,
       "tag": "0007_stripe_api_2026_10_28_endive",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794942908074,
+      "tag": "0008_supplier_catalog_sync",
+      "breakpoints": true
     }
   ]
 }
