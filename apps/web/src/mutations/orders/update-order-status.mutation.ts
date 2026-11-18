@@ -1,6 +1,7 @@
 "use server";
 
 import { OrderShippedEmail } from "@/emails";
+import { emailCopy, emailLocale, orderNumber } from "@/emails/copy";
 import { requireAdmin } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { sendEmail } from "@/lib/email";
@@ -90,11 +91,16 @@ async function updateOrderStatus(
     if (status === "shipped") {
       const recipientEmail = order.guestEmail ?? (order.userId ? await getUserEmail(order.userId) : null);
       if (recipientEmail) {
-        const customerName = order.shippingAddress?.name ?? "Customer";
+        const locale = emailLocale(order.metadata?.locale);
         await sendEmail({
           to: recipientEmail,
-          subject: `Your order #${order.id.slice(0, 8)} has shipped!`,
-          react: React.createElement(OrderShippedEmail, { orderId: order.id, customerName }),
+          subject: emailCopy(locale)("shipped.subject", { number: orderNumber(order.id) }),
+          react: React.createElement(OrderShippedEmail, {
+            locale,
+            orderId: order.id,
+            customerName: order.shippingAddress?.name || null,
+            viewable: Boolean(order.userId),
+          }),
         });
       }
     }

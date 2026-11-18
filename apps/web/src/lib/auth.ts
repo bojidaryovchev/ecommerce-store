@@ -1,4 +1,5 @@
 import { WelcomeEmail } from "@/emails";
+import { emailBrand, emailCopy } from "@/emails/copy";
 import { sendEmail } from "@/lib/email";
 import { mergeGuestCartToUser } from "@/mutations/cart";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
@@ -44,10 +45,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Send welcome email on first sign-in
       if (isNewUser && user.email) {
         try {
+          // Sign-in does not say which language the visitor browsed in: the shop's own, Bulgarian.
           await sendEmail({
             to: user.email,
-            subject: "Welcome to our store!",
-            react: React.createElement(WelcomeEmail, { name: user.name ?? "there" }),
+            subject: emailCopy("bg")("welcome.subject", { brand: emailBrand("bg") }),
+            react: React.createElement(WelcomeEmail, { locale: "bg", name: user.name ?? null }),
           });
         } catch (error) {
           console.error("Failed to send welcome email:", error);

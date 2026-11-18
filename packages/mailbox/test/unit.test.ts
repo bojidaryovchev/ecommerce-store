@@ -97,6 +97,7 @@ describe("subjects and headers", () => {
 
   it("reads order references the way our emails write them", () => {
     expect(orderReferences("Re: Order Confirmed — #7A1FFAB1")).toEqual(["7a1ffab1"]);
+    expect(orderReferences("Re: Поръчка #7A1FFAB1 е потвърдена")).toEqual(["7a1ffab1"]);
     expect(orderReferences("#7a1ffab1 and #7a1ffab1, #0123abcd #0123abcd9")).toEqual(["7a1ffab1", "0123abcd"]);
     expect(orderReferences("no reference 7a1ffab1")).toEqual([]);
   });

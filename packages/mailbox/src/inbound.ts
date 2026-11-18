@@ -91,7 +91,7 @@ export type RecordResult = { threadId: string; created: boolean; newThread: bool
  * several, or that does not parse is still recorded, in a thread of its own that joins no conversation,
  * is tied to no order and cannot be answered from the panel.
  *
- * A new conversation whose subject quotes an order reference ("Re: Order Confirmed — #7a1ffab1") is tied
+ * A new conversation whose subject quotes an order reference ("Re: Поръчка #7A1FFAB1 е потвърдена") is tied
  * to that order when the order was placed with the sender's address, unless the receiving server said
  * the From address was forged.
  */

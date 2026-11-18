@@ -1,0 +1,50 @@
+{
+  "customer": "customer",
+  "footer": {
+    "questions": "A question? Just reply to this email.",
+    "delivery": "Delivery",
+    "returns": "Returns and withdrawal",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  },
+  "order": {
+    "subject": "Order #{number} confirmed",
+    "preview": "Thank you! We received the payment for order #{number}.",
+    "title": "Thank you for your order!",
+    "greeting": "Hello {name},",
+    "intro": "we received your payment and your order is being processed. We will write when it ships.",
+    "number": "Order number",
+    "items": "Products",
+    "subtotal": "Products",
+    "shipping": "Delivery",
+    "discount": "Discount",
+    "tax": "VAT",
+    "total": "Total",
+    "vatIncluded": "Prices include VAT.",
+    "address": "Delivery address",
+    "next": "What happens next",
+    "nextText": "We confirm the delivery date by email. If you ordered a unit we install, we will contact you to arrange a site visit.",
+    "view": "View the order",
+    "withdrawalTitle": "Right of withdrawal",
+    "withdrawalText": "You may withdraw from the purchase within 14 days of receiving the goods, without giving a reason. The conditions are on the Returns and withdrawal page and in the Terms.",
+    "withdrawalLink": "Withdraw from the contract"
+  },
+  "shipped": {
+    "subject": "Order #{number} has shipped",
+    "preview": "Your order is on its way.",
+    "title": "Your order is on its way",
+    "greeting": "Hello {name},",
+    "text": "order #{number} has shipped. The courier will contact you about the delivery.",
+    "check": "Check the parcel in front of the courier. If it is visibly damaged, note it in the courier's report and email us photos.",
+    "view": "View the order"
+  },
+  "welcome": {
+    "subject": "Welcome to {brand}",
+    "preview": "Your account is ready.",
+    "title": "Welcome!",
+    "greeting": "Hello {name},",
+    "text": "thank you for creating an account. You will find your orders, addresses and saved products in it.",
+    "help": "Not sure what you need? Read our guides and calculators or write to us: we are glad to help.",
+    "shop": "Go to the shop"
+  }
+}

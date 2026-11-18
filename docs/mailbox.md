@@ -14,7 +14,7 @@ admin panel ──reply / new message──▶ Resend (from EMAIL_FROM, In-Reply
 - **Senders.** The sender is the single address the From header names, parsed strictly. A display name that looks like an address (`"<customer@x>" <attacker@y>`) never counts. A From that names no address, or several, is kept but cannot be answered from the panel.
 - **Orders.** A conversation is tied to an order in two cases:
   - it was started from the order page ("Email customer");
-  - the customer's subject quotes the order reference (`#7a1ffab1`, as in "Re: Order Confirmed — #7a1ffab1") and they wrote from the order's email address.
+  - the customer's subject quotes the order reference (`#7a1ffab1`, as in "Re: Поръчка #7A1FFAB1 е потвърдена") and they wrote from the order's email address.
 - **Unverified senders.** If Resend's receiving server says the From address was not authenticated (DMARC/DKIM), the message is flagged in the panel and not tied to an order.
 - **Bodies.** Messages are shown as text, never as the sender's HTML.
 - **Attachments.** The files stay in Resend and are proxied on download behind the admin session.

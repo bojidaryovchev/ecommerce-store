@@ -245,7 +245,7 @@ export async function matchThread(
 }
 
 /**
- * The order a subject refers to ("Re: Order Confirmed — #7a1ffab1"), if that order was placed with this
+ * The order a subject refers to ("Re: Поръчка #7A1FFAB1 е потвърдена"), if that order was placed with this
  * address. The reference alone is short enough to guess; the address is what makes it theirs.
  */
 export async function findOrderByReference(

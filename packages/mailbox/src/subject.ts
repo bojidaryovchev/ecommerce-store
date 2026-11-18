@@ -52,7 +52,7 @@ export function headerValue(headers: Record<string, string> | null | undefined, 
 
 /**
  * The order references a subject quotes: "#" and the eight hex characters our order emails show
- * ("Order Confirmed — #7a1ffab1", and every reply to it). At most three, since a subject is a stranger's
+ * ("Поръчка #7A1FFAB1 е потвърдена", and every reply to it). At most three, since a subject is a stranger's
  * and each one is a lookup.
  */
 export function orderReferences(subject: string): string[] {

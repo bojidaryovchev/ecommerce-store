@@ -1,4 +1,5 @@
 import { OrderConfirmationEmail } from "@/emails";
+import { emailCopy, emailLocale, orderNumber } from "@/emails/copy";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { sendEmail } from "@/lib/email";
 import { stripe } from "@/lib/stripe";
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const cartId = session.metadata?.cartId;
   const userId = session.metadata?.userId || null;
+  const locale = emailLocale(session.metadata?.locale);
 
   if (!cartId) {
     console.error("No cartId in session metadata");
@@ -143,6 +145,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       totalAmount: session.amount_total ?? subtotalAmount,
       shippingAddress,
       billingAddress,
+      metadata: { locale },
       paidAt: new Date(),
     })
     .returning();
@@ -188,10 +191,12 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   if (recipientEmail) {
     await sendEmail({
       to: recipientEmail,
-      subject: `Order Confirmed — #${order.id.slice(0, 8)}`,
+      // "#" and the number let the mailbox file the customer's reply with this order.
+      subject: emailCopy(locale)("order.subject", { number: orderNumber(order.id) }),
       react: React.createElement(OrderConfirmationEmail, {
+        locale,
         orderId: order.id,
-        customerName: customerDetails?.name ?? "Customer",
+        customerName: shippingAddress?.name || customerDetails?.name || null,
         items: cart.items.map((item) => ({
           name: item.product.name,
           quantity: item.quantity,
@@ -203,18 +208,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         tax: session.total_details?.amount_tax ?? 0,
         discount: session.total_details?.amount_discount ?? 0,
         total: session.amount_total ?? subtotalAmount,
-        currency: session.currency ?? "usd",
-        shippingAddress: shippingAddress
-          ? {
-              name: shippingAddress.name,
-              line1: shippingAddress.line1,
-              line2: shippingAddress.line2,
-              city: shippingAddress.city,
-              state: shippingAddress.state,
-              postalCode: shippingAddress.postalCode,
-              country: shippingAddress.country,
-            }
-          : undefined,
+        currency: session.currency ?? "eur",
+        viewable: Boolean(userId),
+        shippingAddress,
       }),
     });
   }

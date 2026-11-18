@@ -118,6 +118,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         cartId: cart.id,
         userId: session?.user?.id ?? "",
+        // The emails about this order are written in this language.
+        locale,
       },
       // We deliver and install in Bulgaria only.
       shipping_address_collection: {
