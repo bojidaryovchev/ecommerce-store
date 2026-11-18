@@ -58,6 +58,18 @@ const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted 
           <p className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">{product.brand}</p>
         )}
         <h3 className="mt-1 line-clamp-2 text-sm leading-snug font-medium">{product.name}</h3>
+        {product.keySpecs && product.keySpecs.length > 0 && (
+          <ul className="mt-2 flex flex-wrap gap-1.5">
+            {product.keySpecs.map((spec) => (
+              <li
+                key={spec}
+                className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-[11px] font-medium"
+              >
+                {spec}
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="mt-auto pt-4">
           {defaultPrice && defaultPrice.unitAmount !== null ? (
             <p className="flex items-baseline gap-1.5">

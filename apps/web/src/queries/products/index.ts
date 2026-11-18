@@ -10,4 +10,5 @@ export { getProducts } from "./get-products.query";
 export { getSearchSuggestions, type SearchSuggestions } from "./get-search-suggestions.query";
 export { getSeasonalProducts, type Season } from "./get-seasonal-products.query";
 export { getSimilarProducts } from "./get-similar-products.query";
+export { getSpecRanges, type SpecRanges } from "./get-spec-ranges.query";
 export { searchProducts } from "./search-products.query";

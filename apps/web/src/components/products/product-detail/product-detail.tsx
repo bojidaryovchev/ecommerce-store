@@ -23,6 +23,7 @@ import { ProductGallery } from "./product-gallery";
 import { ProductSpecs, specRows } from "./product-specs";
 import { ReviewSection } from "./review-section";
 import { SimilarProducts } from "./similar-products";
+import { SpecComparison } from "./spec-comparison";
 import { StickyBuyBar } from "./sticky-buy-bar";
 
 type Product = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
@@ -229,8 +230,17 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail, isWishlisted }
         ) : (
           <div />
         )}
-        <div className="lg:sticky lg:top-32">
+        <div className="space-y-10 lg:sticky lg:top-32">
           <ProductSpecs brand={product.brand} values={product.attributeValues} />
+          {categoryTrail[0] && (
+            <Suspense fallback={null}>
+              <SpecComparison
+                rootCategoryId={categoryTrail[0].id}
+                rootCategoryName={categoryTrail[0].name}
+                values={product.attributeValues}
+              />
+            </Suspense>
+          )}
         </div>
       </div>
 

@@ -2,6 +2,8 @@ import type { Category, Price, Product, Review } from "@ecommerce/database/schem
 
 export type ProductWithPrices = Product & {
   prices: Price[];
+  /** Quick facts for listing cards ("17.6 kW", "до 160 кв."), when the query provides them. */
+  keySpecs?: string[];
 };
 
 export type ProductWithCategory = Product & {

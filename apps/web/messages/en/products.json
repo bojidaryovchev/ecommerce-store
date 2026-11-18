@@ -75,6 +75,14 @@
     "question": {
       "title": "A question about this product?",
       "text": "Write to us and we will answer by email."
+    },
+    "comparison": {
+      "title": "Compared with the other models",
+      "lead": "Where this model stands on its main specifications among the models in “{category}”.",
+      "higherThan": "Higher than {below} of {others, plural, one {# other model} other {# other models}}.",
+      "highest": "The highest value in the category.",
+      "lowest": "The lowest value in the category.",
+      "aria": "{name}: {value}, with values in the category from {min} to {max} {unit}"
     }
   },
   "productAddToCart": {
