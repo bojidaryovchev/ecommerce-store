@@ -75,8 +75,14 @@ export function getMailTransport(): MailTransport | null {
       return { id: data.id };
     },
     async sentMessageId(emailId) {
-      const { data } = await api.emails.get(emailId);
-      return data?.message_id ?? null;
+      // Resend hands the message to its mail servers, and gets the Message-ID back, about half a
+      // second after `send` returns; asked at once, it has none yet.
+      for (const wait of [400, 700, 1200]) {
+        await new Promise((resolve) => setTimeout(resolve, wait));
+        const { data } = await api.emails.get(emailId);
+        if (data?.message_id) return data.message_id;
+      }
+      return null;
     },
   };
 }

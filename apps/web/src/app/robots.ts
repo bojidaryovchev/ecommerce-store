@@ -4,13 +4,18 @@ import type { MetadataRoute } from "next";
 
 const PRIVATE_PATHS = ["/admin", "/api/", "/account", "/checkout", "/login"];
 
+/* Until launch, product photos stay out of image search too. They are served by Vercel's image
+   optimiser, which the X-Robots-Tag header in next.config.ts does not reach, and robots.txt is how
+   Google says to keep images out. */
+const PRE_LAUNCH_PATHS = SITE_INDEXABLE ? [] : ["/_next/image"];
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: [...PRIVATE_PATHS, ...PRIVATE_PATHS.map((path) => `/en${path}`)],
+        disallow: [...PRIVATE_PATHS, ...PRIVATE_PATHS.map((path) => `/en${path}`), ...PRE_LAUNCH_PATHS],
       },
     ],
     // Until launch the pages say noindex (lib/indexing.ts): crawling stays allowed so that is seen, but
