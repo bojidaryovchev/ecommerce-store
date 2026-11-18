@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { replyToThreadAction } from "@/mutations/mailbox";
-import type { MailFormState } from "@/types/mail-form-state.type";
-import React, { startTransition, useActionState, useEffect, useRef } from "react";
+import { mailFormData, replySchema, type ReplyInput } from "@/schemas/mail.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import React from "react";
+import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 
 type Props = {
   threadId: string;
@@ -16,50 +19,65 @@ type Props = {
 };
 
 /**
- * The reply box. Plain text on purpose. Submitted by hand rather than through `<form action>`, which
- * would reset the fields when the action returns, error or not: a failed send must leave the typed
- * reply where it was. Cleared only after a send that worked.
+ * The reply box. Plain text on purpose. A failed send leaves the typed reply where it was; it is cleared only
+ * after a send that worked.
  */
 const ReplyForm: React.FC<Props> = ({ threadId, from, to }) => {
-  const [state, dispatch, pending] = useActionState<MailFormState, FormData>(replyToThreadAction, {});
-  const form = useRef<HTMLFormElement>(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ReplyInput>({
+    resolver: zodResolver(replySchema),
+    defaultValues: { body: "" },
+  });
 
-  useEffect(() => {
-    if (state.sentAt) form.current?.reset();
-  }, [state.sentAt]);
-
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    startTransition(() => dispatch(data));
+  const onSubmit = async (values: ReplyInput) => {
+    const state = await replyToThreadAction({}, mailFormData({ threadId, body: values.body }, values.files));
+    if (state.error) {
+      toast.error(state.error);
+      return;
+    }
+    toast.success("Reply sent");
+    reset();
   };
 
   return (
-    <form ref={form} onSubmit={onSubmit} className="space-y-3 rounded-lg border p-4">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3 rounded-lg border p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <Label htmlFor="reply-body">Reply</Label>
         <p className="text-muted-foreground text-xs">
           from {from} to {to}
         </p>
       </div>
-      <input type="hidden" name="threadId" value={threadId} />
-      <Textarea id="reply-body" name="body" rows={7} required placeholder="Write your reply…" disabled={pending} />
+      <Textarea
+        id="reply-body"
+        rows={7}
+        placeholder="Write your reply…"
+        {...register("body")}
+        aria-invalid={Boolean(errors.body)}
+        aria-describedby={errors.body ? "reply-body-error" : undefined}
+        disabled={isSubmitting}
+      />
+      {errors.body?.message && (
+        <p id="reply-body-error" className="text-destructive text-sm">
+          {errors.body.message}
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Input type="file" name="files" multiple className="max-w-sm" disabled={pending} aria-label="Attachments" />
-        <Button type="submit" disabled={pending}>
-          {pending ? "Sending…" : "Send reply"}
+        <Input
+          type="file"
+          multiple
+          className="max-w-sm"
+          {...register("files")}
+          disabled={isSubmitting}
+          aria-label="Attachments"
+        />
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Sending…" : "Send reply"}
         </Button>
       </div>
-      {state.error && (
-        <p role="alert" className="text-destructive text-sm">
-          {state.error}
-        </p>
-      )}
-      {state.sentAt && !state.error && !pending && (
-        <p role="status" className="text-muted-foreground text-sm">
-          Sent.
-        </p>
-      )}
     </form>
   );
 };

@@ -14,8 +14,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 import { issueRefund } from "@/mutations/refunds";
-import type { RefundReason } from "@ecommerce/database/schema";
-import React, { useState } from "react";
+import { REFUND_REASONS, refundSchema, toCents, type RefundInput } from "@/schemas/refund.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useMemo, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import toast from "react-hot-toast";
 
 type Props = {
@@ -28,12 +30,13 @@ type Props = {
   onSuccess: () => void;
 };
 
-const REFUND_REASONS: { value: RefundReason; label: string }[] = [
-  { value: "requested_by_customer", label: "Requested by customer" },
-  { value: "duplicate", label: "Duplicate charge" },
-  { value: "fraudulent", label: "Fraudulent" },
-];
+const REASON_LABELS: Record<(typeof REFUND_REASONS)[number], string> = {
+  requested_by_customer: "Requested by customer",
+  duplicate: "Duplicate charge",
+  fraudulent: "Fraudulent",
+};
 
+/** A full or partial refund through Stripe: React Hook Form, with the order's own ceiling in the schema. */
 const RefundDialog: React.FC<Props> = ({
   orderId,
   totalAmount,
@@ -44,48 +47,42 @@ const RefundDialog: React.FC<Props> = ({
   onSuccess,
 }) => {
   const maxRefundable = totalAmount - totalRefunded;
-  const [amountStr, setAmountStr] = useState("");
-  const [reason, setReason] = useState<RefundReason | "">("");
-  const [isFullRefund, setIsFullRefund] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fullAmount = (maxRefundable / 100).toFixed(2);
+  const schema = useMemo(() => refundSchema(maxRefundable), [maxRefundable]);
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<RefundInput>({
+    resolver: zodResolver(schema),
+    mode: "onChange",
+    defaultValues: { full: true, amount: fullAmount, reason: "" },
+  });
+  const [full, amount] = useWatch({ control, name: ["full", "amount"] });
+  const amountCents = toCents(amount ?? "");
 
-  // Reset form when the dialog opens. Adjusting state during render (instead of in an
-  // effect) avoids an extra render pass; starting from `false` also covers mounting open.
+  // A fresh form each time the dialog opens. Adjusting state during render (instead of in an effect) avoids an
+  // extra render pass; starting from `false` also covers mounting open.
   const [wasOpen, setWasOpen] = useState(false);
   if (isOpen !== wasOpen) {
     setWasOpen(isOpen);
-    if (isOpen) {
-      setAmountStr((maxRefundable / 100).toFixed(2));
-      setReason("");
-      setIsFullRefund(true);
-    }
+    if (isOpen) reset({ full: true, amount: fullAmount, reason: "" });
   }
 
-  const handleFullRefundToggle = (full: boolean) => {
-    setIsFullRefund(full);
-    if (full) {
-      setAmountStr((maxRefundable / 100).toFixed(2));
-    } else {
-      setAmountStr("");
-    }
+  const choose = (nextFull: boolean) => {
+    setValue("full", nextFull);
+    setValue("amount", nextFull ? fullAmount : "", { shouldValidate: nextFull });
   };
 
-  const amountCents = Math.round(parseFloat(amountStr || "0") * 100);
-  const isValidAmount = amountCents > 0 && amountCents <= maxRefundable;
-
-  const handleSubmit = async () => {
-    if (!isValidAmount) return;
-
-    setIsSubmitting(true);
+  const onSubmit = async (values: RefundInput) => {
     try {
-      const result = await issueRefund({
-        orderId,
-        amount: amountCents,
-        ...(reason ? { reason } : {}),
-      });
-
+      const cents = toCents(values.amount);
+      const result = await issueRefund({ orderId, amount: cents, ...(values.reason ? { reason: values.reason } : {}) });
       if (result.success) {
-        toast.success(`Refund of ${formatCurrency(amountCents, currency)} issued successfully`);
+        toast.success(`Refund of ${formatCurrency(cents, currency)} issued successfully`);
         onClose();
         onSuccess();
       } else {
@@ -93,8 +90,6 @@ const RefundDialog: React.FC<Props> = ({
       }
     } catch {
       toast.error("Failed to issue refund");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -131,18 +126,18 @@ const RefundDialog: React.FC<Props> = ({
           <div className="flex gap-2">
             <Button
               type="button"
-              variant={isFullRefund ? "default" : "outline"}
+              variant={full ? "default" : "outline"}
               size="sm"
-              onClick={() => handleFullRefundToggle(true)}
+              onClick={() => choose(true)}
               className="flex-1"
             >
               Full Refund
             </Button>
             <Button
               type="button"
-              variant={!isFullRefund ? "default" : "outline"}
+              variant={!full ? "default" : "outline"}
               size="sm"
-              onClick={() => handleFullRefundToggle(false)}
+              onClick={() => choose(false)}
               className="flex-1"
             >
               Partial Refund
@@ -150,22 +145,20 @@ const RefundDialog: React.FC<Props> = ({
           </div>
 
           {/* Amount input (for partial refunds) */}
-          {!isFullRefund && (
+          {!full && (
             <div className="space-y-2">
               <Label htmlFor="refund-amount">Amount ({currency.toUpperCase()})</Label>
               <Input
                 id="refund-amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                max={(maxRefundable / 100).toFixed(2)}
-                placeholder="0.00"
-                value={amountStr}
-                onChange={(e) => setAmountStr(e.target.value)}
+                inputMode="decimal"
+                placeholder="0,00"
+                {...register("amount")}
+                aria-invalid={Boolean(errors.amount)}
+                aria-describedby={errors.amount ? "refund-amount-error" : undefined}
               />
-              {amountStr && !isValidAmount && (
-                <p className="text-destructive text-xs">
-                  Amount must be between {formatCurrency(1, currency)} and {formatCurrency(maxRefundable, currency)}
+              {errors.amount && (
+                <p id="refund-amount-error" className="text-destructive text-xs">
+                  Between {formatCurrency(1, currency)} and {formatCurrency(maxRefundable, currency)}
                 </p>
               )}
             </div>
@@ -174,18 +167,24 @@ const RefundDialog: React.FC<Props> = ({
           {/* Reason select */}
           <div className="space-y-2">
             <Label htmlFor="refund-reason">Reason (optional)</Label>
-            <Select value={reason} onValueChange={(v) => setReason(v as RefundReason)}>
-              <SelectTrigger id="refund-reason">
-                <SelectValue placeholder="Select a reason..." />
-              </SelectTrigger>
-              <SelectContent>
-                {REFUND_REASONS.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>
-                    {r.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              control={control}
+              name="reason"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="refund-reason">
+                    <SelectValue placeholder="Select a reason..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REFUND_REASONS.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {REASON_LABELS[value]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
         </div>
 
@@ -193,8 +192,8 @@ const RefundDialog: React.FC<Props> = ({
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleSubmit} disabled={isSubmitting || !isValidAmount}>
-            {isSubmitting ? "Processing..." : `Refund ${isValidAmount ? formatCurrency(amountCents, currency) : ""}`}
+          <Button variant="destructive" onClick={handleSubmit(onSubmit)} disabled={isSubmitting || !isValid}>
+            {isSubmitting ? "Processing..." : `Refund ${isValid ? formatCurrency(amountCents, currency) : ""}`}
           </Button>
         </DialogFooter>
       </DialogContent>
