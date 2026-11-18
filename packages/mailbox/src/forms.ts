@@ -19,6 +19,8 @@ export async function recordFormSubmission(
     text: string;
     /** The shop's address, recorded as the recipient. */
     to: string;
+    /** An order the form is about, already checked to belong to this address. */
+    orderId?: string | null;
     createdAt?: Date;
   },
 ): Promise<{ threadId: string; messageId: string } | { error: "invalid-email" }> {
@@ -33,6 +35,7 @@ export async function recordFormSubmission(
       subject: input.subject,
       correspondent: mailbox.address,
       correspondentName: name,
+      orderId: input.orderId ?? null,
       createdAt,
       direction: "in",
     });

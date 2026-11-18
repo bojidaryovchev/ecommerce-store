@@ -53,7 +53,21 @@
     "orders": "My orders",
     "delivery": "Delivery and installation across Bulgaria.",
     "prices": "All prices are in euros and include VAT.",
-    "rights": "© {name}. All rights reserved."
+    "rights": "© {name}. All rights reserved.",
+    "about": "Heating and cooling units with delivery across Bulgaria and turnkey installation: we help you choose, survey on site, install and commission the system.",
+    "guidesAndTools": "Guides and calculators",
+    "allGuides": "All guides",
+    "payments": "Card payments through Stripe.",
+    "promises": {
+      "delivery": "Delivery across Bulgaria",
+      "deliveryText": "Large units arrive by specialised transport.",
+      "installation": "Turnkey installation",
+      "installationText": "We install, commission and set up the system.",
+      "visit": "Site visit",
+      "visitText": "We size the system before you order.",
+      "payment": "Secure payment",
+      "paymentText": "By card, through Stripe. 14 days to withdraw."
+    }
   },
   "topBar": {
     "delivery": "Delivery across Bulgaria",

@@ -19,6 +19,7 @@ export const MESSAGE_NAMESPACES = [
   "contact",
   "guides",
   "tools",
+  "info",
 ] as const;
 
 export type MessageNamespace = (typeof MESSAGE_NAMESPACES)[number];

@@ -2,6 +2,7 @@ import { ContactForm } from "@/components/contact";
 import { CONTACT_EMAIL } from "@/constants";
 import { Link } from "@/i18n/navigation";
 import { isInstallationSystem } from "@/lib/installation-systems";
+import { localizedAlternates } from "@/lib/seo";
 import { ArrowRight, Mail } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -15,7 +16,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "contact.meta" });
-  return { title: t("title"), description: t("description"), alternates: { canonical: "/kontakti" } };
+  return { title: t("title"), description: t("description"), alternates: localizedAlternates("/kontakti", locale) };
 }
 
 const ContactPage: React.FC<Props> = async ({ params, searchParams }) => {

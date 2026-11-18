@@ -3,6 +3,7 @@ import { JsonLd } from "@/components/seo";
 import { findGuide, guideHref, GUIDES, guideText } from "@/content/guides";
 import { Link } from "@/i18n/navigation";
 import { installationHref } from "@/lib/installation-systems";
+import { localizedAlternates } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-url";
 import { getCategoryProducts } from "@/queries/products";
 import { ArrowRight, Calculator, ChevronRight, Clock, Wrench } from "lucide-react";
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: text.title,
     description: text.excerpt,
-    alternates: { canonical: guideHref(slug) },
+    alternates: localizedAlternates(guideHref(slug), locale),
     openGraph: { type: "article", images: [guide.image] },
   };
 }

@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { TOOLS } from "@/lib/calculators";
+import { localizedAlternates } from "@/lib/seo";
 import { AirVent, ArrowRight, Heater, ThermometerSun } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -12,7 +13,7 @@ const ICONS = { termopompa: ThermometerSun, klimatik: AirVent, radiatori: Heater
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "tools.meta" });
-  return { title: t("title"), description: t("description"), alternates: { canonical: "/kalkulatori" } };
+  return { title: t("title"), description: t("description"), alternates: localizedAlternates("/kalkulatori", locale) };
 }
 
 const ToolsPage: React.FC<Props> = async ({ params }) => {

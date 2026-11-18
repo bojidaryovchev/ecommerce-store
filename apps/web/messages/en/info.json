@@ -1,0 +1,88 @@
+{
+  "home": "Home",
+  "section": "Information",
+  "navTitle": "Customer information",
+  "contents": "Contents",
+  "updated": "Last updated: {date}",
+  "draft": "Draft: this text will be reviewed by a lawyer, and the trader's details in [brackets] will be filled in before the shop launches.",
+  "help": {
+    "title": "A question?",
+    "text": "Write to us and we will answer the address you write from.",
+    "link": "Contact us"
+  },
+  "withdrawalCta": {
+    "title": "Want to withdraw from a purchase?",
+    "text": "Fill in the short form and get an email confirmation straight away. No account needed.",
+    "button": "Withdraw from the contract here"
+  },
+  "withdrawal": {
+    "meta": {
+      "title": "Withdraw from the contract",
+      "description": "An online form to withdraw from a contract made in the shop: fill it in and get an email confirmation."
+    },
+    "eyebrow": "Withdrawal",
+    "title": "Withdraw from the contract here",
+    "lead": "Fill in the form to tell us you withdraw from an order or part of it. We email you a confirmation straight away, with the text of your statement and the date and time you sent it.",
+    "rules": "How withdrawal works",
+    "rulesList": [
+      "You have 14 days from receiving the goods, and for services from the conclusion of the contract.",
+      "Return the goods within 14 days of telling us. You bear the cost of returning them.",
+      "We refund within 14 days, by the same means you paid."
+    ],
+    "rulesLink": "The full text",
+    "required": "required",
+    "fields": {
+      "name": "Full name",
+      "email": "Email",
+      "emailHint": "Where we send the confirmation.",
+      "order": "Order number",
+      "orderHint": "For example 8E04FC85: it is in the order email and in your account.",
+      "scope": "What you withdraw from",
+      "scopeAll": "The whole order",
+      "scopePart": "Part of the order",
+      "items": "Which products or services",
+      "received": "Date received",
+      "receivedHint": "If you have already received the goods.",
+      "note": "Note",
+      "noteHint": "Optional. You do not need to give a reason."
+    },
+    "privacy": "We use these details only to process the withdrawal. More in the",
+    "privacyLink": "Privacy policy",
+    "submit": "Confirm withdrawal",
+    "sending": "Sending…",
+    "statement": "I hereby give notice that I withdraw from my contract.",
+    "statementPart": "I hereby give notice that I withdraw from my contract as regards the products or services listed.",
+    "errors": {
+      "name": "Write your name.",
+      "email": "Write an email address for the confirmation.",
+      "order": "Write the order number.",
+      "items": "Write which products or services you withdraw from.",
+      "tooFast": "The form was sent too quickly. Try again in a few seconds.",
+      "failed": "We could not record the statement. Try again or email us at {email}: an email is a valid withdrawal too."
+    },
+    "success": {
+      "title": "We received your withdrawal",
+      "text": "Your statement was sent on {date} at {time}. We emailed a confirmation to {email}, and will write about returning the goods and the refund."
+    },
+    "subject": "Withdrawal from the contract — order #{order}",
+    "labels": {
+      "name": "Name",
+      "email": "Email",
+      "order": "Order",
+      "scope": "Withdrawal",
+      "items": "Products or services",
+      "received": "Received on",
+      "submitted": "Sent on",
+      "note": "Note"
+    },
+    "ack": {
+      "greeting": "Hello {name},",
+      "body": "we confirm we received your withdrawal from the contract on {date} at {time}. We will write with instructions for the return and the refund.",
+      "replyHint": "If you have a question, just reply to this email.",
+      "copy": "Your statement:"
+    }
+  },
+  "footer": {
+    "withdrawal": "Withdraw from a contract"
+  }
+}

@@ -1,5 +1,6 @@
 import { GUIDES, guideHref, guideText } from "@/content/guides";
 import { Link } from "@/i18n/navigation";
+import { localizedAlternates } from "@/lib/seo";
 import { Clock } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -11,7 +12,7 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "guides.meta" });
-  return { title: t("title"), description: t("description"), alternates: { canonical: guideHref() } };
+  return { title: t("title"), description: t("description"), alternates: localizedAlternates(guideHref(), locale) };
 }
 
 const GuidesPage: React.FC<Props> = async ({ params }) => {

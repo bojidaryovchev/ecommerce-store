@@ -6,6 +6,7 @@ import { findGuide, guideHref, guideText } from "@/content/guides";
 import { INSTALLATIONS, installationText } from "@/content/installations";
 import { Link } from "@/i18n/navigation";
 import { INSTALLATION_SYSTEMS, installationHref, isInstallationSystem } from "@/lib/installation-systems";
+import { localizedAlternates } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-url";
 import { getCategoryProducts } from "@/queries/products";
 import { ArrowRight, Calculator, Check, ChevronDown, ChevronRight, ClipboardList } from "lucide-react";
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: text.title,
     description: text.metaDescription,
-    alternates: { canonical: installationHref(system) },
+    alternates: localizedAlternates(installationHref(system), locale),
     openGraph: { images: [INSTALLATION_SYSTEMS.find((entry) => entry.slug === system)!.image] },
   };
 }

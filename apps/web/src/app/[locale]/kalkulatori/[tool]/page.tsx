@@ -1,6 +1,7 @@
 import { ToolCalculator } from "@/components/tools";
 import { Link } from "@/i18n/navigation";
 import { isTool, TOOLS } from "@/lib/calculators";
+import { localizedAlternates } from "@/lib/seo";
 import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t(`${tool}.title`),
     description: t(`${tool}.short`),
-    alternates: { canonical: `/kalkulatori/${tool}` },
+    alternates: localizedAlternates(`/kalkulatori/${tool}`, locale),
   };
 }
 

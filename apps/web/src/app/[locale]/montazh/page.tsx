@@ -1,6 +1,7 @@
 import { ContactBand, HowItWorks } from "@/components/home";
 import { Link } from "@/i18n/navigation";
 import { INSTALLATION_SYSTEMS, installationHref } from "@/lib/installation-systems";
+import { localizedAlternates } from "@/lib/seo";
 import { ArrowRight, Check } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -14,7 +15,11 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "installation.hub" });
-  return { title: t("metaTitle"), description: t("metaDescription"), alternates: { canonical: installationHref() } };
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    alternates: localizedAlternates(installationHref(), locale),
+  };
 }
 
 const InstallationHub: React.FC<Props> = async ({ params }) => {
