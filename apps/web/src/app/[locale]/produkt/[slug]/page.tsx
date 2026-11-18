@@ -26,7 +26,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // starts and an unknown product is a real 404 for them; visitors see the same not-found page.
   if (!product) notFound();
 
-  const description = truncate(product.description ?? t("productDescription", { name: product.name }), 160);
+  // The rewritten copy comes with its own meta description (supplier-sync rewrite); else the opening of the text.
+  const description =
+    product.metadata?.metaDescription ??
+    truncate(product.description ?? t("productDescription", { name: product.name }), 160);
   const path = productHref(product);
 
   return {

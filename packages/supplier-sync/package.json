@@ -11,10 +11,12 @@
   },
   "scripts": {
     "sync": "tsx src/cli.ts",
+    "rewrite": "tsx src/rewrite/cli.ts",
     "test": "vitest run",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.10.0",
     "@ecommerce/database": "workspace:*",
     "drizzle-orm": "0.45.4",
     "zod": "4.6.7"
