@@ -1,6 +1,8 @@
 import { ProductDetailSkeleton } from "@/components/common";
 import { ProductLoader } from "@/components/products";
 import { routing } from "@/i18n/routing";
+import { hasOwnCopy } from "@/lib/product-indexing";
+import { primaryPhoto } from "@/lib/product-media";
 import { productHref } from "@/lib/routes";
 import { getProductBySlug, getProducts } from "@/queries/products";
 import type { Metadata } from "next";
@@ -31,15 +33,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     product.metadata?.metaDescription ??
     truncate(product.description ?? t("productDescription", { name: product.name }), 160);
   const path = productHref(product);
+  const photo = primaryPhoto(product);
+  // Product content is Bulgarian; the English pages only translate the interface, so they stay out of the index.
+  // So does a page whose text is still the supplier's, until its own copy is published.
+  const indexable = locale === routing.defaultLocale && hasOwnCopy(product);
 
   return {
     title: product.name,
     description,
-    // Product content is Bulgarian; the English pages only translate the interface, so keep them out of the index.
-    ...(locale === routing.defaultLocale
-      ? { alternates: { canonical: path } }
-      : { robots: { index: false, follow: true } }),
-    openGraph: { type: "website", title: product.name, description, url: path, images: product.images.slice(0, 1) },
+    ...(locale === routing.defaultLocale && { alternates: { canonical: path } }),
+    ...(!indexable && { robots: { index: false, follow: true } }),
+    openGraph: { type: "website", title: product.name, description, url: path, images: photo ? [photo] : [] },
   };
 }
 

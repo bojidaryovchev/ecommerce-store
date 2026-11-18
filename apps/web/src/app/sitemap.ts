@@ -3,6 +3,8 @@ import { INFO_SLUGS, infoHref, WITHDRAWAL_HREF } from "@/content/legal";
 import { TOOLS } from "@/lib/calculators";
 import { categoryTrail } from "@/lib/category-tree";
 import { INSTALLATION_SYSTEMS, installationHref } from "@/lib/installation-systems";
+import { hasOwnCopy } from "@/lib/product-indexing";
+import { productPhotos } from "@/lib/product-media";
 import { categoryHref, productHref } from "@/lib/routes";
 import { SITE_URL } from "@/lib/site-url";
 import { getCategoryIndex } from "@/queries/categories";
@@ -57,13 +59,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categories.map((category) =>
       bulgarian(categoryHref(categoryTrail(categories, category.id)), { changeFrequency: "weekly", priority: 0.7 }),
     ),
-    ...products.map((product) =>
+    // Only products with the shop's own text: one still showing the supplier's is not indexed (lib/product-indexing.ts).
+    ...products.filter(hasOwnCopy).map((product) =>
       bulgarian(productHref(product), {
         lastModified: product.updatedAt,
         changeFrequency: "daily",
         priority: 0.6,
-        // The photos, so image search finds them through the page they belong to.
-        images: (product.images ?? [])
+        // The photos (not the feature icons), so image search finds them through the page they belong to.
+        images: productPhotos(product)
           .slice(0, 10)
           .map((image) => (image.startsWith("http") ? image : `${SITE_URL}${image}`)),
       }),

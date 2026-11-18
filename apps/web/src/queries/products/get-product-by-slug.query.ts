@@ -27,6 +27,8 @@ async function getProductBySlug(slug: string) {
         orderBy: [desc(schema.reviews.createdAt)],
         limit: 10,
       },
+      // Whether the text is still the supplier's (lib/product-indexing.ts).
+      supplierProduct: { columns: { id: true } },
     },
   });
 

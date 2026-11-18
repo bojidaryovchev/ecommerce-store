@@ -19,6 +19,8 @@ async function getProducts() {
         where: eq(schema.prices.active, true),
       },
       category: true,
+      // Whether the text is still the supplier's (lib/product-indexing.ts).
+      supplierProduct: { columns: { id: true } },
     },
   });
 
