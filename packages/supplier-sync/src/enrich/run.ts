@@ -20,7 +20,7 @@ import {
   type ResearchItem,
 } from "./contract";
 import { buildCopyItem, checkCopyAnswer, figureSpellings } from "./copy";
-import { KINDS, PRODUCT_KINDS, fieldBrief, kindFields, type ProductKind } from "./fields";
+import { KINDS, PRODUCT_KINDS, effectiveKind, fieldBrief, kindFields, type ProductKind } from "./fields";
 import { guessImageKind, prepareImages } from "./images";
 import {
   readClassify,
@@ -134,7 +134,7 @@ function validateHash(product: EnrichProduct, extract: ExtractOutput, classify: 
   return hashOf({
     version: STAGE_VERSIONS.validate,
     extract,
-    kind: product.kind ?? classify?.kind ?? extract.kind,
+    kind: effectiveKind(product.kind, classify?.kind, extract.kind),
     name: product.source.name,
     category: product.category?.slug ?? classify?.category?.slug ?? null,
     attributes: supplierAttributesOf(product),
@@ -523,11 +523,11 @@ async function storeResearch(
   started: Date,
   finished: Date,
 ): Promise<void> {
-  const kind = product.kind ?? answer.kind;
+  const kind = effectiveKind(product.kind, answer.kind)!;
   const notes: string[] = [];
   if (product.kind && answer.kind !== product.kind) {
     notes.push(
-      `The research took it for a ${KINDS[answer.kind].label.toLowerCase()}; its category says ${KINDS[product.kind].label.toLowerCase()}.`,
+      `The research took it for a ${KINDS[answer.kind].label.toLowerCase()}; its category says ${KINDS[product.kind].label.toLowerCase()}${kind === "accessory" ? ", so it is checked as a part" : ""}.`,
     );
   }
   const extract: ExtractOutput = {
@@ -613,7 +613,7 @@ async function runValidation(
   const extract = readExtract(current.stages.extract?.output);
   if (!extract) return null;
   const classify = readClassify(current.stages.classify?.output);
-  const kind = current.kind ?? classify?.kind ?? extract.kind;
+  const kind = effectiveKind(current.kind, classify?.kind, extract.kind)!;
   const answer: ResearchAnswer = {
     id: current.id,
     kind,

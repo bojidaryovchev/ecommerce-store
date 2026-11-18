@@ -38,6 +38,7 @@ Search the web for the exact model: brand, model designation and output. Prefer,
 - **Never use hydrotermbg.com or justpurrrfect.com as evidence.** The first is the supplier whose data is in question, the second is our own shop.
 - Make sure each source describes the same variant: same model code, same output, same refrigerant, single- or three-phase.
 - Budget: about four searches and four page fetches per family. Stop when the figures are clear. A family of six sizes usually has one datasheet with all six.
+- Radiators and towel rails: look for the manufacturer's output table and take the row for this exact size (height and width or length, panel type, sections). Another size's figure in the same series is not this product's. If no table names this size, leave the output out.
 - When `task.research` is false, work from the supplier's text and images; search only if a required figure is missing or contradicted.
 
 ### 4. Extract the specifications
@@ -56,7 +57,7 @@ When sources disagree, prefer the manufacturer's datasheet, then the supplier's 
 
 ### 5. Classify
 
-- `kind`: the product's kind. When the file gives one, return it unchanged unless it is plainly wrong (then return the right one and explain in `note`).
+- `kind`: the product's kind. When the file gives one, return it unchanged unless it is plainly wrong (then return the right one and explain in `note`). A part sold beside its units (a fitting kit, a wall bracket, a valve, a heating element) is an `accessory`, even in a radiator or boiler category.
 - `category`: only when `task.chooseCategory` is true: the `slug` of the best category from `categories` and a short `reason`. Otherwise null.
 - `images`: what each image shows, for every image without a `known` classification and for every photo (known or not, since whether a photo shows this very model is a question about this product): `photo` (the product itself, a real photograph or a clean product render), `icon` (a small feature pictogram), `badge` (a certification or marketing seal: CE, "Energy saving", awards), `energy_label` (an EU energy label or an energy-class graphic), `spec_table` (a table of figures), `diagram` (a drawing, dimensions, system schematic, an installation example), `logo` (a brand logo alone), or `other`. For icons, badges and energy labels give a short Bulgarian `label` of what it says ("Wi-Fi", "A+++", "R32", "Smart Grid", "CE"); otherwise null. Set `otherModel` to true when the picture shows a different model or size than this product (the supplier reuses a range's photos: a two-fan 12–16 kW unit on a 5 kW product's page), else false; `kind` still says what the picture is. Use the image's `url` exactly as given.
 

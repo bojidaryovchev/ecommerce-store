@@ -17,7 +17,7 @@ import {
   type ResearchAnswer,
 } from "../src/enrich/contract";
 import { checkCopyAnswer, copiedRun, figureSpellings, modelTokens } from "../src/enrich/copy";
-import { KINDS, SPEC_FIELDS, formatSpecValue, kindOfCategory } from "../src/enrich/fields";
+import { KINDS, SPEC_FIELDS, effectiveKind, formatSpecValue, kindOfCategory } from "../src/enrich/fields";
 import { guessImageKind } from "../src/enrich/images";
 import { researchBatches } from "../src/enrich/run";
 import type { EnrichProduct } from "../src/enrich/state";
@@ -198,6 +198,13 @@ describe("fields", () => {
       for (const key of Object.keys(kind.fields)) expect(SPEC_FIELDS).toHaveProperty(key);
     }
   });
+
+  it("checks a part sold in a unit's category as a part, and otherwise goes by the category", () => {
+    expect(effectiveKind("radiator", "accessory")).toBe("accessory");
+    expect(effectiveKind("radiator", "towel_rail")).toBe("radiator");
+    expect(effectiveKind(null, "boiler")).toBe("boiler");
+    expect(effectiveKind(null, undefined, "other")).toBe("other");
+  });
 });
 
 /* --- Validation ------------------------------------------------------------------------------------------- */
@@ -293,6 +300,39 @@ describe("validateResearch", () => {
     expect(result.conflicts).toEqual([]);
     expect(result.supersede).toEqual(["power-heating"]);
     expect(result.problems).toEqual([]);
+  });
+
+  it("accepts the 36 mm bottom-centre connection of a designer towel rail, not a figure in cm", () => {
+    const rail = (centreDistanceMm: number) =>
+      validateResearch({
+        name: "Алуминиева лира Guardian 15 450/1300",
+        kind: "towel_rail",
+        categorySlug: "aluminievi-liri",
+        research: answer({
+          kind: "towel_rail",
+          specs: [
+            {
+              key: "centreDistanceMm",
+              value: centreDistanceMm,
+              condition: null,
+              source: "supplier_image",
+              url: null,
+              confidence: "medium",
+            },
+            {
+              key: "outputW",
+              value: 795,
+              condition: "75/65/20",
+              source: "supplier_text",
+              url: null,
+              confidence: "high",
+            },
+          ],
+        }),
+        supplierAttributes: [],
+      });
+    expect(rail(36).problems).toEqual([]);
+    expect(rail(5).problems.join(" ")).toMatch(/Междуосие 5 мм is outside/);
   });
 
   it("keeps a valid GTIN and drops a bad one", () => {

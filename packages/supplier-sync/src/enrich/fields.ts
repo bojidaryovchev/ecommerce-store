@@ -357,7 +357,11 @@ type Range = readonly [number, number];
 export interface KindConfig {
   /** English, for the admin. */
   label: string;
-  /** Whether web research is worth it: machines have manufacturer datasheets; towel rails and pipes don't add much. */
+  /**
+   * Whether web research is worth it: machines have manufacturer datasheets, and radiators and towel rails have
+   * output tables (the supplier rarely states the output, the figure shoppers size a room by); pipes and parts don't
+   * add much.
+   */
   research: boolean;
   /** The fields that apply, with the range a real value falls in. */
   fields: Partial<Record<SpecKey, Range | null>>;
@@ -469,7 +473,7 @@ export const KINDS: Record<ProductKind, KindConfig> = {
   },
   radiator: {
     label: "Radiator",
-    research: false,
+    research: true,
     fields: {
       outputW: [40, 8000],
       heightMm: [100, 2500],
@@ -486,13 +490,14 @@ export const KINDS: Record<ProductKind, KindConfig> = {
   },
   towel_rail: {
     label: "Towel rail",
-    research: false,
+    research: true,
     fields: {
       outputW: [20, 3000],
       heightMm: [250, 2500],
       widthMm: [150, 1500],
       depthMm: [15, 250],
-      centreDistanceMm: [150, 1500],
+      // Side-connected rails are 150 mm and up; designer rails connected at the bottom centre are 36 to 50 mm.
+      centreDistanceMm: [30, 1500],
       heatingType: null,
       colour: null,
       weightKg: [1, 80],
@@ -600,6 +605,19 @@ export const KIND_BY_CATEGORY: Record<string, ProductKind> = {
 
 export function kindOfCategory(slug: string | null | undefined): ProductKind | null {
   return (slug && KIND_BY_CATEGORY[slug]) || null;
+}
+
+/**
+ * The kind the gates check a product as. Its category decides, except for a part sold beside its units: a fitting
+ * kit or a wall bracket in the radiator category is checked as an accessory, not as a radiator without an output.
+ */
+export function effectiveKind(
+  categoryKind: ProductKind | null,
+  researchKind: ProductKind | null | undefined,
+  fallback?: ProductKind,
+): ProductKind | null {
+  if (categoryKind && researchKind === "accessory") return "accessory";
+  return categoryKind ?? researchKind ?? fallback ?? null;
 }
 
 /** What the model is told about one field. */

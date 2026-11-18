@@ -19,7 +19,11 @@ one stopped, and the daily run only touches products the supplier changed.
    datasheets first, EPREL for energy classes; never the supplier's or our own site) and returns typed
    specifications for the product's kind (`fields.ts`: heat pumps, air conditioners, pellet stoves, boilers,
    radiators, towel rails, fan coils, pumps), each with its source, test condition and confidence. Products
-   sharing the supplier's text are researched together, from one datasheet.
+   sharing the supplier's text are researched together, from one datasheet. Radiators and towel rails are
+   researched too: the supplier rarely states their output, and the output table must name the exact size.
+   Parts (kits, brackets, ...) are only read from the supplier's data. A part the research recognises in a
+   unit's category, such as a bracket among the radiators, is checked as a part, not as a radiator without an
+   output.
 2. **Validate** (code, `validate.ts`). Types and plausible ranges per kind; figures in the name against the
    specs; the supplier's attribute fields against what was found (a contradiction the name settles is
    corrected, any other goes to review); required fields; GTIN check digits. Radiator and towel-rail outputs
