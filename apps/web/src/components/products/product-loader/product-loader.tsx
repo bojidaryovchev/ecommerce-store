@@ -1,11 +1,9 @@
 import { ProductDetail } from "@/components/products";
-import { auth } from "@/lib/auth";
 import { categoryTrail } from "@/lib/category-tree";
 import { categoryHref, productHref } from "@/lib/routes";
 import { SITE_URL } from "@/lib/site-url";
 import { getCategoryIndex } from "@/queries/categories";
 import { getProductBySlug } from "@/queries/products";
-import { isProductWishlisted } from "@/queries/wishlist";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -16,10 +14,11 @@ interface Props {
 }
 
 const ProductLoader: React.FC<Props> = async ({ slug }) => {
-  const [product, categories, session, locale, t] = await Promise.all([
+  // Nothing here reads the request (the wishlist heart does, in its own island), so the whole page
+  // is prerendered: the product's content is in the HTML as served.
+  const [product, categories, locale, t] = await Promise.all([
     getProductBySlug(slug),
     getCategoryIndex(),
-    auth(),
     getLocale(),
     getTranslations("products.detail.breadcrumb"),
   ]);
@@ -28,7 +27,6 @@ const ProductLoader: React.FC<Props> = async ({ slug }) => {
     notFound();
   }
 
-  const wishlisted = session?.user?.id ? await isProductWishlisted(session.user.id, product.id) : undefined;
   const trail = categoryTrail(categories, product.categoryId);
   const prefix = locale === "en" ? "/en" : "";
   const url = `${SITE_URL}${prefix}${productHref(product)}`;
@@ -55,7 +53,7 @@ const ProductLoader: React.FC<Props> = async ({ slug }) => {
           { name: product.name, url },
         ]}
       />
-      <ProductDetail product={product} categoryTrail={trail} isWishlisted={wishlisted} />
+      <ProductDetail product={product} categoryTrail={trail} />
     </>
   );
 };

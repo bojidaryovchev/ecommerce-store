@@ -5,6 +5,7 @@ import { NextAuthRequest } from "next-auth";
 import createIntlMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 import { setSecurityHeaders } from "./lib/headers";
+import { catalogVerdict } from "./lib/route-index";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -31,7 +32,7 @@ const redirectToLogin = (req: NextAuthRequest, prefix: string, callbackPath: str
   return NextResponse.redirect(signInUrl);
 };
 
-export default auth((req) => {
+export default auth(async (req) => {
   const { pathname } = req.nextUrl;
   const user = req.auth?.user;
 
@@ -54,6 +55,26 @@ export default auth((req) => {
   const { prefix, path } = splitLocalePrefix(pathname);
   if (!user && (path.startsWith("/account") || path.startsWith("/orders"))) {
     return finish(redirectToLogin(req, prefix, pathname), pathname);
+  }
+
+  // A catalog page that doesn't exist is a 404 and a category under an outdated path a 308, decided
+  // here: with Cache Components the page itself commits to 200 once its shell streams (lib/route-index.ts).
+  const verdict = await catalogVerdict(path);
+  if (verdict.kind === "moved") {
+    return finish(
+      NextResponse.redirect(new URL(`${prefix}${verdict.to}${req.nextUrl.search}`, req.url), 308),
+      pathname,
+    );
+  }
+  if (verdict.kind === "missing") {
+    // The page renders its own not-found view; the rewrite carries the status.
+    const locale = prefix ? prefix.slice(1) : routing.defaultLocale;
+    const headers = new Headers(req.headers);
+    headers.set("X-NEXT-INTL-LOCALE", locale);
+    return finish(
+      NextResponse.rewrite(new URL(`/${locale}${path}`, req.url), { status: 404, request: { headers } }),
+      pathname,
+    );
   }
 
   return finish(intlMiddleware(req), pathname);

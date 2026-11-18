@@ -25,8 +25,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { ...page("/", true), changeFrequency: "daily", priority: 1 },
-    { ...page("/products", true), changeFrequency: "daily", priority: 0.8 },
-    { ...page("/categories", true), changeFrequency: "weekly", priority: 0.7 },
+    // Listings of Bulgarian product content: the English versions are not indexed.
+    { ...page("/products", false), changeFrequency: "daily", priority: 0.8 },
+    { ...page("/categories", false), changeFrequency: "weekly", priority: 0.7 },
     { ...page(installationHref(), true), changeFrequency: "monthly", priority: 0.8 },
     ...INSTALLATION_SYSTEMS.map((system) => ({
       ...page(installationHref(system.slug), true),

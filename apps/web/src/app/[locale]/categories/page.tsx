@@ -1,5 +1,6 @@
 import { AllCategories } from "@/components/categories";
 import { CategoriesGridSkeleton } from "@/components/common";
+import { routing } from "@/i18n/routing";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import React, { Suspense } from "react";
@@ -16,6 +17,9 @@ export async function generateMetadata({ params }: CategoriesPageProps): Promise
   return {
     title: t("metadata.title"),
     description: t("metadata.description"),
+    alternates: { canonical: "/categories" },
+    // The categories are Bulgarian content; the English page only translates the interface.
+    ...(locale !== routing.defaultLocale && { robots: { index: false, follow: true } }),
   };
 }
 

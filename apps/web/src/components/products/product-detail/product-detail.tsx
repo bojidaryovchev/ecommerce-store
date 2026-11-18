@@ -1,4 +1,3 @@
-import { WishlistButton } from "@/components/products/wishlist-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -21,6 +20,7 @@ import { ExpandableText } from "./expandable-text";
 import { ProductAddToCart } from "./product-add-to-cart";
 import { ProductGallery } from "./product-gallery";
 import { ProductSpecs, specRows } from "./product-specs";
+import { ProductWishlist } from "./product-wishlist";
 import { ReviewSection } from "./review-section";
 import { SimilarProducts } from "./similar-products";
 import { SpecComparison } from "./spec-comparison";
@@ -32,14 +32,13 @@ interface Props {
   product: Product;
   /** The product's category and its ancestors, root first. */
   categoryTrail: CategoryNode[];
-  isWishlisted?: boolean;
 }
 
 /** How many specifications the buy box shows; the rest are in the table below. */
 const KEY_SPECS = 4;
 const BUY_BUTTON_ID = "buy-box";
 
-const ProductDetail: React.FC<Props> = ({ product, categoryTrail, isWishlisted }) => {
+const ProductDetail: React.FC<Props> = ({ product, categoryTrail }) => {
   const t = useTranslations("products.detail");
   const tReviews = useTranslations("products.reviews");
   const tSystems = useTranslations("installation.systems");
@@ -151,9 +150,9 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail, isWishlisted }
                 stockQuantity={product.stockQuantity}
               />
             </div>
-            {isWishlisted !== undefined && (
-              <WishlistButton productId={product.id} isWishlisted={isWishlisted} variant="labeled" />
-            )}
+            <Suspense fallback={null}>
+              <ProductWishlist productId={product.id} />
+            </Suspense>
           </div>
 
           {system && (

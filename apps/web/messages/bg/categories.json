@@ -3,7 +3,8 @@
     "title": "Категории",
     "description": "Разгледайте нашите продуктови категории",
     "notFoundTitle": "Категорията не е намерена",
-    "categoryDescription": "Разгледайте продуктите в категория „{name}“"
+    "categoryDescription": "Разгледайте продуктите в категория „{name}“",
+    "pagedTitle": "{name}: страница {page}"
   },
   "page": {
     "title": "Категории"

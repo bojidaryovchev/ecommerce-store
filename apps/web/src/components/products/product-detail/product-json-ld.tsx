@@ -1,3 +1,4 @@
+import { deliveryFee } from "@/lib/delivery";
 import { SITE_URL } from "@/lib/site-url";
 import React from "react";
 
@@ -23,9 +24,13 @@ const toScript = (data: unknown) => JSON.stringify(data).replaceAll("<", LESS_TH
 
 const absolute = (url: string) => (url.startsWith("http") ? url : `${SITE_URL}${url.startsWith("/") ? "" : "/"}${url}`);
 
-/** schema.org Product + BreadcrumbList for rich results. */
+/**
+ * schema.org Product + BreadcrumbList for rich results. Product goes out only with an offer: Google's
+ * product snippets and merchant listings need one, and a price-on-request product has none. The offer
+ * carries the delivery terms (lib/delivery.ts) and the 14-day return policy, at the customer's cost.
+ */
 const ProductJsonLd: React.FC<Props> = (props) => {
-  const product = {
+  const product = props.price && {
     "@context": "https://schema.org",
     "@type": "Product",
     name: props.name,
@@ -41,6 +46,23 @@ const ProductJsonLd: React.FC<Props> = (props) => {
         priceCurrency: props.price.currency.toUpperCase(),
         availability: `https://schema.org/${props.availability}`,
         itemCondition: "https://schema.org/NewCondition",
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          shippingRate: {
+            "@type": "MonetaryAmount",
+            value: (deliveryFee(props.price.amount) / 100).toFixed(2),
+            currency: props.price.currency.toUpperCase(),
+          },
+          shippingDestination: { "@type": "DefinedRegion", addressCountry: "BG" },
+        },
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: "BG",
+          returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: 14,
+          returnMethod: "https://schema.org/ReturnByMail",
+          returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
+        },
       },
     }),
   };
@@ -57,7 +79,7 @@ const ProductJsonLd: React.FC<Props> = (props) => {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toScript(product) }} />
+      {product && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toScript(product) }} />}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toScript(breadcrumbs) }} />
     </>
   );

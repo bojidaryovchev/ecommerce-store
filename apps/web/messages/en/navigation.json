@@ -67,7 +67,8 @@
       "visitText": "We size the system before you order.",
       "payment": "Secure payment",
       "paymentText": "By card, through Stripe. 14 days to withdraw."
-    }
+    },
+    "allTools": "All calculators"
   },
   "topBar": {
     "delivery": "Delivery across Bulgaria",

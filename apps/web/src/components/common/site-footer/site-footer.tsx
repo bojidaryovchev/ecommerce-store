@@ -102,6 +102,11 @@ const SiteFooter: React.FC = async () => {
               </li>
             ))}
             <li>
+              <Link href="/categories" className={linkClass}>
+                {t("allCategories")}
+              </Link>
+            </li>
+            <li>
               <Link href="/products" className="text-heat text-sm font-semibold hover:underline">
                 {t("allProducts")}
               </Link>
@@ -148,6 +153,11 @@ const SiteFooter: React.FC = async () => {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href="/kalkulatori" className={linkClass}>
+                {t("allTools")}
+              </Link>
+            </li>
           </Column>
 
           <Column title={tInfo("navTitle")}>

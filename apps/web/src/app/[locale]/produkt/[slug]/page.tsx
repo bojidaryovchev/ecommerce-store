@@ -5,6 +5,7 @@ import { productHref } from "@/lib/routes";
 import { getProductBySlug, getProducts } from "@/queries/products";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 import React, { Suspense } from "react";
 
 interface Props {
@@ -21,11 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProductBySlug(slug);
   const t = await getTranslations({ locale, namespace: "products.metadata" });
 
-  if (!product) {
-    return {
-      title: t("productNotFound"),
-    };
-  }
+  // Crawlers get blocking metadata (htmlLimitedBots in next.config), so this runs before the response
+  // starts and an unknown product is a real 404 for them; visitors see the same not-found page.
+  if (!product) notFound();
 
   const description = truncate(product.description ?? t("productDescription", { name: product.name }), 160);
   const path = productHref(product);
@@ -54,6 +53,8 @@ export async function generateStaticParams({ params }: { params: { locale: strin
 const ProductPage: React.FC<Props> = async ({ params }) => {
   const { locale, slug } = await params;
   setRequestLocale(locale);
+  // Decided before anything streams, so an unknown product is a real 404, not a 200 "not found" page.
+  if (!(await getProductBySlug(slug))) notFound();
 
   return (
     <main className="max-w-container py-8">

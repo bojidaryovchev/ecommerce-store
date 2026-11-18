@@ -7,7 +7,7 @@ import { getProductBySlug } from "@/queries/products";
 import { ArrowRight, Mail } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import React from "react";
+import React, { Suspense } from "react";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -20,14 +20,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: t("title"), description: t("description"), alternates: localizedAlternates("/kontakti", locale) };
 }
 
+/**
+ * The form, set up from the query: a site visit for a system (?tema=ogled&sistema=…) or a question
+ * about a product (?produkt=…). Only this part waits for the request, so the rest is prerendered.
+ */
+const ContactFormForQuery: React.FC<Pick<Props, "searchParams">> = async ({ searchParams }) => {
+  const { tema, sistema, produkt } = await searchParams;
+  const product = produkt && /^[a-z0-9-]{1,200}$/.test(produkt) ? await getProductBySlug(produkt) : null;
+  return (
+    <ContactForm
+      topic={tema === "ogled" ? "ogled" : "vapros"}
+      system={sistema && isInstallationSystem(sistema) ? sistema : undefined}
+      product={product?.slug ? { slug: product.slug, name: product.name } : undefined}
+    />
+  );
+};
+
 const ContactPage: React.FC<Props> = async ({ params, searchParams }) => {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { tema, sistema, produkt } = await searchParams;
-  const [t, product] = await Promise.all([
-    getTranslations("contact"),
-    produkt && /^[a-z0-9-]{1,200}$/.test(produkt) ? getProductBySlug(produkt) : Promise.resolve(null),
-  ]);
+  const t = await getTranslations("contact");
   const next = t.raw("aside.next") as string[];
 
   return (
@@ -39,11 +51,9 @@ const ContactPage: React.FC<Props> = async ({ params, searchParams }) => {
       </div>
 
       <div className="mt-10 grid items-start gap-8 lg:grid-cols-[1fr_22rem] lg:gap-12">
-        <ContactForm
-          topic={tema === "ogled" ? "ogled" : "vapros"}
-          system={sistema && isInstallationSystem(sistema) ? sistema : undefined}
-          product={product?.slug ? { slug: product.slug, name: product.name } : undefined}
-        />
+        <Suspense fallback={<div className="bg-card min-h-[36rem] rounded-3xl border" />}>
+          <ContactFormForQuery searchParams={searchParams} />
+        </Suspense>
 
         <aside className="space-y-8 lg:sticky lg:top-32">
           <section>

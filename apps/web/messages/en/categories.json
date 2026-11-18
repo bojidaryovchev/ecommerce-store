@@ -3,7 +3,8 @@
     "title": "Categories",
     "description": "Browse our product categories",
     "notFoundTitle": "Category Not Found",
-    "categoryDescription": "Browse products in {name}"
+    "categoryDescription": "Browse products in {name}",
+    "pagedTitle": "{name}: page {page}"
   },
   "page": {
     "title": "Categories"

@@ -10,6 +10,14 @@ const nextConfig: NextConfig = {
   // Transpile workspace packages
   transpilePackages: ["@ecommerce/database", "@ecommerce/mailbox", "@ecommerce/supplier-sync"],
 
+  /*
+   * Crawlers that get the title, description and canonical in the <head> rather than streamed into
+   * the body: Next's own list plus Googlebot (which only trusts a canonical in the head) and the AI
+   * search crawlers, which do not run JavaScript. Visitors keep streamed metadata.
+   */
+  htmlLimitedBots:
+    /Googlebot|bingbot|GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-SearchBot|Claude-User|PerplexityBot|Perplexity-User|CCBot|Amazonbot|meta-externalagent|[\w-]+-Google|Google-[\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight/i,
+
   experimental: {
     // Mailbox replies carry attachments (up to 4 MB, see ATTACHMENT_LIMIT in @ecommerce/mailbox); Vercel caps
     // a request body at 4.5 MB anyway.
