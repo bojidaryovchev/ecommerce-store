@@ -1,12 +1,15 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import { INSTALLATION_SYSTEMS } from "@/lib/installation-systems";
 import { cn } from "@/lib/utils";
-import { submitContactAction, type ContactFormState } from "@/mutations/contact/submit-contact.mutation";
+import { submitContactAction } from "@/mutations/contact/submit-contact.mutation";
+import { CONTACT_SYSTEMS, contactSchema, type ContactInput } from "@/schemas/contact.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import React, { startTransition, useActionState, useState } from "react";
+import React, { useRef, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import toast from "react-hot-toast";
 
 type Props = {
   topic?: "ogled" | "vapros";
@@ -16,15 +19,13 @@ type Props = {
   className?: string;
 };
 
-const SYSTEMS = [...INSTALLATION_SYSTEMS.map((system) => system.slug), "drugo"];
-
 const field =
   "bg-background focus:border-ring focus:ring-ring/20 w-full rounded-xl border px-3.5 py-2.5 text-[15px] outline-none transition-shadow focus:ring-4 aria-[invalid=true]:border-destructive";
 const label = "text-sm font-medium";
 
 /**
- * The contact and site-visit form. Submitted by hand rather than through `<form action>`, which
- * would clear the fields when the action returns: a refusal must leave what was typed in place.
+ * The contact and site-visit form: React Hook Form with the same Zod schema the action checks, so a mistake
+ * shows at the field as soon as it is left, and what was typed stays in place when the action refuses.
  */
 const ContactForm: React.FC<Props> = ({
   topic: initialTopic = "vapros",
@@ -34,38 +35,77 @@ const ContactForm: React.FC<Props> = ({
 }) => {
   const t = useTranslations("contact");
   const locale = useLocale();
-  const [state, dispatch, pending] = useActionState<ContactFormState, FormData>(submitContactAction, {});
-  const [topic, setTopic] = useState(initialTopic);
   // When the page was opened: the action refuses forms filled faster than a person could.
   const [startedAt] = useState(() => Date.now());
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const honeypot = useRef<HTMLInputElement>(null);
+  const {
+    register,
+    handleSubmit,
+    control,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<ContactInput>({
+    resolver: zodResolver(contactSchema),
+    mode: "onTouched",
+    defaultValues: {
+      topic: initialTopic,
+      system: (CONTACT_SYSTEMS as readonly string[]).includes(initialSystem ?? "")
+        ? (initialSystem as ContactInput["system"])
+        : "",
+      name: "",
+      email: "",
+      phone: "",
+      city: "",
+      message: "",
+      consent: false,
+    },
+  });
+  const topic = useWatch({ control, name: "topic" });
 
-  if (state.ok) {
+  if (sentTo !== null) {
     return (
       <div className={cn("bg-card flex flex-col items-start rounded-3xl border p-8 md:p-10", className)} role="status">
         <CheckCircle2 className="text-heat size-10" aria-hidden />
         <h2 className="mt-4 text-2xl font-bold">{t("success.title")}</h2>
-        <p className="text-muted-foreground mt-2 leading-relaxed">{t("success.text", { email: state.email ?? "" })}</p>
+        <p className="text-muted-foreground mt-2 leading-relaxed">{t("success.text", { email: sentTo })}</p>
       </div>
     );
   }
 
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    startTransition(() => dispatch(data));
+  const onSubmit = async (values: ContactInput) => {
+    const result = await submitContactAction({
+      ...values,
+      locale,
+      startedAt,
+      website: honeypot.current?.value ?? "",
+      ...(product ? { product: product.slug } : {}),
+    });
+    if (result.ok) {
+      toast.success(t("success.title"));
+      setSentTo(result.email ?? values.email);
+      return;
+    }
+    for (const [name, key] of Object.entries(result.errors ?? {})) {
+      setError(name as keyof ContactInput, { message: key }, { shouldFocus: true });
+    }
+    if (result.error) toast.error(result.error);
   };
-  const error = (key: keyof NonNullable<ContactFormState["errors"]>) => state.errors?.[key];
+  /** The message for a field's error, in the visitor's language (the schema gives keys). */
+  const error = (name: "name" | "email" | "message" | "consent") =>
+    errors[name]?.message ? t(`errors.${errors[name]!.message as "name"}`) : undefined;
 
   return (
-    <form onSubmit={onSubmit} noValidate className={cn("bg-card rounded-3xl border p-6 shadow-sm md:p-8", className)}>
-      <input type="hidden" name="locale" value={locale} />
-      <input type="hidden" name="startedAt" value={startedAt} />
-      {product && <input type="hidden" name="product" value={product.slug} />}
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      className={cn("bg-card rounded-3xl border p-6 shadow-sm md:p-8", className)}
+    >
       {/* For bots only: hidden from people and from assistive technology. */}
       <div aria-hidden className="absolute -left-[9999px] h-0 overflow-hidden">
         <label>
           Website
-          <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+          <input ref={honeypot} type="text" name="website" tabIndex={-1} autoComplete="off" />
         </label>
       </div>
 
@@ -80,14 +120,7 @@ const ContactForm: React.FC<Props> = ({
                 topic === value ? "border-primary bg-primary/5 font-medium" : "hover:border-primary/30",
               )}
             >
-              <input
-                type="radio"
-                name="topic"
-                value={value}
-                checked={topic === value}
-                onChange={() => setTopic(value)}
-                className="accent-primary"
-              />
+              <input type="radio" value={value} {...register("topic")} className="accent-primary" />
               {t(`form.topics.${value}`)}
             </label>
           ))}
@@ -99,9 +132,9 @@ const ContactForm: React.FC<Props> = ({
           <label htmlFor="contact-system" className={label}>
             {t("form.system")}
           </label>
-          <select id="contact-system" name="system" defaultValue={initialSystem ?? ""} className={cn(field, "mt-1.5")}>
+          <select id="contact-system" {...register("system")} className={cn(field, "mt-1.5")}>
             <option value="">—</option>
-            {SYSTEMS.map((slug) => (
+            {CONTACT_SYSTEMS.map((slug) => (
               <option key={slug} value={slug}>
                 {t(`form.systems.${slug}`)}
               </option>
@@ -117,10 +150,9 @@ const ContactForm: React.FC<Props> = ({
           </label>
           <input
             id="contact-name"
-            name="name"
             autoComplete="name"
-            required
             maxLength={120}
+            {...register("name")}
             aria-invalid={Boolean(error("name"))}
             aria-describedby={error("name") ? "contact-name-error" : undefined}
             className={cn(field, "mt-1.5")}
@@ -137,11 +169,10 @@ const ContactForm: React.FC<Props> = ({
           </label>
           <input
             id="contact-email"
-            name="email"
             type="email"
             autoComplete="email"
-            required
             maxLength={200}
+            {...register("email")}
             aria-invalid={Boolean(error("email"))}
             aria-describedby={error("email") ? "contact-email-error" : undefined}
             className={cn(field, "mt-1.5")}
@@ -158,10 +189,10 @@ const ContactForm: React.FC<Props> = ({
           </label>
           <input
             id="contact-phone"
-            name="phone"
             type="tel"
             autoComplete="tel"
             maxLength={40}
+            {...register("phone")}
             aria-describedby="contact-phone-hint"
             className={cn(field, "mt-1.5")}
           />
@@ -175,9 +206,9 @@ const ContactForm: React.FC<Props> = ({
           </label>
           <input
             id="contact-city"
-            name="city"
             autoComplete="address-level2"
             maxLength={100}
+            {...register("city")}
             className={cn(field, "mt-1.5")}
           />
         </div>
@@ -195,10 +226,10 @@ const ContactForm: React.FC<Props> = ({
         )}
         <textarea
           id="contact-message"
-          name="message"
           rows={6}
           maxLength={4000}
           placeholder={t("form.messagePlaceholder")}
+          {...register("message")}
           aria-invalid={Boolean(error("message"))}
           aria-describedby={error("message") ? "contact-message-error" : undefined}
           className={cn(field, "mt-1.5 resize-y")}
@@ -214,9 +245,9 @@ const ContactForm: React.FC<Props> = ({
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
-            name="consent"
-            required
+            {...register("consent")}
             aria-invalid={Boolean(error("consent"))}
+            aria-describedby={error("consent") ? "contact-consent-error" : undefined}
             className="accent-primary mt-0.5 size-4 shrink-0"
           />
           <span>
@@ -227,21 +258,19 @@ const ContactForm: React.FC<Props> = ({
             .
           </span>
         </label>
-        {error("consent") && <p className="text-destructive mt-1.5 text-sm">{error("consent")}</p>}
+        {error("consent") && (
+          <p id="contact-consent-error" className="text-destructive mt-1.5 text-sm">
+            {error("consent")}
+          </p>
+        )}
       </div>
-
-      {state.error && (
-        <p role="alert" className="text-destructive mt-5 text-sm">
-          {state.error}
-        </p>
-      )}
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={isSubmitting}
         className="bg-heat text-heat-foreground hover:bg-heat/90 mt-6 inline-flex h-12 w-full items-center justify-center rounded-full px-8 text-sm font-semibold transition-colors disabled:opacity-60 sm:w-auto"
       >
-        {pending ? t("form.sending") : t("form.submit")}
+        {isSubmitting ? t("form.sending") : t("form.submit")}
       </button>
     </form>
   );

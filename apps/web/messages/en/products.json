@@ -119,7 +119,15 @@
     "contentPlaceholder": "Share your thoughts about this product…",
     "submitting": "Submitting…",
     "submit": "Submit review",
-    "contentRequired": "Write at least a few words about the product."
+    "contentRequired": "Write at least a few words about the product.",
+    "errors": {
+      "signIn": "Sign in to leave a review.",
+      "rating": "Choose a rating from 1 to 5 stars.",
+      "content": "Write a few words about the product (at least 10 characters).",
+      "notPurchased": "Only customers who bought the product can review it.",
+      "duplicate": "You have already reviewed this product.",
+      "failed": "The review was not sent. Please try again."
+    }
   },
   "reviewList": {
     "deleted": "Review deleted",

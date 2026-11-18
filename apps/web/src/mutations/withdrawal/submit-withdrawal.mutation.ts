@@ -3,34 +3,34 @@
 import { CONTACT_EMAIL } from "@/constants";
 import { routing } from "@/i18n/routing";
 import { getMailDeps, getMailIdentity, mailboxThreadUrl } from "@/lib/mailbox";
+import { withdrawalSchema, type WithdrawalField, type WithdrawalInput } from "@/schemas/withdrawal.schema";
 import { db } from "@ecommerce/database";
 import { composeNotification, findOrderByReference, recordFormSubmission, replyToThread } from "@ecommerce/mailbox";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
-export type WithdrawalField = "name" | "email" | "order" | "items";
 export type WithdrawalFormState = {
   ok?: boolean;
   /** Where the confirmation went, and when the statement was made, shown back on success. */
   email?: string;
   date?: string;
   time?: string;
-  errors?: Partial<Record<WithdrawalField, string>>;
+  /** Per field, the key of the message under `info.withdrawal.errors`. */
+  errors?: Partial<Record<WithdrawalField, WithdrawalField>>;
+  /** A message for the whole form, already in the consumer's language. */
   error?: string;
+};
+
+export type WithdrawalSubmission = WithdrawalInput & {
+  locale: string;
+  /** When the page was opened: a person needs longer to fill the form than a script. */
+  startedAt: number;
+  /** The field only bots fill. */
+  website?: string;
 };
 
 /** A person needs longer than this to fill the form; a script does not. */
 const MIN_FILL_MS = 2500;
-
-const schema = z.object({
-  name: z.string().trim().min(1).max(120),
-  email: z.email().trim().max(200),
-  order: z.string().trim().min(1).max(100),
-  scope: z.enum(["all", "part"]),
-  items: z.string().trim().max(2000).optional(),
-  note: z.string().trim().max(2000).optional(),
-});
 
 /** "№ 8e04 fc85", "#8E04FC85" → "8e04fc85": the reference customers see, if that is what they typed. */
 const orderReferenceOf = (typed: string) => {
@@ -48,17 +48,8 @@ const orderReferenceOf = (typed: string) => {
  * address, so a reply joins the same conversation. Nothing beyond what the law asks for is required:
  * no account, no reason, no consent box. A bot filling the hidden field is told it worked.
  */
-async function submitWithdrawalAction(
-  _previous: WithdrawalFormState,
-  formData: FormData,
-): Promise<WithdrawalFormState> {
-  const value = (key: string) => {
-    const raw = formData.get(key);
-    return typeof raw === "string" && raw.trim() !== "" ? raw : undefined;
-  };
-  const locale = routing.locales.includes(value("locale") as never)
-    ? (value("locale") as string)
-    : routing.defaultLocale;
+async function submitWithdrawalAction(submission: WithdrawalSubmission): Promise<WithdrawalFormState> {
+  const locale = routing.locales.includes(submission.locale as never) ? submission.locale : routing.defaultLocale;
   const [t, format] = await Promise.all([
     getTranslations({ locale, namespace: "info.withdrawal" }),
     getFormatter({ locale }),
@@ -67,36 +58,27 @@ async function submitWithdrawalAction(
   const date = format.dateTime(submittedAt, { dateStyle: "long" });
   const time = format.dateTime(submittedAt, { timeStyle: "short" });
 
-  if (value("website")) return { ok: true, email: value("email"), date, time };
-  const startedAt = Number(value("startedAt"));
+  if (submission.website) return { ok: true, email: submission.email, date, time };
+  const startedAt = Number(submission.startedAt);
   if (!Number.isFinite(startedAt) || Date.now() - startedAt < MIN_FILL_MS) return { error: t("errors.tooFast") };
 
-  const parsed = schema.safeParse({
-    name: value("name") ?? "",
-    email: value("email") ?? "",
-    order: value("order") ?? "",
-    scope: value("scope") ?? "all",
-    items: value("items"),
-    note: value("note"),
-  });
-  const data = parsed.data;
-  const itemsMissing = data?.scope === "part" && !data.items;
-  if (!parsed.success || !data || itemsMissing) {
-    const fields = new Set(parsed.error?.issues.map((issue) => String(issue.path[0])) ?? []);
-    if (itemsMissing) fields.add("items");
+  const parsed = withdrawalSchema.safeParse(submission);
+  if (!parsed.success) {
     const errors: WithdrawalFormState["errors"] = {};
-    for (const field of ["name", "email", "order", "items"] as const) {
-      if (fields.has(field)) errors[field] = t(`errors.${field}`);
+    for (const issue of parsed.error.issues) {
+      const field = String(issue.path[0]);
+      if (field === "name" || field === "email" || field === "order" || field === "items") errors[field] = field;
     }
-    return { errors };
+    return Object.keys(errors).length > 0 ? { errors } : { error: t("errors.failed", { email: CONTACT_EMAIL }) };
   }
+  const data = parsed.data;
 
   const reference = orderReferenceOf(data.order);
   const orderLabel = reference ? reference.toUpperCase() : data.order;
   const subject = t("subject", { order: orderLabel });
   // Optional, so an unreadable date is left out rather than refused: nothing may stand between a
   // consumer and a withdrawal.
-  const receivedRaw = value("received");
+  const receivedRaw = data.received;
   const receivedOn =
     receivedRaw && /^\d{4}-\d{2}-\d{2}$/.test(receivedRaw) ? new Date(`${receivedRaw}T12:00:00Z`) : null;
   const received =
@@ -129,7 +111,7 @@ async function submitWithdrawalAction(
       orderId,
       createdAt: submittedAt,
     });
-    if ("error" in recorded) return { errors: { email: t("errors.email") } };
+    if ("error" in recorded) return { errors: { email: "email" } };
 
     const deps = getMailDeps();
     if (deps) {
