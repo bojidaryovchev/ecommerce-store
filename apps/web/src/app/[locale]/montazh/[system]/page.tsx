@@ -52,6 +52,8 @@ const InstallationPage: React.FC<Props> = async ({ params }) => {
   const chips = t.raw("chips") as string[];
   const requestHref = `/kontakti?tema=ogled&sistema=${system}`;
 
+  const prefix = locale === "en" ? "/en" : "";
+
   return (
     <main>
       <JsonLd
@@ -63,14 +65,20 @@ const InstallationPage: React.FC<Props> = async ({ params }) => {
             description: text.metaDescription,
             serviceType: text.title,
             areaServed: { "@type": "Country", name: "Bulgaria" },
-            url: `${SITE_URL}${installationHref(system)}`,
+            provider: { "@id": `${SITE_URL}/#organization` },
+            url: `${SITE_URL}${prefix}${installationHref(system)}`,
           },
           {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [
-              { "@type": "ListItem", position: 1, name: t("breadcrumbHome"), item: `${SITE_URL}/` },
-              { "@type": "ListItem", position: 2, name: t("breadcrumbInstallation"), item: `${SITE_URL}/montazh` },
+              { "@type": "ListItem", position: 1, name: t("breadcrumbHome"), item: `${SITE_URL}${prefix || "/"}` },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: t("breadcrumbInstallation"),
+                item: `${SITE_URL}${prefix}/montazh`,
+              },
               { "@type": "ListItem", position: 3, name: text.title },
             ],
           },

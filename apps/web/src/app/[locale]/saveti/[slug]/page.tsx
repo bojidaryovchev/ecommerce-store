@@ -53,6 +53,22 @@ const GuidePage: React.FC<Props> = async ({ params }) => {
       <JsonLd
         data={{
           "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: t("home"), item: `${SITE_URL}${locale === "en" ? "/en" : "/"}` },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: t("eyebrow"),
+              item: `${SITE_URL}${locale === "en" ? "/en" : ""}${guideHref()}`,
+            },
+            { "@type": "ListItem", position: 3, name: text.title },
+          ],
+        }}
+      />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
           "@type": "Article",
           headline: text.title,
           description: text.excerpt,

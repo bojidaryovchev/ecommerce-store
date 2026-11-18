@@ -4,6 +4,7 @@ import { categoryHref, productHref } from "@/lib/routes";
 import { SITE_URL } from "@/lib/site-url";
 import { getCategoryIndex } from "@/queries/categories";
 import { getProductBySlug } from "@/queries/products";
+import { getReviewsByProductId } from "@/queries/reviews";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -27,6 +28,7 @@ const ProductLoader: React.FC<Props> = async ({ slug }) => {
     notFound();
   }
 
+  const reviews = await getReviewsByProductId(product.id);
   const trail = categoryTrail(categories, product.categoryId);
   const prefix = locale === "en" ? "/en" : "";
   const url = `${SITE_URL}${prefix}${productHref(product)}`;
@@ -43,7 +45,25 @@ const ProductLoader: React.FC<Props> = async ({ slug }) => {
         sku={product.slug ?? product.id}
         url={url}
         price={price?.unitAmount ? { amount: price.unitAmount, currency: price.currency } : null}
-        availability={outOfStock ? "OutOfStock" : "InStock"}
+        availability={!product.active ? "Discontinued" : outOfStock ? "OutOfStock" : "InStock"}
+        category={trail.map((category) => category.name).join(" > ") || null}
+        color={
+          product.attributeValues
+            .filter((value) => value.attribute.name.trim().toLowerCase() === "цвят")
+            .map((value) => value.value)
+            .join(", ") || null
+        }
+        rating={
+          reviews.length > 0
+            ? { value: reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length, count: reviews.length }
+            : null
+        }
+        reviews={reviews.slice(0, 5).map((review) => ({
+          author: review.user?.name?.split(" ")[0] || t("reviewer"),
+          rating: review.rating,
+          date: review.createdAt.toISOString().slice(0, 10),
+          body: review.content,
+        }))}
         breadcrumbs={[
           { name: t("home"), url: `${SITE_URL}${prefix || "/"}` },
           ...trail.map((category, index) => ({

@@ -32,7 +32,8 @@
   "detail": {
     "breadcrumb": {
       "home": "Home",
-      "products": "Products"
+      "products": "Products",
+      "reviewer": "Customer"
     },
     "unavailable": "Unavailable",
     "outOfStock": "Out of stock",

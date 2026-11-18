@@ -1,8 +1,7 @@
-import { deliveryFee } from "@/lib/delivery";
 import { SITE_URL } from "@/lib/site-url";
 import React from "react";
 
-type Availability = "InStock" | "OutOfStock" | "BackOrder";
+type Availability = "InStock" | "OutOfStock" | "BackOrder" | "Discontinued";
 
 interface Props {
   name: string;
@@ -14,6 +13,12 @@ interface Props {
   url: string;
   price: { amount: number; currency: string } | null;
   availability: Availability;
+  /** The category trail, "Термопомпи > Термопомпи моноблок". */
+  category?: string | null;
+  color?: string | null;
+  /** Customer reviews: the average and count over all of them, and the latest few in full. */
+  rating?: { value: number; count: number } | null;
+  reviews?: Array<{ author: string; rating: number; date: string; body: string | null }>;
   /** Breadcrumb trail, home first: [name, absolute url]. */
   breadcrumbs: Array<{ name: string; url: string }>;
 }
@@ -22,22 +27,48 @@ interface Props {
 const LESS_THAN_ESCAPE = String.fromCharCode(92) + "u003c";
 const toScript = (data: unknown) => JSON.stringify(data).replaceAll("<", LESS_THAN_ESCAPE);
 
+/** Cut at a word, not in the middle of one. */
+const clip = (text: string, max: number) => {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), max - 40)).trimEnd()}…`;
+};
+
 const absolute = (url: string) => (url.startsWith("http") ? url : `${SITE_URL}${url.startsWith("/") ? "" : "/"}${url}`);
 
 /**
- * schema.org Product + BreadcrumbList for rich results. Product goes out only with an offer: Google's
- * product snippets and merchant listings need one, and a price-on-request product has none. The offer
+ * schema.org Product + BreadcrumbList for rich results. Product goes out only with an offer or customer
+ * ratings: Google's product snippets need one of them, and a price-on-request product has no offer. The offer
  * carries the delivery terms (lib/delivery.ts) and the 14-day return policy, at the customer's cost.
  */
 const ProductJsonLd: React.FC<Props> = (props) => {
-  const product = props.price && {
+  const rated = props.rating && props.rating.count > 0;
+  const product = (props.price || rated) && {
     "@context": "https://schema.org",
     "@type": "Product",
     name: props.name,
-    ...(props.description && { description: props.description.slice(0, 1000) }),
-    image: props.images.map(absolute),
+    ...(props.description && { description: clip(props.description, 1000) }),
+    ...(props.images.length > 0 && { image: props.images.map(absolute) }),
+    ...(props.category && { category: props.category }),
+    ...(props.color && { color: props.color }),
     sku: props.sku,
     ...(props.brand && { brand: { "@type": "Brand", name: props.brand } }),
+    ...(rated && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: props.rating!.value.toFixed(1),
+        reviewCount: props.rating!.count,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      review: (props.reviews ?? []).map((review) => ({
+        "@type": "Review",
+        author: { "@type": "Person", name: review.author },
+        datePublished: review.date,
+        reviewRating: { "@type": "Rating", ratingValue: review.rating, bestRating: 5, worstRating: 1 },
+        ...(review.body && { reviewBody: review.body }),
+      })),
+    }),
     ...(props.price && {
       offers: {
         "@type": "Offer",
@@ -46,15 +77,6 @@ const ProductJsonLd: React.FC<Props> = (props) => {
         priceCurrency: props.price.currency.toUpperCase(),
         availability: `https://schema.org/${props.availability}`,
         itemCondition: "https://schema.org/NewCondition",
-        shippingDetails: {
-          "@type": "OfferShippingDetails",
-          shippingRate: {
-            "@type": "MonetaryAmount",
-            value: (deliveryFee(props.price.amount) / 100).toFixed(2),
-            currency: props.price.currency.toUpperCase(),
-          },
-          shippingDestination: { "@type": "DefinedRegion", addressCountry: "BG" },
-        },
         hasMerchantReturnPolicy: {
           "@type": "MerchantReturnPolicy",
           applicableCountry: "BG",
@@ -62,6 +84,7 @@ const ProductJsonLd: React.FC<Props> = (props) => {
           merchantReturnDays: 14,
           returnMethod: "https://schema.org/ReturnByMail",
           returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
+          refundType: "https://schema.org/FullRefund",
         },
       },
     }),

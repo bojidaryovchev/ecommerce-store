@@ -32,7 +32,8 @@
   "detail": {
     "breadcrumb": {
       "home": "Начало",
-      "products": "Продукти"
+      "products": "Продукти",
+      "reviewer": "Клиент"
     },
     "unavailable": "Не се предлага",
     "outOfStock": "Изчерпан",

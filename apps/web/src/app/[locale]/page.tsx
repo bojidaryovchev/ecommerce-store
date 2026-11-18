@@ -57,13 +57,22 @@ const Home: React.FC<Props> = async ({ params }) => {
           },
           {
             "@context": "https://schema.org",
-            "@type": "Organization",
+            "@type": "OnlineStore",
             "@id": `${SITE_URL}/#organization`,
             name: t("siteTitle"),
             url: SITE_URL,
             logo: `${SITE_URL}/apple-icon.png`,
             email: CONTACT_EMAIL,
             areaServed: { "@type": "Country", name: "Bulgaria" },
+            hasMerchantReturnPolicy: {
+              "@type": "MerchantReturnPolicy",
+              applicableCountry: "BG",
+              returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+              merchantReturnDays: 14,
+              returnMethod: "https://schema.org/ReturnByMail",
+              returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
+              refundType: "https://schema.org/FullRefund",
+            },
           },
         ]}
       />

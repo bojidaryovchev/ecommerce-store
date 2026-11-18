@@ -39,8 +39,14 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const filtered = Object.keys(search).some((key) => key !== "page");
   const indexable = locale === routing.defaultLocale && !filtered;
 
+  // The section's picture as the preview: its own, or its top-level section's.
+  const picture = [category, ...categoryTrail(categories, category.id).reverse()]
+    .map((node) => node.image)
+    .find((image) => image?.startsWith("/images/categories/"));
+
   return {
     title: page > 1 ? t("metadata.pagedTitle", { name: category.name, page }) : category.name,
+    ...(picture && { openGraph: { images: [picture] } }),
     description: details?.description || t("metadata.categoryDescription", { name: category.name }),
     alternates: { canonical: !filtered && page > 1 ? `${href}?page=${page}` : href },
     ...(!indexable && { robots: { index: false, follow: true } }),

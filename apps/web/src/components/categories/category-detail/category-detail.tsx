@@ -1,3 +1,4 @@
+import { JsonLd } from "@/components/seo";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,9 +11,10 @@ import { Link } from "@/i18n/navigation";
 import type { CategoryNode } from "@/lib/category-tree";
 import { INSTALLATION_FOR_CATEGORY, installationHref } from "@/lib/installation-systems";
 import { categoryHref } from "@/lib/routes";
+import { SITE_URL } from "@/lib/site-url";
 import type { Category } from "@ecommerce/database/schema";
 import { ArrowRight, Wrench } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import React from "react";
 
@@ -36,8 +38,25 @@ const CategoryDetail: React.FC<Props> = ({ category, trail, subcategories, child
   const banner = [category.image, ...[...trail].reverse().map((node) => node.image)].find(isScene);
   const system = INSTALLATION_FOR_CATEGORY[trail[0]?.slug ?? ""];
 
+  const prefix = useLocale() === "en" ? "/en" : "";
+
   return (
     <div className="space-y-8">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: t("home"), item: `${SITE_URL}${prefix || "/"}` },
+            ...trail.map((node, index) => ({
+              "@type": "ListItem",
+              position: index + 2,
+              name: node.name,
+              item: `${SITE_URL}${prefix}${categoryHref(trail.slice(0, index + 1))}`,
+            })),
+          ],
+        }}
+      />
       <Breadcrumb aria-label={t("breadcrumb")}>
         <BreadcrumbList>
           <BreadcrumbItem>
