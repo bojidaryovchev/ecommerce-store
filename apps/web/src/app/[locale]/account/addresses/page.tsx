@@ -10,6 +10,12 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import React, { Suspense } from "react";
 
+/**
+ * Reads the session before rendering (to send a signed-out visitor to the login), so it blocks on the server:
+ * opted out of Next's instant-navigation validation until it moves to the patterns in the Cache Components auth guide.
+ */
+export const instant = false;
+
 type Props = {
   params: Promise<{ locale: string }>;
 };

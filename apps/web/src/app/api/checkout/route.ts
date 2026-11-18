@@ -10,6 +10,20 @@ import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
+/** A line for the checkout page: the meta description, or the text's first 160 characters cut at a word. */
+function summaryOf(product: {
+  description: string | null;
+  metadata?: Record<string, string> | null;
+}): string | undefined {
+  const meta = product.metadata?.metaDescription?.trim();
+  if (meta) return meta;
+  const text = product.description?.replace(/\s+/g, " ").trim();
+  if (!text) return undefined;
+  if (text.length <= 160) return text;
+  const cut = text.slice(0, 160);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 120)).trimEnd()}…`;
+}
+
 /**
  * Look up or create a Stripe Customer for the authenticated user.
  * Stores the `stripeCustomerId` on the user row for future checkouts.
@@ -92,7 +106,8 @@ export async function POST(request: NextRequest) {
           unit_amount: unitAmount,
           product_data: {
             name: item.product.name,
-            description: item.product.description ?? undefined,
+            // One line under the name on Stripe's page: the shop's own meta description, or the start of the text.
+            description: summaryOf(item.product),
             images: productImage ? [productImage] : undefined,
             metadata: {
               productId: item.product.id,

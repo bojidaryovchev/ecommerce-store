@@ -80,7 +80,7 @@ const ReviewSection: React.FC<Props> = async ({ productId }) => {
       {userId && !hasPurchased && <p className="text-muted-foreground text-sm">{t("purchaseToReview")}</p>}
 
       {/* Reviews List */}
-      <ReviewList reviews={reviews} currentUserId={userId} />
+      <ReviewList reviews={reviews} currentUserId={userId} canReview={canReview} />
     </section>
   );
 };

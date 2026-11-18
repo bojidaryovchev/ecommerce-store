@@ -131,11 +131,12 @@
   },
   "reviewList": {
     "deleted": "Review deleted",
-    "empty": "No reviews yet. Be the first to review this product!",
+    "empty": "No reviews for this product yet.",
     "user": "User",
     "anonymous": "Anonymous",
     "you": "(You)",
-    "deleteOwn": "Delete my review"
+    "deleteOwn": "Delete my review",
+    "emptyInvite": "No reviews yet. Be the first to review this product."
   },
   "notFound": {
     "title": "Product not found",

@@ -6,6 +6,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import React, { Suspense } from "react";
 
+/**
+ * Reads the session before rendering (to send a signed-in visitor on), so it blocks on the server: opted out of
+ * Next's instant-navigation validation until it moves to the patterns in the Cache Components auth guide.
+ */
+export const instant = false;
+
 export const metadata: Metadata = {
   title: "New message | Admin",
 };

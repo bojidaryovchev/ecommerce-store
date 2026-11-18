@@ -4,6 +4,12 @@ import { auth } from "@/lib/auth";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+/**
+ * Reads the session before rendering (to send a signed-in visitor on), so it blocks on the server: opted out of
+ * Next's instant-navigation validation until it moves to the patterns in the Cache Components auth guide.
+ */
+export const instant = false;
+
 type Props = {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ callbackUrl?: string | string[]; notice?: string; error?: string }>;

@@ -14,9 +14,11 @@ type ReviewData = Awaited<ReturnType<typeof getReviewsByProductId>>;
 interface Props {
   reviews: ReviewData;
   currentUserId?: string;
+  /** The visitor may write a review (a verified buyer who has not yet). */
+  canReview?: boolean;
 }
 
-const ReviewList: React.FC<Props> = ({ reviews, currentUserId }) => {
+const ReviewList: React.FC<Props> = ({ reviews, currentUserId, canReview = false }) => {
   const t = useTranslations("products.reviewList");
   const format = useFormatter();
   const [isPending, startTransition] = useTransition();
@@ -35,7 +37,8 @@ const ReviewList: React.FC<Props> = ({ reviews, currentUserId }) => {
   if (reviews.length === 0) {
     return (
       <div className="border-border rounded-lg border border-dashed py-8 text-center">
-        <p className="text-muted-foreground">{t("empty")}</p>
+        {/* Invite a review only from someone who may write one: verified buyers. */}
+        <p className="text-muted-foreground">{canReview ? t("emptyInvite") : t("empty")}</p>
       </div>
     );
   }
