@@ -1,3 +1,4 @@
+import { SITE_INDEXABLE } from "@/lib/indexing";
 import { SITE_URL } from "@/lib/site-url";
 import type { MetadataRoute } from "next";
 
@@ -12,6 +13,8 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [...PRIVATE_PATHS, ...PRIVATE_PATHS.map((path) => `/en${path}`)],
       },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    // Until launch the pages say noindex (lib/indexing.ts): crawling stays allowed so that is seen, but
+    // the sitemap is not advertised.
+    ...(SITE_INDEXABLE && { sitemap: `${SITE_URL}/sitemap.xml` }),
   };
 }

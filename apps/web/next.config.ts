@@ -17,9 +17,9 @@ const nextConfig: NextConfig = {
   },
 
   /*
-   * Until launch the site is public (on its own domain, taking Stripe test payments) but must not be
-   * indexed: every response says noindex until SITE_INDEXING=on is set for the production build.
-   * robots.txt still allows crawling, so search engines can see the noindex.
+   * Nothing is indexed until launch: the product descriptions are still the supplier's own text. Every
+   * response says noindex until SITE_INDEXING=on is set for the production build (see src/lib/indexing.ts,
+   * which also turns the pages' robots meta and the robots.txt sitemap line on and off).
    */
   async headers() {
     if (process.env.SITE_INDEXING === "on") return [];

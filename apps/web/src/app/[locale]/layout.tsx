@@ -1,6 +1,7 @@
 import { SiteFooter } from "@/components/common";
 import Providers from "@/components/providers";
 import { routing } from "@/i18n/routing";
+import { SITE_INDEXABLE } from "@/lib/indexing";
 import { SITE_URL } from "@/lib/site-url";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
@@ -26,6 +27,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: { default: t("siteTitle"), template: `%s | ${t("siteTitle")}` },
     description: t("siteDescription"),
     openGraph: { siteName: t("siteTitle"), locale: locale === "bg" ? "bg_BG" : "en_GB", type: "website" },
+    // Until launch nothing is indexed (see lib/indexing.ts). Pages that set their own robots only ever
+    // set noindex, so this cannot be overridden into an index.
+    ...(!SITE_INDEXABLE && { robots: { index: false, follow: false } }),
   };
 }
 
