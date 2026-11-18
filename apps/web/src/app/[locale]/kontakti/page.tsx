@@ -3,6 +3,7 @@ import { CONTACT_EMAIL } from "@/constants";
 import { Link } from "@/i18n/navigation";
 import { isInstallationSystem } from "@/lib/installation-systems";
 import { localizedAlternates } from "@/lib/seo";
+import { getProductBySlug } from "@/queries/products";
 import { ArrowRight, Mail } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -10,7 +11,7 @@ import React from "react";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ tema?: string; sistema?: string }>;
+  searchParams: Promise<{ tema?: string; sistema?: string; produkt?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -22,8 +23,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const ContactPage: React.FC<Props> = async ({ params, searchParams }) => {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { tema, sistema } = await searchParams;
-  const t = await getTranslations("contact");
+  const { tema, sistema, produkt } = await searchParams;
+  const [t, product] = await Promise.all([
+    getTranslations("contact"),
+    produkt && /^[a-z0-9-]{1,200}$/.test(produkt) ? getProductBySlug(produkt) : Promise.resolve(null),
+  ]);
   const next = t.raw("aside.next") as string[];
 
   return (
@@ -38,6 +42,7 @@ const ContactPage: React.FC<Props> = async ({ params, searchParams }) => {
         <ContactForm
           topic={tema === "ogled" ? "ogled" : "vapros"}
           system={sistema && isInstallationSystem(sistema) ? sistema : undefined}
+          product={product?.slug ? { slug: product.slug, name: product.name } : undefined}
         />
 
         <aside className="space-y-8 lg:sticky lg:top-32">

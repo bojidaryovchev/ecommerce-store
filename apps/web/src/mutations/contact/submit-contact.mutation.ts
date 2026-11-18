@@ -4,6 +4,9 @@ import { CONTACT_EMAIL } from "@/constants";
 import { routing } from "@/i18n/routing";
 import { INSTALLATION_SYSTEMS } from "@/lib/installation-systems";
 import { getMailDeps, getMailIdentity, mailboxThreadUrl } from "@/lib/mailbox";
+import { productHref } from "@/lib/routes";
+import { SITE_URL } from "@/lib/site-url";
+import { getProductBySlug } from "@/queries/products";
 import { db } from "@ecommerce/database";
 import { composeNotification, recordFormSubmission, replyToThread } from "@ecommerce/mailbox";
 import { getTranslations } from "next-intl/server";
@@ -83,12 +86,18 @@ async function submitContactAction(_previous: ContactFormState, formData: FormDa
 
   const identity = getMailIdentity();
   const systemName = input.system ? t(`form.systems.${input.system}`) : null;
+  // Looked up rather than taken from the form, so the subject only ever names a real product.
+  const productSlug = value("product");
+  const product = productSlug && /^[a-z0-9-]{1,200}$/.test(productSlug) ? await getProductBySlug(productSlug) : null;
   const subject =
     input.topic === "ogled"
       ? t("subject.ogled", { system: [systemName ?? t("form.systems.drugo"), input.city].filter(Boolean).join(", ") })
-      : t("subject.vapros");
+      : product
+        ? t("subject.product", { product: product.name })
+        : t("subject.vapros");
   const details = [
     `${t("fields.name")}: ${input.name}`,
+    product && `${t("fields.product")}: ${product.name} (${SITE_URL}${productHref(product)})`,
     systemName && `${t("fields.system")}: ${systemName}`,
     input.city && `${t("fields.city")}: ${input.city}`,
     input.phone && `${t("fields.phone")}: ${input.phone}`,

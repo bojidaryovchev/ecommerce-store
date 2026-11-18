@@ -31,7 +31,8 @@
     "consentLink": "privacy policy",
     "submit": "Send",
     "sending": "Sending…",
-    "required": "required"
+    "required": "required",
+    "about": "About"
   },
   "success": {
     "title": "Thank you!",
@@ -61,14 +62,16 @@
   },
   "subject": {
     "ogled": "Site visit request: {system}",
-    "vapros": "Question from the website"
+    "vapros": "Question from the website",
+    "product": "Question about {product}"
   },
   "fields": {
     "system": "Solution",
     "city": "Town",
     "phone": "Phone",
     "name": "Name",
-    "message": "Message"
+    "message": "Message",
+    "product": "Product"
   },
   "ack": {
     "greeting": "Hello {name},",

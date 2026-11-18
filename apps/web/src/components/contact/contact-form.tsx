@@ -11,6 +11,8 @@ import React, { startTransition, useActionState, useState } from "react";
 type Props = {
   topic?: "ogled" | "vapros";
   system?: string;
+  /** The product the question is about, when the form is opened from a product page. */
+  product?: { slug: string; name: string };
   className?: string;
 };
 
@@ -24,7 +26,12 @@ const label = "text-sm font-medium";
  * The contact and site-visit form. Submitted by hand rather than through `<form action>`, which
  * would clear the fields when the action returns: a refusal must leave what was typed in place.
  */
-const ContactForm: React.FC<Props> = ({ topic: initialTopic = "vapros", system: initialSystem, className }) => {
+const ContactForm: React.FC<Props> = ({
+  topic: initialTopic = "vapros",
+  system: initialSystem,
+  product,
+  className,
+}) => {
   const t = useTranslations("contact");
   const locale = useLocale();
   const [state, dispatch, pending] = useActionState<ContactFormState, FormData>(submitContactAction, {});
@@ -53,6 +60,7 @@ const ContactForm: React.FC<Props> = ({ topic: initialTopic = "vapros", system: 
     <form onSubmit={onSubmit} noValidate className={cn("bg-card rounded-3xl border p-6 shadow-sm md:p-8", className)}>
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="startedAt" value={startedAt} />
+      {product && <input type="hidden" name="product" value={product.slug} />}
       {/* For bots only: hidden from people and from assistive technology. */}
       <div aria-hidden className="absolute -left-[9999px] h-0 overflow-hidden">
         <label>
@@ -179,6 +187,12 @@ const ContactForm: React.FC<Props> = ({ topic: initialTopic = "vapros", system: 
         <label htmlFor="contact-message" className={label}>
           {t("form.message")}
         </label>
+        {product && (
+          <p className="bg-muted/60 mt-1.5 rounded-lg px-3 py-2 text-sm">
+            <span className="text-muted-foreground">{t("form.about")}:</span>{" "}
+            <span className="font-medium">{product.name}</span>
+          </p>
+        )}
         <textarea
           id="contact-message"
           name="message"
