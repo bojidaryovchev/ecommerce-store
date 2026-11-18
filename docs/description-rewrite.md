@@ -41,8 +41,9 @@ A run can be repeated: saved products are skipped, failed ones are tried again. 
 `SUPPLIER_SYNC_SECRET` set, the CLI asks the live site to refresh the rewritten pages
 (`POST /api/revalidate`); otherwise they refresh on the next deploy or catalog sync.
 
-Cost, roughly: about 2,000 input and 700 output tokens per product, so about $8 for the whole
-catalogue at Claude Opus 5.5 prices ($4 / $20 per million tokens).
+Cost, roughly: about 2,000 input and 700 output tokens per product plus the model's thinking, so
+$8–15 for the whole catalogue at Claude Opus 5.5 prices ($4 / $20 per million tokens). Run
+`--limit 20` first and check the usage in the Claude Console before the rest.
 
 ## Before turning indexing on
 
