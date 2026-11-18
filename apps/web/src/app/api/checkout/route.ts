@@ -1,9 +1,11 @@
 import { auth } from "@/lib/auth";
 import { CART_SESSION_COOKIE } from "@/lib/cart-utils";
+import { deliveryFee } from "@/lib/delivery";
 import { stripe } from "@/lib/stripe";
 import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import { db, schema } from "@ecommerce/database";
 import { eq } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -37,6 +39,11 @@ async function getOrCreateStripeCustomer(userId: string, email: string, name?: s
 
 export async function POST(request: NextRequest) {
   try {
+    // The shopper's language: for the messages below, the return URLs and Stripe's page.
+    const body = (await request.json().catch(() => ({}))) as { locale?: unknown };
+    const locale = body.locale === "en" ? "en" : "bg";
+    const localePrefix = locale === "en" ? "/en" : "";
+    const t = await getTranslations({ locale, namespace: "cart.checkoutErrors" });
     const session = await auth();
     let cart;
 
@@ -52,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!cart || cart.items.length === 0) {
-      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+      return NextResponse.json({ error: t("empty") }, { status: 400 });
     }
 
     // Validate stock for all items with inventory tracking
@@ -62,7 +69,10 @@ export async function POST(request: NextRequest) {
           const available = item.product.stockQuantity ?? 0;
           return NextResponse.json(
             {
-              error: `"${item.product.name}" ${available === 0 ? "is out of stock" : `only has ${available} in stock (requested ${item.quantity})`}`,
+              error:
+                available === 0
+                  ? t("outOfStock", { name: item.product.name })
+                  : t("notEnough", { name: item.product.name, available, requested: item.quantity }),
             },
             { status: 400 },
           );
@@ -93,11 +103,12 @@ export async function POST(request: NextRequest) {
       };
     });
 
+    // Delivery: one option, free or the fee (lib/delivery.ts), which Stripe shows as its own line.
+    const subtotal = cart.items.reduce((sum, item) => sum + (item.price.unitAmount ?? 0) * item.quantity, 0);
+    const fee = deliveryFee(subtotal);
+
     // Get the origin for success/cancel URLs, in the shopper's language (Bulgarian URLs have no prefix)
     const origin = request.headers.get("origin") ?? "http://localhost:3000";
-    const body = (await request.json().catch(() => ({}))) as { locale?: unknown };
-    const locale = body.locale === "en" ? "en" : "bg";
-    const localePrefix = locale === "en" ? "/en" : "";
 
     // Resolve Stripe Customer for authenticated users
     let stripeCustomerId: string | undefined;
@@ -125,6 +136,15 @@ export async function POST(request: NextRequest) {
       shipping_address_collection: {
         allowed_countries: ["BG"],
       },
+      shipping_options: [
+        {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: { amount: fee, currency: cart.items[0]?.price.currency ?? "eur" },
+            display_name: fee > 0 ? t("delivery") : t("freeDelivery"),
+          },
+        },
+      ],
       billing_address_collection: "required",
     });
 

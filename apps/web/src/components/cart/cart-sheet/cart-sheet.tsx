@@ -5,11 +5,36 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { useCart } from "@/contexts/cart-context";
 import { priceFormat } from "@/i18n/format";
 import { Link } from "@/i18n/navigation";
-import { Loader2, ShoppingBag } from "lucide-react";
+import { deliveryFee, untilFreeDelivery } from "@/lib/delivery";
+import { Loader2, ShoppingBag, Truck } from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { CartItem } from "./cart-item";
+
+/** What delivery costs for this cart, or how far it is from travelling free (lib/delivery.ts). */
+const DeliveryLine: React.FC<{ subtotal: number; currency: string }> = ({ subtotal, currency }) => {
+  const t = useTranslations("cart.delivery");
+  const format = useFormatter();
+  const money = (cents: number) => format.number(cents / 100, priceFormat(currency));
+  const fee = deliveryFee(subtotal);
+  const missing = untilFreeDelivery(subtotal);
+  return (
+    <div className="space-y-1 text-sm">
+      <p
+        className={
+          fee === 0
+            ? "flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-400"
+            : "flex items-center gap-2"
+        }
+      >
+        <Truck className="size-4" aria-hidden />
+        {fee === 0 ? t("free") : t("fee", { fee: money(fee) })}
+      </p>
+      {missing > 0 && <p className="text-muted-foreground text-xs">{t("until", { amount: money(missing) })}</p>}
+    </div>
+  );
+};
 
 const CartSheet: React.FC = () => {
   const { cart, summary, isOpen, closeCart, isLoading, clear } = useCart();
@@ -95,6 +120,7 @@ const CartSheet: React.FC = () => {
               </span>
             </div>
 
+            <DeliveryLine subtotal={summary.subtotal} currency={summary.currency} />
             <p className="text-muted-foreground text-xs">{t("shippingNote")}</p>
 
             {/* Actions */}

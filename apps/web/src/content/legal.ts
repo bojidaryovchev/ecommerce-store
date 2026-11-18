@@ -1,3 +1,5 @@
+import { DELIVERY, DELIVERY_ALWAYS_FREE } from "@/lib/delivery";
+
 /**
  * Information and legal pages. DRAFTS: written from the Consumer Protection Act (ЗЗП), the 2022
  * Act on the sale of goods (ЗПЦСЦУПС) and the GDPR for what this shop does, and to be reviewed by a
@@ -39,6 +41,19 @@ export const WITHDRAWAL_HREF = "/vrashtane/otkaz";
 export const infoNav = (slug: InfoSlug, locale: string) => (locale === "en" ? INFO_NAV[slug].en : INFO_NAV[slug].bg);
 
 const TRADER_BG = "[Наименование на търговеца], ЕИК [ЕИК], със седалище и адрес на управление [адрес]";
+
+/** The delivery price in words, from the terms in lib/delivery.ts. */
+const eur = (cents: number) => `${(cents / 100).toLocaleString("bg-BG", { maximumFractionDigits: 2 })} €`;
+const DELIVERY_PRICE_BG = DELIVERY_ALWAYS_FREE
+  ? "Доставката е безплатна за всяка поръчка в България."
+  : DELIVERY.freeFrom > 0
+    ? `Доставката е безплатна за поръчки от ${eur(DELIVERY.freeFrom)}. За по-малките поръчки струва ${eur(DELIVERY.fee)}. Цената се вижда в количката и преди плащането.`
+    : `Доставката струва ${eur(DELIVERY.fee)}. Цената се вижда в количката и преди плащането.`;
+const DELIVERY_PRICE_EN = DELIVERY_ALWAYS_FREE
+  ? "Delivery is free for every order in Bulgaria."
+  : DELIVERY.freeFrom > 0
+    ? `Delivery is free for orders from ${eur(DELIVERY.freeFrom)}. Smaller orders pay ${eur(DELIVERY.fee)}. The price is shown in the cart and before payment.`
+    : `Delivery costs ${eur(DELIVERY.fee)}. The price is shown in the cart and before payment.`;
 const TRADER_EN = "[Trader's name], UIC [UIC], registered office [address]";
 
 export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
@@ -59,7 +74,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
         },
         {
           heading: "Цена",
-          paragraphs: ["Цената на доставката се вижда преди плащането, отделно от цената на продуктите."],
+          paragraphs: [DELIVERY_PRICE_BG],
         },
         {
           heading: "Големи уреди",
@@ -89,7 +104,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
             "It depends on the manufacturer's stock. We confirm it by email after the order. For orders with installation, delivery is agreed together with the installation date after the site visit.",
           ],
         },
-        { heading: "Price", paragraphs: ["The delivery price is shown before payment, separately from the products."] },
+        { heading: "Price", paragraphs: [DELIVERY_PRICE_EN] },
         {
           heading: "Large units",
           paragraphs: [

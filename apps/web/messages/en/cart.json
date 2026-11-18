@@ -18,5 +18,17 @@
     "added": "Added to cart",
     "removed": "Removed from cart",
     "cleared": "Cart cleared"
+  },
+  "checkoutErrors": {
+    "empty": "The cart is empty.",
+    "outOfStock": "“{name}” is out of stock.",
+    "notEnough": "Only {available} of “{name}” left (you asked for {requested}).",
+    "delivery": "Delivery to your address",
+    "freeDelivery": "Free delivery"
+  },
+  "delivery": {
+    "free": "Delivery is free.",
+    "fee": "Delivery: {fee}",
+    "until": "Add {amount} more for free delivery."
   }
 }

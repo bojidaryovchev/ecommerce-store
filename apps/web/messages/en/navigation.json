@@ -73,7 +73,9 @@
     "delivery": "Delivery across Bulgaria",
     "installation": "Turnkey installation",
     "prices": "Prices include VAT",
-    "writeUs": "Write to us"
+    "writeUs": "Write to us",
+    "freeDelivery": "Free delivery across Bulgaria",
+    "freeDeliveryFrom": "Free delivery over {amount}"
   },
   "search": {
     "label": "Search the shop",

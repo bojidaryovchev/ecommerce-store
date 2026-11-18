@@ -73,7 +73,9 @@
     "delivery": "Доставка в цяла България",
     "installation": "Монтаж до ключ",
     "prices": "Цени с ДДС",
-    "writeUs": "Пишете ни"
+    "writeUs": "Пишете ни",
+    "freeDelivery": "Безплатна доставка в цяла България",
+    "freeDeliveryFrom": "Безплатна доставка над {amount}"
   },
   "search": {
     "label": "Търсене в магазина",

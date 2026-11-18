@@ -14,10 +14,11 @@ import { CONTACT_EMAIL } from "@/constants";
 import { useCart } from "@/contexts/cart-context";
 import { Link } from "@/i18n/navigation";
 import type { CategoryMenuItem } from "@/lib/category-tree";
+import { DELIVERY, DELIVERY_ALWAYS_FREE } from "@/lib/delivery";
 import { BadgeEuro, Flame, Mail, ShoppingBag, Snowflake, Truck, UserRound, Wrench } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import NextLink from "next/link";
 import React, { useState } from "react";
 import { LocaleSwitcher } from "./locale-switcher";
@@ -65,18 +66,39 @@ const Navbar: React.FC<Props> = ({ menu, session }) => {
   );
 };
 
+/** The delivery terms in a few words, from lib/delivery.ts: the shop's banner line. */
+const useDeliveryLine = () => {
+  const t = useTranslations("navigation.topBar");
+  const format = useFormatter();
+  if (DELIVERY_ALWAYS_FREE) return t("freeDelivery");
+  if (DELIVERY.freeFrom > 0) {
+    return t("freeDeliveryFrom", {
+      amount: format.number(DELIVERY.freeFrom / 100, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }),
+    });
+  }
+  return t("delivery");
+};
+
 const TopBar: React.FC = () => {
   const t = useTranslations("navigation.topBar");
   const tn = useTranslations("navigation.navbar");
+  const deliveryLine = useDeliveryLine();
   const item = "inline-flex items-center gap-1.5";
 
   return (
-    <div className="bg-primary text-primary-foreground/85 hidden text-xs md:block">
-      <div className="max-w-container flex h-9 items-center justify-between gap-6">
+    <div className="bg-primary text-primary-foreground/85 text-xs">
+      {/* Phones: the delivery terms alone, as a strip above the header. */}
+      <p className="flex h-8 items-center justify-center gap-1.5 font-medium md:hidden">
+        <Truck className="text-heat size-3.5" aria-hidden />
+        {deliveryLine}
+      </p>
+      <div className="max-w-container hidden h-9 items-center justify-between gap-6 md:flex">
         <ul className="flex items-center gap-5">
-          <li className={item}>
-            <Truck className="size-3.5" aria-hidden />
-            {t("delivery")}
+          <li className={`${item} text-primary-foreground font-semibold`}>
+            <Truck className="text-heat size-3.5" aria-hidden />
+            <Link href="/dostavka" className="hover:underline">
+              {deliveryLine}
+            </Link>
           </li>
           <li className={item}>
             <Wrench className="size-3.5" aria-hidden />
