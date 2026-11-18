@@ -16,5 +16,45 @@
       "title": "Underfloor heating",
       "short": "Even warmth underfoot, ideal with a heat pump"
     }
+  },
+  "hub": {
+    "metaTitle": "Turnkey installation of heat pumps, pellet heating and air conditioners",
+    "metaDescription": "Site visit, sizing, installation and commissioning of heat pumps, pellet stoves and boilers, air conditioners and underfloor heating.",
+    "eyebrow": "Turnkey installation",
+    "title": "Not just a unit, a warm home",
+    "lead": "We choose the unit with you, survey on site, install it and commission the system. See how each installation goes.",
+    "systemsTitle": "What we install",
+    "commonEyebrow": "In every installation",
+    "commonTitle": "What you get",
+    "common": [
+      "A site visit and an exact quote",
+      "Sizing for your home",
+      "Installation by our team",
+      "Commissioning and set-up",
+      "An explanation of the controls",
+      "Help with the warranty"
+    ]
+  },
+  "page": {
+    "breadcrumbHome": "Home",
+    "breadcrumbInstallation": "Installation",
+    "eyebrow": "Turnkey installation",
+    "chips": ["Site visit", "Installation", "Commissioning"],
+    "primary": "Request a site visit",
+    "secondary": "See the products",
+    "includedTitle": "What the installation includes",
+    "needTitle": "What we need from you",
+    "scopeNote": "We settle the exact scope at the site visit.",
+    "productsEyebrow": "The products",
+    "productsTitle": "Units we install",
+    "productsLink": "All in the category",
+    "moreTitle": "Before you decide",
+    "guideLabel": "Guide",
+    "calculatorLabel": "Calculator",
+    "calculatorTitle": "Work out the power",
+    "faqTitle": "Questions about the installation",
+    "requestEyebrow": "Request",
+    "requestTitle": "Request a site visit",
+    "requestLead": "Describe your home and we will get in touch to arrange a site visit and a quote."
   }
 }

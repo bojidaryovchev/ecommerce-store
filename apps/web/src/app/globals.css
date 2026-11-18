@@ -158,3 +158,17 @@
 @utility max-w-container {
   @apply mx-auto max-w-7xl px-4;
 }
+
+/* Water moving through a pipe in the installation drawings. Still under reduced motion. */
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -44;
+  }
+}
+@utility flow {
+  stroke-dasharray: 10 12;
+  animation: flow-dash 1.4s linear infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
