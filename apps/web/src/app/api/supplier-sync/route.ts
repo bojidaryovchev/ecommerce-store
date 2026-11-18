@@ -43,7 +43,9 @@ async function sync(mode: "incremental" | "full", supplier?: string) {
 
 /**
  * GET /api/supplier-sync?mode=full — for Vercel Cron, which calls GET with
- * `Authorization: Bearer $CRON_SECRET` (see vercel.json).
+ * `Authorization: Bearer $CRON_SECRET` (see vercel.json). A full sync every four hours keeps stock
+ * and prices current: an incremental one misses stock, which does not change the supplier's edit
+ * time. The schedule is six daily jobs four hours apart, which every Vercel plan allows.
  */
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
