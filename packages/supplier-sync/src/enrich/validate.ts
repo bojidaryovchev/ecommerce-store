@@ -201,6 +201,8 @@ export function validateResearch(input: ValidateInput): ValidationResult {
 
   // 1. Each value: a field of this kind, the right type, a plausible range; the most certain per field.
   const accepted = new Map<SpecKey, ValidatedSpec>();
+  // An output brought to ΔT50, as it was rated: the supplier's own field states it that way (step 3).
+  const asRated = new Map<ValidatedSpec, number>();
   for (const spec of research.specs) {
     if (!isSpecKey(spec.key) || !(spec.key in config.fields)) {
       dropped.push({ key: spec.key, value: spec.value, reason: `not a ${config.label.toLowerCase()} field` });
@@ -216,6 +218,7 @@ export function validateResearch(input: ValidateInput): ValidationResult {
       continue;
     }
     let condition = spec.condition?.trim() || null;
+    let rated: number | null = null;
     // Water radiators and towel rails: one yardstick, the EN 442 output at ΔT50.
     if (
       spec.key === "outputW" &&
@@ -227,6 +230,7 @@ export function validateResearch(input: ValidateInput): ValidationResult {
         notices.push(
           `Heat output ${formatSpecValue("outputW", normalized.value)} at ${condition} is ${formatSpecValue("outputW", converted)} at ΔT50 (EN 442, n = 1.3).`,
         );
+        rated = normalized.value;
         normalized = { ok: true, value: converted };
         condition = `ΔT50, from ${condition}`;
       }
@@ -254,6 +258,7 @@ export function validateResearch(input: ValidateInput): ValidationResult {
       url: spec.url && /^https?:\/\//i.test(spec.url) ? spec.url : null,
       confidence: spec.confidence,
     };
+    if (rated !== null) asRated.set(candidate, rated);
     const existing = accepted.get(spec.key);
     if (!existing) {
       accepted.set(spec.key, candidate);
@@ -335,8 +340,12 @@ export function validateResearch(input: ValidateInput): ValidationResult {
       if (attribute.numericValue === null) continue;
       const theirs = convertUnit(attribute.numericValue, attribute.unit, field.unit);
       if (theirs === null) continue;
-      const differ = Math.abs(theirs - spec.numeric) / Math.max(Math.abs(spec.numeric), Math.abs(theirs), 1e-9) > 0.15;
-      if (!differ) continue;
+      const differs = (ours: number) =>
+        Math.abs(theirs - ours) / Math.max(Math.abs(ours), Math.abs(theirs), 1e-9) > 0.15;
+      if (!differs(spec.numeric)) continue;
+      // The supplier gives a radiator's output at its own rating (90/75/18): it agrees with the figure as rated.
+      const rated = asRated.get(spec);
+      if (rated !== undefined && !differs(rated)) continue;
       const resolution = nameChecked.get(spec.key) === true ? "name" : "review";
       conflicts.push({ key: spec.key, supplier: attribute.value, found: spec.text, resolution });
       if (resolution === "review") {

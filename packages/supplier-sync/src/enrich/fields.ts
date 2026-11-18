@@ -477,7 +477,8 @@ export const KINDS: Record<ProductKind, KindConfig> = {
     fields: {
       outputW: [40, 8000],
       heightMm: [100, 2500],
-      lengthMm: [150, 4000],
+      // A sectional radiator is also sold by the section ("глидер"), about 80 mm wide.
+      lengthMm: [60, 4000],
       depthMm: [20, 250],
       panelType: null,
       sections: [1, 50],

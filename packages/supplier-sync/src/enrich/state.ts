@@ -20,7 +20,8 @@ export type ImageAssetRow = typeof schema.imageAssets.$inferSelect;
  * Bump a stage's version to redo it for every product (its instructions or rules changed in a way that
  * should reach products already done). The hash of each stage's inputs includes it.
  */
-export const STAGE_VERSIONS = { extract: 1, validate: 1, rewrite: 1 } as const;
+// validate 2: a radiator's output compared with the supplier's at its rating; designer-rail and section ranges.
+export const STAGE_VERSIONS = { extract: 1, validate: 2, rewrite: 1 } as const;
 
 /** What the supplier says about a product (or, for a product of our own, what we say). */
 export interface SourceFacts {

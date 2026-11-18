@@ -302,6 +302,36 @@ describe("validateResearch", () => {
     expect(result.problems).toEqual([]);
   });
 
+  it("compares the supplier's radiator output with the figure as rated, not with its ΔT50 conversion", () => {
+    const radiator = (supplierWatts: number, foundWatts: number) =>
+      validateResearch({
+        name: "Панелен радиатор 300/1000 Ocean тип 22",
+        kind: "radiator",
+        categorySlug: "aluminievi-radiatori",
+        research: answer({
+          kind: "radiator",
+          specs: [
+            {
+              key: "outputW",
+              value: foundWatts,
+              condition: "90/75/18",
+              source: "supplier_image",
+              url: null,
+              confidence: "high",
+            },
+          ],
+        }),
+        supplierAttributes: [{ ...POWER_17_6, value: `${supplierWatts} W`, numericValue: supplierWatts / 1000 }],
+      });
+    // The supplier's 1285 W and the table's 1285 W at 90/75/18 agree; the shop shows 923 W at ΔT50.
+    const agreed = radiator(1285, 1285);
+    expect(agreed.conflicts).toEqual([]);
+    expect(agreed.problems).toEqual([]);
+    expect(agreed.specs.find((spec) => spec.key === "outputW")?.text).toBe("923 W");
+    // The live typo: the field says 2962 W where the supplier's own table says 1962 W.
+    expect(radiator(2962, 1962).conflicts.map((conflict) => conflict.resolution)).toEqual(["review"]);
+  });
+
   it("accepts the 36 mm bottom-centre connection of a designer towel rail, not a figure in cm", () => {
     const rail = (centreDistanceMm: number) =>
       validateResearch({
