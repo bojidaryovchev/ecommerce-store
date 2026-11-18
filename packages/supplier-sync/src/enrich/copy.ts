@@ -99,7 +99,13 @@ const BANNED: Array<[RegExp, string]> = [
   [/попълн(?:ете|ите|и)\s/iu, "an instruction to fill in a form"],
   [/полетата\s+по-долу/iu, "a reference to the supplier's form"],
   [/ще\s+се\s+свържем\s+с\s+вас/iu, "the supplier's promise to call back"],
-  [/хидро\s*-?\s*терм|hydro\s*-?\s*therm?|hydrotermbg/iu, "the supplier's company name"],
+  // "Hydro Term" is also the brand of the supplier's own boilers, and a brand belongs in the name; the company
+  // as a seller, importer or contact does not.
+  [
+    /(?:хидро\s*-?\s*терм|hydro\s*-?\s*therm?)\s*(?:е?еоод|оод|ад|ltd|eood|ood)|hydrotermbg|(?:фирма|дружеството|вносител\p{L}*|дистрибутор\p{L}*)\s+(?:„|")?(?:хидро|hydro)/iu,
+    "the supplier's company",
+  ],
+  [/hydrotherm|хидротерм/iu, 'the brand spelled other than "Hydro Term"'],
   [/https?:\/\/|www\.|\b[\w-]+\.(?:bg|com|eu|net|org)\b/iu, "a web address"],
   [/[\w.+-]+@[\w-]+\.[\w.]+/u, "an email address"],
   [/(?:\+359|\b0)[\s-]?[2-9]\d{1,2}[\s-]?\d{2,3}[\s-]?\d{2,4}\b/u, "a phone number"],

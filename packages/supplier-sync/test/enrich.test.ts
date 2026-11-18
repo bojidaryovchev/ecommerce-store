@@ -394,7 +394,11 @@ describe("the copy gate", () => {
         { item: copyItem(), forbiddenFigures: [] },
       ).join(" ");
     expect(problems("Поискайте оферта днес.")).toMatch(/offer/);
-    expect(problems("Предлага се от Хидро Терм.")).toMatch(/company name/);
+    expect(problems("Внася се от Хидро Терм ЕООД.")).toMatch(/supplier's company/);
+    expect(problems("Сайтът hydrotermbg.com го предлага.")).toMatch(/company|web address/);
+    // The brand of the supplier's own boilers is a brand like any other, spelled as the shop spells it.
+    expect(problems("Котлите Hydro Term се почистват лесно.")).toBe("");
+    expect(problems("Котлите Hydrotherm се почистват лесно.")).toMatch(/Hydro Term/);
     expect(problems("Обадете се на 0888 123 456.")).toMatch(/phone/);
     expect(problems("Вижте www.example.bg за подробности.")).toMatch(/web address/);
     expect(problems("Цената е 3200 лв. с ДДС.")).toMatch(/price/);
