@@ -1,13 +1,151 @@
 {
   "hero": {
-    "title": "Heating and cooling for your home",
-    "description": "Stoves, pellet boilers, heat pumps, air conditioners, radiators and towel rails — with delivery across Bulgaria and installation by certified technicians.",
-    "browseCategories": "Browse Categories"
+    "eyebrow": "Heating · Cooling · Installation",
+    "title": "A warm home in winter, a cool one in summer",
+    "description": "Heat pumps, pellet stoves and boilers, air conditioners, radiators and towel rails. Delivery across Bulgaria, a site visit and turnkey installation.",
+    "primary": "Request a site visit",
+    "secondary": "Browse the products",
+    "solutions": "Solutions with installation",
+    "solutionLink": "How the installation goes"
+  },
+  "trust": {
+    "delivery": {
+      "title": "Delivery across Bulgaria",
+      "text": "To the address you choose."
+    },
+    "installation": {
+      "title": "Turnkey installation",
+      "text": "Site visit, installation and commissioning."
+    },
+    "warranty": {
+      "title": "Manufacturer's warranty",
+      "text": "And our help with every question."
+    },
+    "payment": {
+      "title": "Secure payment",
+      "text": "By card online, prices include VAT."
+    }
+  },
+  "categories": {
+    "eyebrow": "Catalog",
+    "title": "Products for heating and cooling",
+    "description": "{count} products in {categories} categories, from heat pumps to towel rails.",
+    "viewAll": "All products"
+  },
+  "house": {
+    "eyebrow": "Solutions for the whole home",
+    "title": "What can heat and cool your home",
+    "description": "Pick a point on the plan to see how each solution works and how we install it.",
+    "legend": "The solutions on the plan",
+    "hotspots": {
+      "termopompa": "Air-to-water heat pump",
+      "bojler": "Hot water tank",
+      "peletna-kamina": "Pellet stove with a water jacket",
+      "podovo": "Underfloor heating",
+      "klimatik": "Air conditioner",
+      "radiator": "Radiators",
+      "liri": "Towel rail",
+      "solar": "Solar collector"
+    }
+  },
+  "howItWorks": {
+    "eyebrow": "How we work",
+    "title": "From choosing to a warm home in four steps",
+    "steps": {
+      "choose": {
+        "title": "Choose",
+        "text": "Browse the products or write to us. We help you choose the power and the model."
+      },
+      "visit": {
+        "title": "Site visit",
+        "text": "We come over, survey the place and send a quote for the unit and the installation."
+      },
+      "install": {
+        "title": "Installation",
+        "text": "We deliver and install the unit on the agreed day."
+      },
+      "handover": {
+        "title": "Commissioning and warranty",
+        "text": "We start the system, show you how to use it and stay available for service."
+      }
+    }
+  },
+  "seasonal": {
+    "heating": {
+      "eyebrow": "Heating season",
+      "title": "Most sought after for the cold months"
+    },
+    "cooling": {
+      "eyebrow": "Cooling season",
+      "title": "Most sought after for the hot months"
+    },
+    "viewAll": "View all"
+  },
+  "tools": {
+    "eyebrow": "Calculators",
+    "title": "Work out what you need",
+    "items": {
+      "termopompa": {
+        "title": "Heat pump power",
+        "text": "By floor area, insulation and local climate."
+      },
+      "klimatik": {
+        "title": "Air conditioner power",
+        "text": "How many BTU for your room."
+      },
+      "radiatori": {
+        "title": "Radiators for a room",
+        "text": "How many watts and what size of radiator."
+      }
+    },
+    "open": "Calculate"
+  },
+  "guides": {
+    "eyebrow": "Guides",
+    "title": "Before you choose",
+    "viewAll": "All guides",
+    "read": "Read"
+  },
+  "faq": {
+    "eyebrow": "Questions",
+    "title": "Frequently asked questions",
+    "items": {
+      "install": {
+        "q": "Do you install what you sell?",
+        "a": "Yes. For heat pumps, pellet stoves and boilers, air conditioners and underfloor heating we offer turnkey installation: a site visit, the installation and commissioning. Request a site visit and we will send you a quote."
+      },
+      "vat": {
+        "q": "Do prices include VAT?",
+        "a": "Yes. Every price in the shop is in euros and includes VAT."
+      },
+      "delivery": {
+        "q": "How long does delivery take?",
+        "a": "It depends on the manufacturer's stock. We confirm the date after the order, and for units with installation we agree on a day after the site visit."
+      },
+      "power": {
+        "q": "How do I know what power I need?",
+        "a": "Our calculators for heat pumps, air conditioners and radiators give you a guide. We set the exact power at the site visit, from the insulation, the windows and how you use the home."
+      },
+      "returns": {
+        "q": "Can I return a product?",
+        "a": "Yes. You have 14 days from delivery to withdraw from an online purchase without giving a reason, with the exceptions the law provides."
+      },
+      "payment": {
+        "q": "How can I pay?",
+        "a": "By card online when you order. Payment goes through Stripe, and your card details never reach us."
+      }
+    }
+  },
+  "cta": {
+    "title": "Not sure what you need?",
+    "text": "Tell us about your home and we will suggest a solution and a site visit.",
+    "primary": "Request a site visit",
+    "secondary": "Write to us"
   },
   "featuredProducts": {
-    "title": "Featured Products"
+    "title": "Featured products"
   },
   "featuredCategories": {
-    "title": "Shop by Category"
+    "title": "Shop by category"
   }
 }

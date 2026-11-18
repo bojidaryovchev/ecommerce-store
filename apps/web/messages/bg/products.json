@@ -19,7 +19,8 @@
   "productCard": {
     "unavailable": "Не се предлага",
     "priceOnRequest": "Цена по запитване",
-    "outOfStock": "Изчерпан"
+    "outOfStock": "Изчерпан",
+    "withVat": "с ДДС"
   },
   "wishlist": {
     "add": "Добави в любими",

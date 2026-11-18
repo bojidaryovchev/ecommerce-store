@@ -1,6 +1,17 @@
-import { CategoriesGridSkeleton, ProductsGridSkeleton, SectionHeader } from "@/components/common";
-import { FeaturedCategories, FeaturedProducts, HomeHero } from "@/components/home";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { ProductsGridSkeleton } from "@/components/common";
+import {
+  BlueprintBand,
+  CategoryShowcase,
+  ContactBand,
+  GuidesTeaser,
+  HomeFaq,
+  HomeHero,
+  HowItWorks,
+  SeasonalProducts,
+  ToolsTeaser,
+  TrustStrip,
+} from "@/components/home";
+import { setRequestLocale } from "next-intl/server";
 import React, { Suspense } from "react";
 
 type Props = {
@@ -10,25 +21,35 @@ type Props = {
 const Home: React.FC<Props> = async ({ params }) => {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("home");
 
   return (
-    <main className="max-w-container py-8">
+    <main>
       <HomeHero />
-
-      <section className="space-y-8 py-12">
-        <SectionHeader title={t("featuredProducts.title")} link="/products" />
-        <Suspense fallback={<ProductsGridSkeleton />}>
-          <FeaturedProducts />
-        </Suspense>
-      </section>
-
-      <section className="space-y-8 py-12">
-        <SectionHeader title={t("featuredCategories.title")} link="/categories" />
-        <Suspense fallback={<CategoriesGridSkeleton />}>
-          <FeaturedCategories />
-        </Suspense>
-      </section>
+      <TrustStrip />
+      <Suspense
+        fallback={
+          <div className="max-w-container py-20">
+            <ProductsGridSkeleton />
+          </div>
+        }
+      >
+        <CategoryShowcase />
+      </Suspense>
+      <BlueprintBand />
+      <HowItWorks />
+      <Suspense
+        fallback={
+          <div className="max-w-container py-20">
+            <ProductsGridSkeleton />
+          </div>
+        }
+      >
+        <SeasonalProducts />
+      </Suspense>
+      <ToolsTeaser />
+      <GuidesTeaser />
+      <HomeFaq />
+      <ContactBand />
     </main>
   );
 };

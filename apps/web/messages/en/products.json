@@ -19,7 +19,8 @@
   "productCard": {
     "unavailable": "Unavailable",
     "priceOnRequest": "Price on request",
-    "outOfStock": "Out of stock"
+    "outOfStock": "Out of stock",
+    "withVat": "incl. VAT"
   },
   "wishlist": {
     "add": "Add to wishlist",
