@@ -12,7 +12,8 @@
     "checkout": "Proceed to checkout",
     "continueShopping": "Continue shopping",
     "clearCart": "Clear cart",
-    "checkoutFailed": "Checkout failed"
+    "checkoutFailed": "Checkout failed",
+    "promoHint": "A promo code is entered on the payment page."
   },
   "toasts": {
     "added": "Added to cart",

@@ -24,6 +24,7 @@ const PromotionForm: React.FC<Props> = ({ coupons }) => {
   const [maxRedemptions, setMaxRedemptions] = useState("");
   const [firstTimeOnly, setFirstTimeOnly] = useState(false);
   const [minimumAmount, setMinimumAmount] = useState("");
+  const [storefront, setStorefront] = useState(false);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -40,7 +41,8 @@ const PromotionForm: React.FC<Props> = ({ coupons }) => {
           couponId,
           ...(maxRedemptions ? { maxRedemptions: Number(maxRedemptions) } : {}),
           firstTimeTransaction: firstTimeOnly || undefined,
-          ...(minimumAmount ? { minimumAmount: Number(minimumAmount), minimumAmountCurrency: "usd" } : {}),
+          ...(minimumAmount ? { minimumAmount: Number(minimumAmount), minimumAmountCurrency: "eur" } : {}),
+          storefront: storefront || undefined,
         });
 
         if (result.success) {
@@ -52,7 +54,7 @@ const PromotionForm: React.FC<Props> = ({ coupons }) => {
         }
       });
     },
-    [code, couponId, maxRedemptions, firstTimeOnly, minimumAmount, router],
+    [code, couponId, maxRedemptions, firstTimeOnly, minimumAmount, storefront, router],
   );
 
   const formatCouponLabel = (coupon: Coupon) => {
@@ -127,7 +129,7 @@ const PromotionForm: React.FC<Props> = ({ coupons }) => {
           min={0}
           value={minimumAmount}
           onChange={(e) => setMinimumAmount(e.target.value)}
-          placeholder="e.g. 5000 ($50.00)"
+          placeholder="e.g. 5000 (50.00 €)"
         />
       </div>
 
@@ -139,6 +141,18 @@ const PromotionForm: React.FC<Props> = ({ coupons }) => {
         />
         <Label htmlFor="firstTimeOnly" className="cursor-pointer text-sm font-normal">
           First-time customers only
+        </Label>
+      </div>
+
+      <div className="flex items-start gap-2">
+        <Checkbox
+          id="storefront"
+          checked={storefront}
+          onCheckedChange={(checked) => setStorefront(checked === true)}
+          className="mt-0.5"
+        />
+        <Label htmlFor="storefront" className="cursor-pointer text-sm font-normal">
+          Show in the shop: a strip on the home page while the code is active (for public campaigns, not personal codes)
         </Label>
       </div>
 

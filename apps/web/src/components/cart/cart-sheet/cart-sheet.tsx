@@ -121,7 +121,9 @@ const CartSheet: React.FC = () => {
             </div>
 
             <DeliveryLine subtotal={summary.subtotal} currency={summary.currency} />
-            <p className="text-muted-foreground text-xs">{t("shippingNote")}</p>
+            <p className="text-muted-foreground text-xs">
+              {t("shippingNote")} {t("promoHint")}
+            </p>
 
             {/* Actions */}
             <div className="flex flex-col gap-2">

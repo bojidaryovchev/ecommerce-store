@@ -1,3 +1,4 @@
+import { NotFoundHelp } from "@/components/common/not-found-help";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
@@ -15,6 +16,7 @@ const ProductNotFound: React.FC = async () => {
           <Link href="/products">{t("browseProducts")}</Link>
         </Button>
       </div>
+      <NotFoundHelp />
     </main>
   );
 };

@@ -6,6 +6,7 @@ export {
   GuidesTeaser,
   HomeFaq,
   HowItWorks,
+  PromoStrip,
   SeasonalProducts,
   SectionHeading,
   ToolsTeaser,

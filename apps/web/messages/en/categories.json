@@ -7,7 +7,8 @@
     "pagedTitle": "{name}: page {page}"
   },
   "page": {
-    "title": "Categories"
+    "title": "Categories",
+    "lead": "Every heating and cooling unit we sell, by kind. Choose a section, or go straight to a subsection."
   },
   "categoriesGrid": {
     "empty": "No categories found"

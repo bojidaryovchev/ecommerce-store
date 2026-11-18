@@ -2,7 +2,10 @@
   "notFound": {
     "title": "Page not found",
     "description": "The address may be wrong, or the page may have moved.",
-    "backHome": "Back to the home page"
+    "backHome": "Back to the home page",
+    "browse": "Browse the catalogue",
+    "help": "Can't find what you are looking for?",
+    "contact": "Write to us"
   },
   "pagination": {
     "label": "Pagination",

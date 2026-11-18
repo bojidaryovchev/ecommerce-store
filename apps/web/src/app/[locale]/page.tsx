@@ -7,6 +7,7 @@ import {
   HomeFaq,
   HomeHero,
   HowItWorks,
+  PromoStrip,
   SeasonalProducts,
   ToolsTeaser,
   TrustStrip,
@@ -32,6 +33,7 @@ const Home: React.FC<Props> = async ({ params }) => {
   return (
     <main>
       <HomeHero />
+      <PromoStrip />
       <TrustStrip />
       <Suspense
         fallback={

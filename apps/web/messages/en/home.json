@@ -147,5 +147,15 @@
   },
   "featuredCategories": {
     "title": "Shop by category"
+  },
+  "promo": {
+    "label": "Promotions",
+    "percent": "{percent}% off your order with the code",
+    "amount": "{amount} off your order with the code",
+    "minimum": "on orders over {amount}",
+    "until": "until {date}",
+    "howTo": "Enter it on the payment page.",
+    "copy": "Copy the code",
+    "copied": "Code copied"
   }
 }

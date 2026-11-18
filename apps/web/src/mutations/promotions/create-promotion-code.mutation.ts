@@ -17,6 +17,8 @@ type CreatePromotionCodeInput = {
   firstTimeTransaction?: boolean;
   minimumAmount?: number;
   minimumAmountCurrency?: string;
+  /** Advertise the code in the shop: the home page strip and the cart (see getStorefrontPromotions). */
+  storefront?: boolean;
 };
 
 async function createPromotionCode(data: CreatePromotionCodeInput): Promise<ActionResult<PromotionCode>> {
@@ -48,6 +50,7 @@ async function createPromotionCode(data: CreatePromotionCodeInput): Promise<Acti
         coupon: coupon.stripeCouponId,
       },
       code: data.code.trim().toUpperCase(),
+      ...(data.storefront ? { metadata: { storefront: "true" } } : {}),
       ...(data.maxRedemptions ? { max_redemptions: data.maxRedemptions } : {}),
       ...(data.expiresAt ? { expires_at: Math.floor(data.expiresAt.getTime() / 1000) } : {}),
       restrictions: {
@@ -55,7 +58,7 @@ async function createPromotionCode(data: CreatePromotionCodeInput): Promise<Acti
         ...(data.minimumAmount
           ? {
               minimum_amount: data.minimumAmount,
-              minimum_amount_currency: data.minimumAmountCurrency ?? "usd",
+              minimum_amount_currency: data.minimumAmountCurrency ?? "eur",
             }
           : {}),
       },
@@ -71,6 +74,7 @@ async function createPromotionCode(data: CreatePromotionCodeInput): Promise<Acti
         active: true,
         maxRedemptions: data.maxRedemptions ?? null,
         expiresAt: data.expiresAt ?? null,
+        metadata: data.storefront ? { storefront: "true" } : null,
         restrictions: {
           firstTimeTransaction: data.firstTimeTransaction ?? false,
           minimumAmount: data.minimumAmount ?? undefined,

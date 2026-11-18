@@ -1,3 +1,4 @@
+import { NotFoundHelp } from "@/components/common/not-found-help";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
@@ -13,6 +14,7 @@ const NotFoundPage: React.FC = async () => {
       <Button asChild>
         <Link href="/">{t("backHome")}</Link>
       </Button>
+      <NotFoundHelp />
     </main>
   );
 };
