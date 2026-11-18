@@ -1,0 +1,170 @@
+# Catalogue enrichment: research, validation, classification and copy for supplier products that are new or
+# changed since their last run (docs/enrichment.md). Nothing is published here: an admin approves on
+# /admin/enrichment.
+#
+# It runs on the owner's Claude subscription: `claude setup-token` (on the owner's machine) prints a
+# long-lived token, stored here as the secret CLAUDE_CODE_OAUTH_TOKEN. Without it the job says so in its
+# summary and succeeds: the shop works without the pipeline; products just wait.
+#
+# LOGS: the job prints product slugs, counts and gate verdicts only. Never add a step that echoes the
+# environment, runs with `set -x`, or prints a secret. ANTHROPIC_API_KEY is set empty on purpose: if it were
+# ever added to this repository it would silently take precedence over the subscription token and bill the
+# API instead.
+#
+# Configuration (names only):
+#   secrets    DATABASE_URL (production), CLAUDE_CODE_OAUTH_TOKEN
+#   variables  ENRICH_LIMIT (products per run, default 40), ENRICH_RESEARCH_MODEL, ENRICH_COPY_MODEL
+
+name: Catalogue enrichment
+
+on:
+  schedule:
+    # An hour after the 01:30 supplier sync (apps/web/vercel.json), once a day.
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Run the model and write (off: print the plan only)"
+        type: boolean
+        default: true
+      limit:
+        description: "Products this run (blank for the default)"
+        type: string
+        required: false
+        default: ""
+      slugs:
+        description: "Only these products, comma-separated (blank for all that need it)"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalogue-enrichment
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    name: Enrich the catalogue
+    if: ${{ !github.event.repository.fork }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      NODE_VERSION: "22"
+      # The version this was tested with; raise it deliberately.
+      CLAUDE_CODE_VERSION: "2.1.327"
+    steps:
+      - name: Check configuration
+        id: config
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          LIMIT: ${{ inputs.limit || vars.ENRICH_LIMIT }}
+        run: |
+          if [ -n "$LIMIT" ] && ! [[ "$LIMIT" =~ ^[1-9][0-9]{0,3}$ ]]; then
+            echo "::error title=Bad input::limit must be a positive whole number."
+            exit 1
+          fi
+          if [ -z "$DATABASE_URL" ] || [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "::notice title=Enrichment skipped::Set the secrets DATABASE_URL and CLAUDE_CODE_OAUTH_TOKEN (run 'claude setup-token')."
+            {
+              echo "### Catalogue enrichment: skipped"
+              echo
+              echo "Add the secrets DATABASE_URL and CLAUDE_CODE_OAUTH_TOKEN (from \`claude setup-token\`) under Settings > Secrets and variables > Actions."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          node -e '
+            try {
+              const u = new URL(process.env.DATABASE_URL);
+              for (const v of [decodeURIComponent(u.password), u.hostname]) if (v) console.log("::add-mask::" + v);
+            } catch {
+              console.log("::error title=Not configured::DATABASE_URL is not a valid URL.");
+              process.exit(1);
+            }
+          '
+          case "${CLAUDE_CODE_OAUTH_TOKEN//[[:space:]]/}" in
+            sk-ant-oat*) ;;
+            *) echo "::error title=Claude token::The secret does not look like a token from 'claude setup-token' (those start with sk-ant-oat)." ;;
+          esac
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.ready == 'true'
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        if: steps.config.outputs.ready == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.config.outputs.ready == 'true'
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          pnpm install --frozen-lockfile --filter @ecommerce/supplier-sync...
+          npm install --global --no-fund --no-audit "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+
+      - name: Cache supplier images
+        if: steps.config.outputs.ready == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ecommerce-enrich/images
+          key: enrich-images-${{ github.run_id }}
+          restore-keys: enrich-images-
+
+      # Never fails by itself: the exit code is judged after the summary is written.
+      - name: Run the pipeline
+        id: run
+        if: steps.config.outputs.ready == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ""
+          ENRICH_RESEARCH_MODEL: ${{ vars.ENRICH_RESEARCH_MODEL }}
+          ENRICH_COPY_MODEL: ${{ vars.ENRICH_COPY_MODEL }}
+          APPLY: ${{ github.event_name != 'workflow_dispatch' || inputs.apply }}
+          LIMIT: ${{ inputs.limit || vars.ENRICH_LIMIT }}
+          SLUGS: ${{ inputs.slugs }}
+        run: |
+          args=(--concurrency 2)
+          if [ "$APPLY" = "true" ]; then args+=(--apply); fi
+          if [ -n "$LIMIT" ]; then args+=(--limit "$LIMIT"); fi
+          if [ -n "$SLUGS" ]; then args+=(--slug "$SLUGS"); fi
+          set +e
+          pnpm --filter @ecommerce/supplier-sync enrich "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/enrich.out"
+          code=${PIPESTATUS[0]}
+          set -e
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        if: always() && steps.run.outcome != 'skipped' && steps.config.outputs.ready == 'true'
+        env:
+          EXIT_CODE: ${{ steps.run.outputs.exit_code }}
+        run: |
+          {
+            echo "### Catalogue enrichment (exit ${EXIT_CODE:-unknown})"
+            echo
+            echo '```'
+            sed -n '/^Catalogue enrichment:/,$p' "$RUNNER_TEMP/enrich.out" | head -80
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "FAILED - stopped early (usage limit, or some sessions failed)"
+        if: steps.run.outputs.exit_code == '2'
+        run: |
+          echo "::error title=Enrichment stopped early::A usage limit was reached or some sessions failed. Nothing was written for those products; the next run retries them."
+          exit 1
+
+      - name: "FAILED - the Claude CLI could not start or sign in"
+        if: steps.run.outputs.exit_code == '1'
+        run: |
+          echo "::error title=Enrichment misconfigured::Is CLAUDE_CODE_OAUTH_TOKEN current? Tokens from 'claude setup-token' last a year."
+          exit 1

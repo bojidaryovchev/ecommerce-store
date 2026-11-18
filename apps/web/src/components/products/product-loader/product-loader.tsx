@@ -49,10 +49,13 @@ const ProductLoader: React.FC<Props> = async ({ slug }) => {
         category={trail.map((category) => category.name).join(" > ") || null}
         color={
           product.attributeValues
-            .filter((value) => value.attribute.name.trim().toLowerCase() === "цвят")
+            .filter((value) => value.attribute.slug === "color")
             .map((value) => value.value)
             .join(", ") || null
         }
+        gtin={product.metadata?.gtin ?? null}
+        mpn={product.metadata?.mpn ?? null}
+        eprel={product.metadata?.eprel ?? null}
         rating={
           reviews.length > 0
             ? { value: reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length, count: reviews.length }

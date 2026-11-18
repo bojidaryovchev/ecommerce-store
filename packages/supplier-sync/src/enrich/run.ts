@@ -362,11 +362,12 @@ async function runResearchJob(
   const log = options.logger;
   const workspace = await createWorkspace(options.skillsDir, "catalog-research");
   try {
-    // Images: the ones not classified before, and spec tables and labels (their figures are needed again).
+    // Images: the ones not classified before; spec tables and labels (their figures are needed again); and
+    // photos (whether a photo shows this very model is a question about the product, not the picture).
     const urls = [...new Set(products.flatMap((product) => product.source.images))];
     const needsLook = urls.filter((url) => {
       const known = state.imageAssets.get(url);
-      return !known || known.kind === "spec_table" || known.kind === "energy_label";
+      return !known || known.kind === "spec_table" || known.kind === "energy_label" || known.kind === "photo";
     });
     const prepared = await prepareImages(needsLook, {
       workspace,

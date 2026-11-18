@@ -22,7 +22,7 @@ Why these tags:
 - `local`: serves Bulgaria with installation; no public street address yet.
 
 The live checks ran against the launch configuration (`SITE_INDEXING=on`); production is noindex on purpose until the
-descriptions are rewritten (docs/description-rewrite.md). check-site after the fixes: 27 pass, 3 warn, 1 info-level
+descriptions are rewritten (docs/enrichment.md). check-site after the fixes: 27 pass, 3 warn, 1 info-level
 duplicate-description note, 0 fail (the one fail in the second run was a dev-server hiccup; the production build answers 200).
 
 ## Regressions

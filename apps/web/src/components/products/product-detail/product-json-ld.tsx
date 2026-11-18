@@ -16,6 +16,11 @@ interface Props {
   /** The category trail, "Термопомпи > Термопомпи моноблок". */
   category?: string | null;
   color?: string | null;
+  /** Barcode digits (8, 12, 13 or 14), and the manufacturer's part number, from the catalogue enrichment. */
+  gtin?: string | null;
+  mpn?: string | null;
+  /** The product's registration number in the EU energy label database (EPREL). */
+  eprel?: string | null;
   /** Customer reviews: the average and count over all of them, and the latest few in full. */
   rating?: { value: number; count: number } | null;
   reviews?: Array<{ author: string; rating: number; date: string; body: string | null }>;
@@ -52,6 +57,18 @@ const ProductJsonLd: React.FC<Props> = (props) => {
     ...(props.category && { category: props.category }),
     ...(props.color && { color: props.color }),
     sku: props.sku,
+    ...(props.gtin &&
+      /^(\d{8}|\d{12}|\d{13}|\d{14})$/.test(props.gtin) && { [`gtin${props.gtin.length}`]: props.gtin }),
+    ...(props.mpn && { mpn: props.mpn }),
+    // An EU energy label needs its EPREL code (Google's merchant listing docs); the class alone is not enough.
+    ...(props.eprel && {
+      hasCertification: {
+        "@type": "Certification",
+        issuedBy: { "@type": "Organization", name: "European_Commission" },
+        name: "EPREL",
+        certificationIdentification: props.eprel,
+      },
+    }),
     ...(props.brand && { brand: { "@type": "Brand", name: props.brand } }),
     ...(rated && {
       aggregateRating: {

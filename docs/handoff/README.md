@@ -76,7 +76,7 @@ https://claude.ai/artifact/J76m6ijGq5CXbqfaYttukq
 | Emails                                     | `src/emails/*`, Bulgarian or English by the order's locale                                                                                                                                           |
 | Delivery, promotions                       | `src/lib/delivery.ts` (free unless `NEXT_PUBLIC_DELIVERY_FEE` / `_FREE_FROM` are set); promo codes with "Show in the shop"                                                                           |
 | Supplier sync                              | full sync every 4 hours (`apps/web/vercel.json` crons)                                                                                                                                               |
-| Description rewrite                        | `packages/supplier-sync/src/rewrite/*`, `docs/description-rewrite.md`: Anthropic API based, never run (no key)                                                                                       |
+| Catalogue enrichment                       | `packages/supplier-sync/src/enrich/*`, `.claude/skills/catalog-*`, `/admin/enrichment`, `docs/enrichment.md`: specs, categories, image kinds and copy on the Claude subscription                     |
 | SEO                                        | `docs/seo-status.md` (the audit by the seo plugin, `d:\repos\claude-playbooks\plugins\seo`)                                                                                                          |
 
 ## Known problems
