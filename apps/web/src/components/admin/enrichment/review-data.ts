@@ -30,6 +30,11 @@ export type ReviewData = {
   dropped: Array<{ name: string; value: string; reason: string }>;
   problems: string[];
   notices: string[];
+  review: {
+    verdict: "pass" | "revise" | "hold";
+    issues: string[];
+    keywords: { primary: string; volume: number; secondary: string[] } | null;
+  } | null;
   note: string | null;
   sources: string[];
   features: string[];
@@ -90,6 +95,10 @@ export function toReviewData(detail: EnrichmentDetail): ReviewData {
       ...(detail.stages.classify?.status === "flagged" ? detail.stages.classify.errors : []),
     ],
     notices: validate?.notices ?? [],
+    /** The second reader's verdict on the proposed copy, and the searched phrases it was written around. */
+    review: detail.review
+      ? { verdict: detail.review.verdict, issues: detail.review.issues, keywords: detail.review.keywords }
+      : null,
     note: extract?.note || null,
     sources: extract?.sources ?? [],
     features: extract?.features ?? [],

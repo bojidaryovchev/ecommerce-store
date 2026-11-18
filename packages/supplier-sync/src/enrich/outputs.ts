@@ -84,6 +84,14 @@ export const rewriteOutputSchema = z.object({
 });
 export type RewriteOutput = z.infer<typeof rewriteOutputSchema>;
 
+export const reviewOutputSchema = z.object({
+  verdict: z.enum(["pass", "revise", "hold"]),
+  issues: z.array(z.string()),
+  /** The searched phrases the copy was checked against (keywords.ts), for the admin. */
+  keywords: z.object({ primary: z.string(), volume: z.number(), secondary: z.array(z.string()) }).nullable(),
+});
+export type ReviewOutput = z.infer<typeof reviewOutputSchema>;
+
 const reader =
   <T>(schema: z.ZodType<T>) =>
   (value: unknown): T | null => {
@@ -95,3 +103,4 @@ export const readExtract = reader(extractOutputSchema);
 export const readClassify = reader(classifyOutputSchema);
 export const readValidate = reader(validateOutputSchema);
 export const readRewrite = reader(rewriteOutputSchema);
+export const readReview = reader(reviewOutputSchema);

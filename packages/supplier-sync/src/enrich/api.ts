@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { z } from "zod";
 import { SessionError, type SessionRequest, type SessionResult } from "./claude";
-import { copyOutputSchema, researchOutputSchema } from "./contract";
+import { copyOutputSchema, researchOutputSchema, reviewOutputSchema } from "./contract";
 
 /**
  * The same sessions on the Anthropic API instead of the subscription (`--engine api`): billed per token, for
@@ -18,6 +18,7 @@ const PAUSE_LIMIT = 6;
 const SCHEMAS: Record<SessionRequest["skill"], z.ZodType> = {
   "catalog-research": researchOutputSchema,
   "catalog-copy": copyOutputSchema,
+  "catalog-review": reviewOutputSchema,
 };
 
 /** The skill's instructions without their frontmatter, adjusted for a session without a file system. */

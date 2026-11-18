@@ -1,5 +1,6 @@
 import type { CopyAnswer, CopyItem } from "./contract";
 import { SPEC_FIELDS, type ProductKind } from "./fields";
+import { checkKeywordUse, type KeywordTarget } from "./keywords";
 import type { ValidatedSpec } from "./validate";
 
 /**
@@ -7,7 +8,8 @@ import type { ValidatedSpec } from "./validate";
  *
  * The copy is built only on facts that passed validation: a figure in doubt is listed in `omit` and must not
  * appear. The gate then refuses copy that lifts the supplier's wording, carries their calls to action or
- * company name, states prices or contact details, or names the product without its brand and model.
+ * company name, states prices or contact details, names the product without its brand and model, or leaves out
+ * (or stuffs) the phrase people search for (keywords.ts).
  */
 
 /**
@@ -49,6 +51,7 @@ export interface CopyContext {
   features: string[];
   supplierDescription: string | null;
   siblings: string[];
+  keywords: KeywordTarget | null;
   retry: string[] | null;
 }
 
@@ -72,6 +75,7 @@ export function buildCopyItem(context: CopyContext): CopyItem {
     omit: context.omit.map((key) => (key in SPEC_FIELDS ? SPEC_FIELDS[key as keyof typeof SPEC_FIELDS].name : key)),
     supplierDescription: context.supplierDescription,
     siblings: context.siblings.slice(0, 12),
+    keywords: context.keywords,
     retry: context.retry,
   };
 }
@@ -200,6 +204,7 @@ export function checkCopyAnswer(answer: CopyAnswer, input: CopyGateInput): strin
     const needle = squash(figure);
     if (needle.length >= 3 && all.includes(needle)) problems.push(`it states ${figure}, which is in doubt`);
   }
+  if (item.keywords) problems.push(...checkKeywordUse({ name, metaDescription: meta, description }, item.keywords));
   return [...new Set(problems)];
 }
 

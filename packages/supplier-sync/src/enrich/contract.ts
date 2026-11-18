@@ -1,15 +1,19 @@
 import { z } from "zod";
 import { PRODUCT_KINDS, SPEC_KEYS, type FieldType, type ProductKind, type SpecKey } from "./fields";
+import type { KeywordTarget } from "./keywords";
 
 /**
  * What the enrichment pipeline hands the model, and what it accepts back.
  *
- * Two kinds of session, each with its own skill (.claude/skills/catalog-research and catalog-copy):
+ * Three kinds of session, each with its own skill (.claude/skills/catalog-research, catalog-copy, catalog-review):
  *
  * - research: reads the supplier's text, attributes and images (spec tables are often pictures), searches the
  *   web for the exact model, and returns typed specifications with sources, the product's kind and category,
  *   and what each image shows. Feeds the extract and classify stages.
- * - copy: writes the shop's own name, description and meta description from facts that passed validation.
+ * - copy: writes the shop's own name, description and meta description from facts that passed validation, around
+ *   the phrases people search for.
+ * - review: a second reader checks that copy against the same facts, the searched phrases and the shop's rules,
+ *   and passes it, sends it back with notes, or holds it for a person.
  *
  * The CLI holds the model to the JSON Schema generated here (shape and limits); each product's answer is then
  * parsed on its own, so one product's slip costs that product, not the batch.
@@ -195,6 +199,8 @@ export interface CopyItem {
   supplierDescription: string | null;
   /** Names of related products, so the copy says what sets this one apart. */
   siblings: string[];
+  /** The searched phrases the page is written around (keywords.ts); null when none has measurable demand. */
+  keywords: KeywordTarget | null;
   /** Why the previous attempt was refused, when this is a retry. */
   retry: string[] | null;
 }
@@ -216,6 +222,47 @@ export type CopyAnswer = z.infer<typeof copyProductSchema>;
 
 export const copyOutputSchema = z.object({ products: z.array(copyProductSchema) }).strict();
 
+/* --- Review --------------------------------------------------------------------------------------------- */
+
+export interface ReviewItem {
+  id: string;
+  kind: ProductKind;
+  category: string | null;
+  /** The shop's notes for its section (sizing rules of thumb the copy may use). */
+  sectionNotes: string | null;
+  /** The facts the copy may state: validated specifications and features. */
+  specs: Array<{ name: string; value: string }>;
+  features: string[];
+  /** Figures in doubt: the copy must not state them. */
+  omit: string[];
+  /** Why the data checks held the product, when they did; the copy must not paper over it. */
+  held: string[];
+  /** Related products the shop sells (other sizes of the range): the copy may point to them by name. */
+  siblings: string[];
+  keywords: KeywordTarget | null;
+  copy: { name: string; metaDescription: string; description: string };
+}
+
+export interface ReviewBatch {
+  version: 1;
+  products: ReviewItem[];
+}
+
+export const REVIEW_VERDICTS = ["pass", "revise", "hold"] as const;
+export type ReviewVerdict = (typeof REVIEW_VERDICTS)[number];
+
+export const reviewProductSchema = z
+  .object({
+    id: z.string().min(1),
+    verdict: z.enum(REVIEW_VERDICTS),
+    /** For "revise": what the writer must change, one point each; for "hold": why a person must look. */
+    issues: z.array(z.string().min(3).max(400)).max(8),
+  })
+  .strict();
+export type ReviewAnswer = z.infer<typeof reviewProductSchema>;
+
+export const reviewOutputSchema = z.object({ products: z.array(reviewProductSchema) }).strict();
+
 /* --- Shared --------------------------------------------------------------------------------------------- */
 
 /** The JSON Schema the CLI enforces (`claude -p --json-schema`). */
@@ -227,6 +274,7 @@ export function jsonSchemaOf(schema: z.ZodType): Record<string, unknown> {
 
 export const RESEARCH_OUTPUT_JSON_SCHEMA = jsonSchemaOf(researchOutputSchema);
 export const COPY_OUTPUT_JSON_SCHEMA = jsonSchemaOf(copyOutputSchema);
+export const REVIEW_OUTPUT_JSON_SCHEMA = jsonSchemaOf(reviewOutputSchema);
 
 /** The envelope: per-product answers are parsed one by one. */
 const envelopeSchema = z.object({ products: z.array(z.unknown()) });

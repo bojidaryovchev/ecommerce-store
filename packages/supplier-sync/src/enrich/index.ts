@@ -16,10 +16,12 @@ export {
 export {
   readClassify,
   readExtract,
+  readReview,
   readRewrite,
   readValidate,
   type ClassifyOutput,
   type ExtractOutput,
+  type ReviewOutput,
   type RewriteOutput,
   type ValidateOutput,
 } from "./outputs";

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."enrichment_stage" ADD VALUE 'review' BEFORE 'publish';

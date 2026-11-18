@@ -45,7 +45,7 @@ describe.skipIf(!isLocal)("publishing enrichment (integration)", () => {
   const now = new Date("2026-11-18T12:00:00Z");
 
   /** A supplier-linked product with the supplier's wrong 17.6 kW, and every stage of a proposal for it. */
-  async function seed(name: string, options: { flagged?: boolean } = {}) {
+  async function seed(name: string, options: { flagged?: boolean; review?: "pass" | "revise" | "hold" | null } = {}) {
     const [supplier] = await db
       .insert(schema.suppliers)
       .values({ slug: `s-${name}`, name: "S", baseUrl: "https://supplier.test", platform: "woocommerce" })
@@ -101,7 +101,7 @@ describe.skipIf(!isLocal)("publishing enrichment (integration)", () => {
       ],
     });
     expect(validation.problems.length > 0).toBe(Boolean(options.flagged));
-    const write = (status: "succeeded" | "flagged", output: unknown, errors: string[] = []) => ({
+    const write = (status: "succeeded" | "flagged" | "failed", output: unknown, errors: string[] = []) => ({
       status,
       inputsHash: "h",
       output,
@@ -137,6 +137,21 @@ describe.skipIf(!isLocal)("publishing enrichment (integration)", () => {
         description: OUR_DESCRIPTION,
       }),
     );
+    // The second reader's verdict on that copy (none: not reviewed yet).
+    const verdict = options.review === undefined ? "pass" : options.review;
+    if (verdict) {
+      const issues = verdict === "pass" ? [] : ["The description says 45 kg; the specs say 52 kg."];
+      await saveStage(
+        db,
+        product!.id,
+        "review",
+        write(
+          verdict === "pass" ? "succeeded" : verdict === "hold" ? "flagged" : "failed",
+          { verdict, issues, keywords: null },
+          issues,
+        ),
+      );
+    }
     const state = await loadEnrichState(db, { productIds: [product!.id] });
     await markPending(db, product!.id, proposalHash(state.products[0]!.stages), now);
     await syncReviewFlag(
@@ -238,14 +253,31 @@ describe.skipIf(!isLocal)("publishing enrichment (integration)", () => {
     ).rejects.toThrow(/not a number/);
   });
 
-  it("approves only clean proposals in bulk, and closes the queue entry of one approved by hand", async () => {
+  it("approves in bulk what the reviewer passed, a held product without its contested figure", async () => {
     const clean = await seed("clean");
     const flagged = await seed("flagged", { flagged: true });
+    const held = await seed("held", { review: "hold" });
+    const sentBack = await seed("sent-back", { review: "revise" });
+    const unreviewed = await seed("unreviewed", { review: null });
+
+    expect((await approveAllReady(db, null, now)).sort()).toEqual([clean.product.id, flagged.product.id].sort());
+    for (const left of [held, sentBack, unreviewed]) {
+      expect((await stageOf(left.product.id, "publish"))!.status).toBe("pending");
+    }
+    // Neither the supplier's contested 17.6 kW nor the research's 4.65 kW is shown until a person settles it.
+    const after = await db.query.products.findFirst({
+      where: eq(schema.products.id, flagged.product.id),
+      with: { attributeValues: { with: { attribute: true } } },
+    });
+    expect(after!.attributeValues.map((value) => value.attribute.slug)).not.toContain("power-heating");
+    expect(after!.attributeValues.some((value) => /4,65|17\.6/.test(value.value))).toBe(false);
+    expect(after!.lockedFields).toContain("description");
+  });
+
+  it("closes the queue entry of a flagged product rejected by hand", async () => {
+    const flagged = await seed("flagged", { flagged: true, review: "hold" });
     const queue = () => db.select().from(schema.syncChanges).where(eq(schema.syncChanges.type, "enrichment_flagged"));
     expect((await queue()).map((row) => [row.productId, row.status])).toEqual([[flagged.product.id, "pending"]]);
-
-    expect(await approveAllReady(db, null, now)).toEqual([clean.product.id]);
-    expect((await stageOf(flagged.product.id, "publish"))!.status).toBe("pending");
 
     await rejectEnrichment(db, flagged.product.id, null, now);
     expect((await stageOf(flagged.product.id, "publish"))!.status).toBe("rejected");

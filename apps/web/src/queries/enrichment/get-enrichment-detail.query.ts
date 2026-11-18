@@ -1,5 +1,5 @@
 import { db, schema } from "@ecommerce/database";
-import { readClassify, readExtract, readRewrite, readValidate } from "@ecommerce/supplier-sync/enrich";
+import { readClassify, readExtract, readReview, readRewrite, readValidate } from "@ecommerce/supplier-sync/enrich";
 import { asc, eq, inArray } from "drizzle-orm";
 import { connection } from "next/server";
 
@@ -54,12 +54,14 @@ async function getEnrichmentDetail(productId: string) {
       validate: stage("validate"),
       classify: stage("classify"),
       rewrite: stage("rewrite"),
+      review: stage("review"),
       publish: stage("publish"),
     },
     extract: readExtract(stage("extract")?.output),
     validate: readValidate(stage("validate")?.output),
     classify: readClassify(stage("classify")?.output),
     rewrite: readRewrite(stage("rewrite")?.output),
+    review: readReview(stage("review")?.output),
   };
 }
 

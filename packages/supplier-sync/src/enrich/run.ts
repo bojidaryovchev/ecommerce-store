@@ -8,20 +8,25 @@ import { SessionError, scrubForLog, type SessionRequest, type SessionResult } fr
 import {
   COPY_OUTPUT_JSON_SCHEMA,
   RESEARCH_OUTPUT_JSON_SCHEMA,
+  REVIEW_OUTPUT_JSON_SCHEMA,
   copyProductSchema,
   isWebAddress,
   parseAnswers,
   researchProductSchema,
+  reviewProductSchema,
   type CopyBatch,
   type CopyItem,
   type FieldBrief,
   type ResearchAnswer,
   type ResearchBatch,
   type ResearchItem,
+  type ReviewBatch,
+  type ReviewItem,
 } from "./contract";
 import { buildCopyItem, checkCopyAnswer, figureSpellings } from "./copy";
 import { KINDS, PRODUCT_KINDS, effectiveKind, fieldBrief, kindFields, type ProductKind } from "./fields";
 import { guessImageKind, prepareImages } from "./images";
+import { keywordTarget } from "./keywords";
 import {
   readClassify,
   readExtract,
@@ -29,6 +34,7 @@ import {
   readValidate,
   type ClassifyOutput,
   type ExtractOutput,
+  type ReviewOutput,
   type ValidateOutput,
 } from "./outputs";
 import {
@@ -47,8 +53,9 @@ import { validateResearch } from "./validate";
  * `enrich`: the catalogue enrichment pipeline (see docs/enrichment.md).
  *
  * Plan by default: it reads the catalogue and prints what it would do. With `apply`, products go to the
- * model in batches (research, then copy), each answer passes the gates, and the results are stored per
- * product and stage. Nothing is published here: an admin approves on /admin/enrichment.
+ * model in batches (research, then copy, then a second reader's review), each answer passes the gates, and the
+ * results are stored per product and stage. Copy the reviewer sends back is written again with its notes.
+ * Nothing is published here: an admin approves on /admin/enrichment, or `enrich --approve` publishes what passed.
  *
  * A run is bounded (`limit` products), resumes where the last one stopped (stages whose inputs are unchanged
  * are skipped), and stops at once when the model service is unavailable (usage limit, sign-in), charging no
@@ -75,6 +82,8 @@ export interface EnrichOptions {
   concurrency: number;
   researchModel: string;
   copyModel: string;
+  /** The second reader; the copy model when not given. */
+  reviewModel?: string;
   generate: Generate;
   /** The repository's .claude/skills directory. */
   skillsDir: string;
@@ -84,6 +93,8 @@ export interface EnrichOptions {
   researchBatchSize?: number;
   /** Products per copy session. */
   copyBatchSize?: number;
+  /** Products per review session. */
+  reviewBatchSize?: number;
   fetch?: typeof fetch;
   now?: () => Date;
 }
@@ -93,6 +104,7 @@ export interface PlannedProduct {
   name: string;
   research: boolean;
   copy: boolean;
+  review: boolean;
 }
 
 export interface EnrichResult {
@@ -108,6 +120,10 @@ export interface EnrichResult {
   flagged: number;
   copyWritten: number;
   copyRejected: number;
+  /** The second reader's verdicts this run. */
+  reviewPassed: number;
+  reviewRevised: number;
+  reviewHeld: number;
   pendingApproval: number;
   /** Why the run stopped early, if it did. */
   stopped: string | null;
@@ -122,6 +138,8 @@ interface Plan {
   copyOnly: EnrichProduct[];
   /** Products whose stored research only needs validating again (the rules changed). */
   revalidate: EnrichProduct[];
+  /** Products whose copy is current but has not been reviewed as it stands. */
+  review: EnrichProduct[];
   deferred: number;
   givenUp: EnrichResult["givenUp"];
 }
@@ -159,6 +177,7 @@ export function planWork(
   const research: EnrichProduct[] = [];
   const copyOnly: EnrichProduct[] = [];
   const revalidate: EnrichProduct[] = [];
+  const review: EnrichProduct[] = [];
   const givenUp: Plan["givenUp"] = [];
 
   for (const product of state.products) {
@@ -187,23 +206,35 @@ export function planWork(
     if (options.stages === "research") continue;
     const context = copyContext(product, state);
     if (!context) continue;
-    if (forced || stale(rewrite, copyInputsHash(context.item)) || rewrite?.status === "failed") {
+    const reviewed = product.stages.review;
+    const reviewing = rewrite?.status === "succeeded" ? reviewContext(product, state) : null;
+    // The reviewer sent this very copy back: write it again with the notes.
+    const sentBack = reviewing !== null && reviewed?.status === "failed" && !stale(reviewed, reviewing.hash);
+    if (sentBack && !forced && !retryable(reviewed)) {
+      givenUp.push({ slug: product.slug, stage: "review", error: reviewed.errors[0] ?? "sent back" });
+      continue;
+    }
+    if (forced || stale(rewrite, copyInputsHash(context.item)) || rewrite?.status === "failed" || sentBack) {
       if (!forced && rewrite?.status === "failed" && !retryable(rewrite)) {
         givenUp.push({ slug: product.slug, stage: "rewrite", error: rewrite.errors[0] ?? "failed" });
         continue;
       }
       copyOnly.push(product);
+      continue;
     }
+    if (reviewing && stale(reviewed, reviewing.hash)) review.push(product);
   }
 
-  const total = research.length + copyOnly.length;
+  const total = research.length + copyOnly.length + review.length;
   const researchTaken = research.slice(0, options.limit);
   const copyTaken = copyOnly.slice(0, Math.max(0, options.limit - researchTaken.length));
+  const reviewTaken = review.slice(0, Math.max(0, options.limit - researchTaken.length - copyTaken.length));
   return {
     research: researchTaken,
     copyOnly: copyTaken,
     revalidate,
-    deferred: total - researchTaken.length - copyTaken.length,
+    review: reviewTaken,
+    deferred: total - researchTaken.length - copyTaken.length - reviewTaken.length,
     givenUp,
   };
 }
@@ -282,9 +313,11 @@ export async function runEnrich(options: EnrichOptions): Promise<EnrichResult> {
   }
   const plan = planWork(state, options);
 
+  const later = options.stages !== "research";
   const planned: PlannedProduct[] = [
-    ...plan.research.map((p) => ({ slug: p.slug, name: p.name, research: true, copy: options.stages !== "research" })),
-    ...plan.copyOnly.map((p) => ({ slug: p.slug, name: p.name, research: false, copy: true })),
+    ...plan.research.map((p) => ({ slug: p.slug, name: p.name, research: true, copy: later, review: later })),
+    ...plan.copyOnly.map((p) => ({ slug: p.slug, name: p.name, research: false, copy: true, review: true })),
+    ...plan.review.map((p) => ({ slug: p.slug, name: p.name, research: false, copy: false, review: true })),
   ];
   const result: EnrichResult = {
     applied: options.apply,
@@ -297,6 +330,9 @@ export async function runEnrich(options: EnrichOptions): Promise<EnrichResult> {
     flagged: 0,
     copyWritten: 0,
     copyRejected: 0,
+    reviewPassed: 0,
+    reviewRevised: 0,
+    reviewHeld: 0,
     pendingApproval: 0,
     stopped: null,
     costUsd: 0,
@@ -304,13 +340,18 @@ export async function runEnrich(options: EnrichOptions): Promise<EnrichResult> {
   };
   if (!options.apply) return result;
 
-  type Job = { kind: "research"; products: EnrichProduct[] } | { kind: "copy"; products: EnrichProduct[] };
+  type Job = { kind: "research" | "copy" | "review"; products: EnrichProduct[] };
+  const copyJobs = (products: EnrichProduct[]) =>
+    chunk(products, options.copyBatchSize ?? 6).map((batch) => ({ kind: "copy" as const, products: batch }));
+  const reviewJobs = (products: EnrichProduct[]) =>
+    chunk(products, options.reviewBatchSize ?? 8).map((batch) => ({ kind: "review" as const, products: batch }));
   const queue: Job[] = [
     ...researchBatches(plan.research, options.researchBatchSize ?? 8).map((products) => ({
       kind: "research" as const,
       products,
     })),
-    ...chunk(plan.copyOnly, options.copyBatchSize ?? 6).map((products) => ({ kind: "copy" as const, products })),
+    ...copyJobs(plan.copyOnly),
+    ...reviewJobs(plan.review),
   ];
 
   const stop = (reason: string) => {
@@ -321,16 +362,16 @@ export async function runEnrich(options: EnrichOptions): Promise<EnrichResult> {
     while (queue.length > 0 && result.stopped === null) {
       const job = queue.shift()!;
       try {
+        // What follows a job goes first: finished products sooner.
         if (job.kind === "research") {
           const ready = await runResearchJob(options, job.products, state, result, now);
-          if (options.stages !== "research" && ready.length > 0) {
-            // Copy for what was just researched goes first: finished products sooner.
-            queue.unshift(
-              ...chunk(ready, options.copyBatchSize ?? 6).map((products) => ({ kind: "copy" as const, products })),
-            );
-          }
+          if (options.stages !== "research" && ready.length > 0) queue.unshift(...copyJobs(ready));
+        } else if (job.kind === "copy") {
+          const written = await runCopyJob(options, job.products, result, now);
+          if (written.length > 0) queue.unshift(...reviewJobs(written));
         } else {
-          await runCopyJob(options, job.products, result, now);
+          const sentBack = await runReviewJob(options, job.products, result, now);
+          if (sentBack.length > 0) queue.unshift(...copyJobs(sentBack));
         }
       } catch (error) {
         if (error instanceof SessionError && error.failure !== "batch") {
@@ -667,13 +708,29 @@ function copyContext(product: EnrichProduct, state: EnrichState) {
     return node?.slug ?? null;
   };
   const previous = product.stages.rewrite;
+  const reviewed = product.stages.review;
+  // Notes for a retry: the gate's reasons when the last copy failed it, else the reviewer's when it sent it back.
+  const retry =
+    previous?.status === "failed" && previous.errors.length > 0
+      ? previous.errors
+      : reviewed?.status === "failed" && reviewed.errors.length > 0
+        ? reviewed.errors.map((issue) => `the reviewer: ${issue}`)
+        : null;
+  const categoryName = product.category?.name ?? proposed?.name ?? null;
+  const keywords = keywordTarget({
+    kind: validate.kind,
+    categorySlug: product.category?.slug ?? proposed?.slug ?? null,
+    text: [product.source.name, categoryName ?? ""].join(" "),
+    description: product.source.description,
+    specs: validate.specs.filter((spec) => !validate.omit.includes(spec.key)),
+  });
   const item = buildCopyItem({
     id: product.id,
     currentName: product.source.name,
     brand: product.brand ?? extract.identity.brand,
     model: extract.identity.model,
     kind: validate.kind,
-    category: product.category?.name ?? proposed?.name ?? null,
+    category: categoryName,
     sectionSlug: product.section?.slug ?? sectionOf(proposed?.id),
     specs: validate.specs,
     omit: validate.omit,
@@ -682,7 +739,8 @@ function copyContext(product: EnrichProduct, state: EnrichState) {
     siblings: state.products
       .filter((other) => other.id !== product.id && familyKey(other) === familyKey(product))
       .map((other) => readRewrite(other.stages.rewrite?.output)?.name ?? other.source.name),
-    retry: previous?.status === "failed" && previous.errors.length > 0 ? previous.errors : null,
+    keywords,
+    retry,
   });
   const forbidden = validate.conflicts
     .filter((conflict) => conflict.resolution === "review" || validate.omit.includes(conflict.key))
@@ -690,12 +748,13 @@ function copyContext(product: EnrichProduct, state: EnrichState) {
   return { item, forbidden };
 }
 
+/** Writes the copy for a batch. Returns the products whose copy passed the gate: the reviewer reads them next. */
 async function runCopyJob(
   options: EnrichOptions,
   products: EnrichProduct[],
   result: EnrichResult,
   now: () => Date,
-): Promise<void> {
+): Promise<EnrichProduct[]> {
   const started = now();
   const log = options.logger;
   const state = await loadEnrichState(options.db);
@@ -707,7 +766,8 @@ async function runCopyJob(
       (entry): entry is { product: EnrichProduct; context: NonNullable<ReturnType<typeof copyContext>> } =>
         entry.context !== null,
     );
-  if (contexts.length === 0) return;
+  if (contexts.length === 0) return [];
+  const written: EnrichProduct[] = [];
 
   const workspace = await createWorkspace(options.skillsDir, "catalog-copy");
   try {
@@ -744,7 +804,7 @@ async function runCopyJob(
           finishedAt: now(),
         });
       }
-      return;
+      return [];
     }
     result.sessions += 1;
     result.costUsd += generated.costUsd ?? 0;
@@ -797,11 +857,141 @@ async function runCopyJob(
         finishedAt: finished,
       });
       result.copyWritten += 1;
+      written.push(product);
+    }
+    log.info("enrich.copy.done", { written: result.copyWritten, seconds: Math.round(generated.durationMs / 1000) });
+    return written;
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+  }
+}
+
+/* --- Review ----------------------------------------------------------------------------------------------- */
+
+/** What the reviewer reads: the copy as it stands and the facts it was written from. Null without current copy. */
+function reviewContext(product: EnrichProduct, state: EnrichState): { item: ReviewItem; hash: string } | null {
+  const copy = readRewrite(product.stages.rewrite?.output);
+  const validate = readValidate(product.stages.validate?.output);
+  const context = copyContext(product, state);
+  if (!copy || !validate || !context || product.stages.rewrite?.status !== "succeeded") return null;
+  const item: ReviewItem = {
+    id: product.id,
+    kind: context.item.kind,
+    category: context.item.category,
+    sectionNotes: context.item.sectionNotes,
+    specs: context.item.specs,
+    features: context.item.features,
+    omit: context.item.omit,
+    held: validate.problems,
+    siblings: context.item.siblings,
+    keywords: context.item.keywords,
+    copy,
+  };
+  return { item, hash: hashOf({ version: STAGE_VERSIONS.review, item }) };
+}
+
+/**
+ * The second reader. "pass" makes the proposal ready, "hold" leaves it for a person, "revise" sends the copy back
+ * to be written again with the notes. Returns the products sent back while attempts remain, for this run.
+ */
+async function runReviewJob(
+  options: EnrichOptions,
+  products: EnrichProduct[],
+  result: EnrichResult,
+  now: () => Date,
+): Promise<EnrichProduct[]> {
+  const started = now();
+  const log = options.logger;
+  const model = options.reviewModel ?? options.copyModel;
+  const state = await loadEnrichState(options.db);
+  const entries = products
+    .map((product) => state.products.find((p) => p.id === product.id))
+    .filter((product): product is EnrichProduct => product !== undefined)
+    .map((product) => ({ product, review: reviewContext(product, state) }))
+    .filter(
+      (entry): entry is { product: EnrichProduct; review: NonNullable<ReturnType<typeof reviewContext>> } =>
+        entry.review !== null,
+    );
+  if (entries.length === 0) return [];
+
+  const workspace = await createWorkspace(options.skillsDir, "catalog-review");
+  try {
+    const batch: ReviewBatch = { version: 1, products: entries.map((entry) => entry.review.item) };
+    const batchFile = "batch.json";
+    await writeFile(path.join(workspace, batchFile), JSON.stringify(batch, null, 2), "utf8");
+    const request: SessionRequest = {
+      skill: "catalog-review",
+      workspace,
+      batchFile,
+      schema: REVIEW_OUTPUT_JSON_SCHEMA,
+      web: false,
+      images: [],
+      maxTurns: 6 + entries.length,
+      timeoutMs: Math.min(30, 6 + 2 * entries.length) * 60_000,
+    };
+    log.info("enrich.review.start", { products: entries.map((entry) => entry.product.slug) });
+    let generated: SessionResult;
+    try {
+      generated = await options.generate(request, model);
+    } catch (error) {
+      if (error instanceof SessionError && error.failure !== "batch") throw error;
+      // Nothing is charged: the reviews stay due and the next run reads them again.
+      result.failedSessions += 1;
+      log.warn("enrich.review.failed", { message: error instanceof Error ? error.message : String(error) });
+      return [];
+    }
+    result.sessions += 1;
+    result.costUsd += generated.costUsd ?? 0;
+
+    const parsed = parseAnswers(
+      generated.output,
+      reviewProductSchema,
+      entries.map((entry) => entry.product.id),
+    );
+    const finished = now();
+    const sentBack: EnrichProduct[] = [];
+    for (const { product, review } of entries) {
+      const answer = parsed.answers.get(product.id);
+      if (!answer) {
+        log.warn("enrich.review.unanswered", { slug: product.slug, error: parsed.invalid.get(product.id) ?? null });
+        continue;
+      }
+      // A revision without a reason gives the writer nothing to act on: it counts as a pass.
+      const verdict = answer.verdict === "revise" && answer.issues.length === 0 ? "pass" : answer.verdict;
+      const output: ReviewOutput = { verdict, issues: answer.issues, keywords: review.item.keywords };
+      await saveStage(options.db, product.id, "review", {
+        status: verdict === "pass" ? "succeeded" : verdict === "hold" ? "flagged" : "failed",
+        inputsHash: review.hash,
+        output,
+        errors: verdict === "pass" ? [] : answer.issues,
+        model,
+        startedAt: started,
+        finishedAt: finished,
+      });
+      if (verdict === "revise") {
+        result.reviewRevised += 1;
+        log.info("enrich.review.revise", { slug: product.slug, issues: answer.issues });
+        const previous = product.stages.review;
+        const attempts = (previous?.status === "failed" ? previous.attempts : 0) + 1;
+        if (attempts < MAX_ATTEMPTS) sentBack.push(product);
+        continue;
+      }
+      if (verdict === "pass") result.reviewPassed += 1;
+      else {
+        result.reviewHeld += 1;
+        log.info("enrich.review.hold", { slug: product.slug, issues: answer.issues });
+      }
       const fresh = await loadEnrichState(options.db, { productIds: [product.id] });
       const stages = fresh.products[0]?.stages ?? {};
       if (await markPending(options.db, product.id, proposalHash(stages), finished)) result.pendingApproval += 1;
     }
-    log.info("enrich.copy.done", { written: result.copyWritten, seconds: Math.round(generated.durationMs / 1000) });
+    log.info("enrich.review.done", {
+      passed: result.reviewPassed,
+      revised: result.reviewRevised,
+      held: result.reviewHeld,
+      seconds: Math.round(generated.durationMs / 1000),
+    });
+    return sentBack;
   } finally {
     await rm(workspace, { recursive: true, force: true });
   }

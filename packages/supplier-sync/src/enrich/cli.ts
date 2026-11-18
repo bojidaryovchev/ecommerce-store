@@ -7,6 +7,7 @@
  *   pnpm --filter @ecommerce/supplier-sync enrich --apply --slug a,b --force             # redo two products
  *   pnpm --filter @ecommerce/supplier-sync enrich --report           # counts per gate, flagged and failed
  *   pnpm --filter @ecommerce/supplier-sync enrich --rerun a,b        # mark products to be redone next run
+ *   pnpm --filter @ecommerce/supplier-sync enrich --approve          # publish everything the reviewer passed
  *
  * Runs on the Claude subscription by default (`claude -p`, the machine's sign-in or CLAUDE_CODE_OAUTH_TOKEN);
  * `--engine api` uses ANTHROPIC_API_KEY instead. Exit codes: 0 done, 1 configuration (the CLI could not start
@@ -25,6 +26,7 @@ import { consoleLogger } from "../logger";
 import { refreshProductMedia } from "../media";
 import { runApiSession } from "./api";
 import { childEnvironment, claudeBin, runClaudeSession } from "./claude";
+import { approveAllReady } from "./publish";
 import { enrichReport, formatReport } from "./report";
 import { runEnrich, type Generate } from "./run";
 import { requestRerun } from "./store";
@@ -44,11 +46,13 @@ const { values } = parseArgs({
     concurrency: { type: "string", default: "2" },
     model: { type: "string" },
     "copy-model": { type: "string" },
+    "review-model": { type: "string" },
     effort: { type: "string" },
     engine: { type: "string", default: "cli" },
     report: { type: "boolean", default: false },
     "refresh-media": { type: "boolean", default: false },
     rerun: { type: "string", multiple: true },
+    approve: { type: "boolean", default: false },
   },
 });
 
@@ -121,6 +125,11 @@ try {
     console.log(`${rows.length} product(s) will be redone on the next run.`);
   } else if (values.report) {
     console.log(formatReport(await enrichReport(db)));
+  } else if (values.approve) {
+    // What an admin's "Approve all ready" does: publishes every proposal that passed the gates and the reviewer.
+    const approved = await approveAllReady(db, null);
+    console.log(`Published ${approved.length} product(s).`);
+    await revalidate(approved);
   } else if (values["refresh-media"]) {
     const changed = await refreshProductMedia(db);
     console.log(`Photos, chips and drawings changed for ${changed.length} product(s).`);
@@ -132,6 +141,7 @@ try {
     }
     const researchModel = values.model ?? process.env.ENRICH_RESEARCH_MODEL ?? "claude-opus-5-5";
     const copyModel = values["copy-model"] ?? process.env.ENRICH_COPY_MODEL ?? "claude-opus-5-5";
+    const reviewModel = values["review-model"] ?? process.env.ENRICH_REVIEW_MODEL ?? copyModel;
     const effort = values.effort ?? process.env.ENRICH_EFFORT;
     const bin = claudeBin();
     // The model's process sees none of this process's secrets (the database URL above all).
@@ -152,6 +162,7 @@ try {
       concurrency,
       researchModel,
       copyModel,
+      reviewModel,
       generate,
       skillsDir,
       imageCacheDir: process.env.ENRICH_IMAGE_CACHE ?? path.join(homedir(), ".cache", "ecommerce-enrich", "images"),
@@ -168,7 +179,7 @@ try {
           planned: result.planned.length,
           plan: values.apply ? undefined : result.planned,
           note: result.applied
-            ? `Researched ${result.researched}, flagged ${result.flagged}, wrote copy for ${result.copyWritten} (rejected ${result.copyRejected}); ${result.pendingApproval} newly waiting for approval.`
+            ? `Researched ${result.researched}, flagged ${result.flagged}, wrote copy for ${result.copyWritten} (rejected ${result.copyRejected}); the reviewer passed ${result.reviewPassed}, sent back ${result.reviewRevised}, held ${result.reviewHeld}; ${result.pendingApproval} newly waiting for approval.`
             : `Plan only; nothing was sent or written. --apply would work on ${result.planned.length} product(s).`,
         },
         null,

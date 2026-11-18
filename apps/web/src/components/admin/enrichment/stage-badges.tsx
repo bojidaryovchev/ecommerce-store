@@ -8,6 +8,7 @@ const STAGE_LABELS: Record<EnrichmentStage, string> = {
   validate: "Validate",
   classify: "Classify",
   rewrite: "Rewrite",
+  review: "Review",
   publish: "Publish",
 };
 

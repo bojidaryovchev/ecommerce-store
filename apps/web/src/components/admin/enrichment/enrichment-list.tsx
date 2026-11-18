@@ -21,7 +21,7 @@ const TAB_LABELS: Record<EnrichmentTab, string> = {
   all: "All",
 };
 
-const STAGE_ORDER = ["extract", "validate", "classify", "rewrite", "publish"] as const;
+const STAGE_ORDER = ["extract", "validate", "classify", "rewrite", "review", "publish"] as const;
 
 /** The pipeline's report and the products, grouped by what an admin has to do about them. */
 const EnrichmentList: React.FC<{ tab: EnrichmentTab; page: number; query: string }> = async ({ tab, page, query }) => {

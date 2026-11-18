@@ -103,6 +103,32 @@ const EnrichmentReviewForm: React.FC<{ data: ReviewData }> = ({ data }) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+      {data.review && (
+        <section className="rounded-lg border p-4 text-sm">
+          <p className="font-semibold">
+            Second reader:{" "}
+            {data.review.verdict === "pass"
+              ? "passed"
+              : data.review.verdict === "hold"
+                ? "held for a person"
+                : "sent back for a rewrite"}
+          </p>
+          {data.review.issues.length > 0 && (
+            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-5">
+              {data.review.issues.map((issue) => (
+                <li key={issue}>{issue}</li>
+              ))}
+            </ul>
+          )}
+          {data.review.keywords && (
+            <p className="text-muted-foreground mt-2">
+              Written around “{data.review.keywords.primary}” ({data.review.keywords.volume} searches a month in
+              Bulgaria)
+              {data.review.keywords.secondary.length > 0 && <>; also {data.review.keywords.secondary.join(", ")}</>}.
+            </p>
+          )}
+        </section>
+      )}
       {(data.problems.length > 0 || data.notices.length > 0 || data.note) && (
         <section className="space-y-3">
           {data.problems.length > 0 && (

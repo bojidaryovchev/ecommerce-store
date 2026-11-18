@@ -424,6 +424,7 @@ function copyItem(overrides: Partial<CopyItem> = {}): CopyItem {
     omit: [],
     supplierDescription: SUPPLIER,
     siblings: [],
+    keywords: null,
     retry: null,
     ...overrides,
   };

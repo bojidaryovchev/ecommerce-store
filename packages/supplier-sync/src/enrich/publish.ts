@@ -265,8 +265,9 @@ export async function rejectEnrichment(db: Database, productId: string, userId: 
 }
 
 /**
- * Approves every proposal that is ready and clean: waiting for approval, with specifications that passed
- * validation and copy that passed its gate. Flagged products are left for a person.
+ * Approves every proposal that is ready: waiting for approval, with copy that passed its gate and the second
+ * reader (the review stage). A product the data checks held goes out without its figures in doubt; one the
+ * reviewer held, or whose copy was sent back for good, is left for a person.
  */
 export async function approveAllReady(db: Database, userId: string | null, now = new Date()): Promise<string[]> {
   const rows = await db
@@ -280,26 +281,40 @@ export async function approveAllReady(db: Database, userId: string | null, now =
       productId: schema.productEnrichments.productId,
       stage: schema.productEnrichments.stage,
       status: schema.productEnrichments.status,
+      output: schema.productEnrichments.output,
     })
     .from(schema.productEnrichments)
     .where(
       and(
         inArray(schema.productEnrichments.productId, ids),
-        inArray(schema.productEnrichments.stage, ["validate", "classify", "rewrite"]),
+        inArray(schema.productEnrichments.stage, ["validate", "classify", "rewrite", "review"]),
       ),
     );
-  const clean = ids.filter((id) => {
-    const own = gates.filter((gate) => gate.productId === id);
-    return (
-      own.some((gate) => gate.stage === "validate" && gate.status === "succeeded") &&
-      own.some((gate) => gate.stage === "rewrite" && gate.status === "succeeded") &&
-      !own.some((gate) => gate.status === "flagged" || gate.status === "failed")
-    );
-  });
   const approved: string[] = [];
-  for (const productId of clean) {
+  for (const productId of ids) {
+    const own = (stage: string) => gates.find((gate) => gate.productId === productId && gate.stage === stage);
+    // Ready: the copy passed its gate and the second reader, and nothing failed on the way.
+    const ready =
+      own("rewrite")?.status === "succeeded" &&
+      own("review")?.status === "succeeded" &&
+      own("validate") !== undefined &&
+      own("classify")?.status !== "failed" &&
+      own("validate")?.status !== "failed";
+    if (!ready) continue;
+    // A product the data checks held is published without the figures in doubt (the copy leaves them out too),
+    // so neither the supplier's contested value nor ours shows until a person settles it.
+    const omit = readValidate(own("validate")?.output)?.omit ?? [];
     approved.push(
-      await approveEnrichment(db, { productId, userId, parts: { copy: true, specs: true, category: true } }, now),
+      await approveEnrichment(
+        db,
+        {
+          productId,
+          userId,
+          parts: { copy: true, specs: true, category: true },
+          ...(omit.length > 0 && { edits: { specs: omit.map((key) => ({ key, include: false, value: "" })) } }),
+        },
+        now,
+      ),
     );
   }
   return approved;
