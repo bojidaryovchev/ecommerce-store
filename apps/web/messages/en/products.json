@@ -84,6 +84,13 @@
       "highest": "The highest value in the category.",
       "lowest": "The lowest value in the category.",
       "aria": "{name}: {value}, with values in the category from {min} to {max} {unit}"
+    },
+    "features": "Features",
+    "drawings": {
+      "title": "Tables, diagrams and labels",
+      "lead": "The manufacturer's tables, diagrams and energy labels for this model.",
+      "open": "Open {number}",
+      "alt": "{name}: drawing or table {number}"
     }
   },
   "productAddToCart": {

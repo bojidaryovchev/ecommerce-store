@@ -2,6 +2,7 @@ import { copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { Logger } from "../logger";
+import { refreshProductMedia } from "../media";
 import type { Database } from "../types";
 import { SessionError, scrubForLog, type SessionRequest, type SessionResult } from "./claude";
 import {
@@ -111,6 +112,8 @@ export interface EnrichResult {
   /** Why the run stopped early, if it did. */
   stopped: string | null;
   costUsd: number;
+  /** Products whose photos, chips or drawings changed: their pages need refreshing. */
+  mediaChanged: string[];
 }
 
 interface Plan {
@@ -297,6 +300,7 @@ export async function runEnrich(options: EnrichOptions): Promise<EnrichResult> {
     pendingApproval: 0,
     stopped: null,
     costUsd: 0,
+    mediaChanged: [],
   };
   if (!options.apply) return result;
 
@@ -346,6 +350,8 @@ export async function runEnrich(options: EnrichOptions): Promise<EnrichResult> {
     }
   };
   await Promise.all(Array.from({ length: Math.max(1, options.concurrency) }, worker));
+  // Image kinds are shared: one classified here may change the gallery of a product done long ago.
+  result.mediaChanged = await refreshProductMedia(options.db);
   return result;
 }
 
@@ -487,6 +493,7 @@ async function runResearchJob(
         continue;
       }
       await storeResearch(options, product, answer, state, prepared, started, finished);
+      await refreshProductMedia(options.db, [product.id]);
       result.researched += 1;
       const validated = await runValidation(options, product, await reload(options, product.id), finished);
       if (validated === "flagged") result.flagged += 1;

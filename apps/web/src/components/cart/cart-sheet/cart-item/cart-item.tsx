@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-context";
 import { priceFormat } from "@/i18n/format";
 import { Link } from "@/i18n/navigation";
+import { primaryPhoto } from "@/lib/product-media";
 import { productHref } from "@/lib/routes";
 import type { CartItemWithProduct } from "@/types/cart.type";
 import { Minus, Plus, Trash2 } from "lucide-react";
@@ -18,7 +19,7 @@ interface Props {
 const CartItem: React.FC<Props> = ({ item }) => {
   const { updateQuantity, removeItem, isLoading } = useCart();
   const format = useFormatter();
-  const productImage = item.product.images?.[0];
+  const productImage = primaryPhoto(item.product);
 
   const handleIncrement = () => {
     updateQuantity(item.id, item.quantity + 1);

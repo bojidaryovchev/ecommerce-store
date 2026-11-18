@@ -1,6 +1,7 @@
 import { WishlistButton } from "@/components/products/wishlist-button";
 import { priceFormat } from "@/i18n/format";
 import { Link } from "@/i18n/navigation";
+import { primaryPhoto } from "@/lib/product-media";
 import { productHref } from "@/lib/routes";
 import type { ProductWithPrices } from "@/types/product.type";
 import { useFormatter, useTranslations } from "next-intl";
@@ -22,7 +23,7 @@ const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted 
   const t = useTranslations("products.productCard");
   const format = useFormatter();
   const defaultPrice = product.prices.find((p) => p.id === product.defaultPriceId) ?? product.prices[0];
-  const image = product.images?.[0];
+  const image = primaryPhoto(product);
   const outOfStock = product.trackInventory && (product.stockQuantity ?? 0) <= 0;
   const badge = !product.active ? t("unavailable") : outOfStock ? t("outOfStock") : null;
 

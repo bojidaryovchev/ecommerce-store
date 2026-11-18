@@ -9,6 +9,7 @@ export {
   type LockableProductField,
 } from "./locks";
 export { consoleLogger, silentLogger, type Logger } from "./logger";
+export { deriveMedia, refreshProductMedia } from "./media";
 export { normalizeWooProduct, type NormalizedProduct } from "./normalize/product";
 export { slugify, transliterateBg } from "./normalize/transliterate";
 export { DEFAULT_SUPPLIER, SUPPLIERS, getSupplierConfig, isSupplierSlug, type SupplierSlug } from "./suppliers";

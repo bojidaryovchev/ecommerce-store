@@ -2,9 +2,10 @@
 
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { categoryTrail } from "@/lib/category-tree";
+import { primaryPhotoSql } from "@/lib/product-media-sql";
 import { categoryHref } from "@/lib/routes";
 import { db, schema } from "@ecommerce/database";
-import { and, count, desc, isNotNull, sql } from "drizzle-orm";
+import { and, count, desc, isNotNull } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
 import { getCategoryIndex } from "../categories/get-category-index.query";
 import { baseCatalogConditions, defaultPrice, defaultPriceJoin } from "./catalog-conditions";
@@ -49,7 +50,7 @@ async function getSearchSuggestions(term: string): Promise<SearchSuggestions> {
         slug: schema.products.slug,
         name: schema.products.name,
         brand: schema.products.brand,
-        image: sql<string | null>`${schema.products.images}[1]`,
+        image: primaryPhotoSql(schema.products.media, schema.products.images),
         price: defaultPrice.unitAmount,
         currency: defaultPrice.currency,
       })

@@ -11,6 +11,7 @@ import { priceFormat } from "@/i18n/format";
 import { Link } from "@/i18n/navigation";
 import type { CategoryNode } from "@/lib/category-tree";
 import { INSTALLATION_FOR_CATEGORY, installationHref } from "@/lib/installation-systems";
+import { productPhotos } from "@/lib/product-media";
 import { categoryHref } from "@/lib/routes";
 import type { getProductBySlug } from "@/queries/products";
 import { ArrowRight, CreditCard, MessageCircleQuestion, ShieldCheck, Truck, Undo2, Wrench } from "lucide-react";
@@ -18,6 +19,8 @@ import { useFormatter, useTranslations } from "next-intl";
 import React, { Suspense } from "react";
 import { ExpandableText } from "./expandable-text";
 import { ProductAddToCart } from "./product-add-to-cart";
+import { ProductChips } from "./product-chips";
+import { ProductDrawings } from "./product-drawings";
 import { ProductGallery } from "./product-gallery";
 import { ProductSpecs, specRows } from "./product-specs";
 import { ProductWishlist } from "./product-wishlist";
@@ -84,7 +87,10 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail }) => {
       </Breadcrumb>
 
       <div className="-mt-6 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
-        <ProductGallery images={product.images} name={product.name} />
+        <div className="space-y-4">
+          <ProductGallery images={productPhotos(product)} name={product.name} />
+          {product.media && <ProductChips chips={product.media.chips} />}
+        </div>
 
         <div className="space-y-6">
           <div className="space-y-3">
@@ -221,14 +227,15 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail }) => {
       </div>
 
       <div className="grid grid-cols-1 items-start gap-10 border-t pt-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-14">
-        {product.description ? (
-          <section className="space-y-3">
-            <h2 className="text-xl font-semibold">{t("description")}</h2>
-            <ExpandableText text={product.description} />
-          </section>
-        ) : (
-          <div />
-        )}
+        <div className="space-y-10">
+          {product.description && (
+            <section className="space-y-3">
+              <h2 className="text-xl font-semibold">{t("description")}</h2>
+              <ExpandableText text={product.description} />
+            </section>
+          )}
+          {product.media && <ProductDrawings images={product.media.drawings} name={product.name} />}
+        </div>
         <div className="space-y-10 lg:sticky lg:top-32">
           <ProductSpecs brand={product.brand} values={product.attributeValues} />
           {categoryTrail[0] && (

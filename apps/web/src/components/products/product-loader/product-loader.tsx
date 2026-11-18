@@ -1,5 +1,6 @@
 import { ProductDetail } from "@/components/products";
 import { categoryTrail } from "@/lib/category-tree";
+import { productPhotos } from "@/lib/product-media";
 import { categoryHref, productHref } from "@/lib/routes";
 import { SITE_URL } from "@/lib/site-url";
 import { getCategoryIndex } from "@/queries/categories";
@@ -40,7 +41,7 @@ const ProductLoader: React.FC<Props> = async ({ slug }) => {
       <ProductJsonLd
         name={product.name}
         description={product.description}
-        images={product.images}
+        images={productPhotos(product)}
         brand={product.brand}
         sku={product.slug ?? product.id}
         url={url}

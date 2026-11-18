@@ -22,3 +22,19 @@ supplier (see the supplier agreement in the plan).
 
 To add a photo: take it from Unsplash (not Unsplash+) or Pexels, avoid visible brand names and logos
 of other manufacturers, convert it to WebP (about 1200 px wide), and add a row here.
+
+## Which picture goes where
+
+| Slot                                                                    | Picture                                                                                                                  |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Home hero, section tiles and banners, installation and guide pages, 404 | Licensed scene photos (this file). One picture per section, reused by the guides and installation pages of that section. |
+| Installation stories                                                    | SVG illustrations animated with GSAP (`src/components/installation`), not photos.                                        |
+| Subcategory tiles in the menu                                           | The section's best-priced product photo, whole on white.                                                                 |
+| Product cards, cart, search suggestions, checkout, order emails         | The product's first photo (`primaryPhoto`, `src/lib/product-media.ts`).                                                  |
+| Product gallery                                                         | Photos only, without photos of the range's other sizes (`product.media.photos`).                                         |
+| Under the gallery                                                       | The supplier's feature icons and badges as small labelled chips (`product.media.chips`).                                 |
+| "Tables, diagrams and labels" on the product page                       | Spec tables, drawings and energy labels (`product.media.drawings`), opened full size.                                    |
+| Information and legal pages, empty states                               | Text with Lucide icons; no pictures.                                                                                     |
+
+What each supplier image is comes from the catalogue enrichment (`image_asset`, see docs/enrichment.md);
+`product.media` is derived from it by `refreshProductMedia` in `@ecommerce/supplier-sync`.

@@ -35,7 +35,7 @@ async function getCategoryStats(): Promise<Record<string, CategoryStats>> {
       where c.parent_id is not null
     ),
     priced as (
-      select p.id, p.category_id, p.images,
+      select p.id, p.category_id, coalesce(p.media->'photos'->>0, p.images[1]) as photo,
         (select min(pr.unit_amount) from price pr where pr.product_id = p.id and pr.active) as amount
       from product p
       where p.active
@@ -43,8 +43,7 @@ async function getCategoryStats(): Promise<Record<string, CategoryStats>> {
     select l.ancestor_id as id,
       count(distinct pp.id)::int as product_count,
       min(pp.amount)::int as min_price,
-      (array_agg(pp.images[1] order by pp.amount desc nulls last)
-        filter (where coalesce(array_length(pp.images, 1), 0) > 0))[1] as sample_image
+      (array_agg(pp.photo order by pp.amount desc nulls last) filter (where pp.photo is not null))[1] as sample_image
     from lineage l
     join priced pp on pp.category_id = l.category_id
     group by l.ancestor_id

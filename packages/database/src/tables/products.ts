@@ -3,6 +3,12 @@ import { boolean, index, integer, jsonb, pgTable, text, timestamp } from "drizzl
 import { productTypeEnum } from "../enums";
 import { categories } from "./categories";
 
+export type ProductMedia = {
+  photos: string[];
+  chips: Array<{ url: string; kind: "icon" | "badge" | "energy_label"; label: string | null }>;
+  drawings: string[];
+};
+
 export const products = pgTable(
   "product",
   {
@@ -17,6 +23,12 @@ export const products = pgTable(
     description: text("description"),
     active: boolean("active").default(true).notNull(),
     images: text("images").array().notNull().default([]),
+    /**
+     * What the images are, derived from their classification (image_asset and the enrichment's classify stage;
+     * see refreshProductMedia in @ecommerce/supplier-sync): the photos a gallery shows, the icons and badges shown
+     * as small labelled chips, and drawings and spec tables. Null until derived: show `images` as they are.
+     */
+    media: jsonb("media").$type<ProductMedia>(),
     metadata: jsonb("metadata").$type<Record<string, string>>().notNull().default({}),
     defaultPriceId: text("default_price_id"),
     shippable: boolean("shippable").default(true),

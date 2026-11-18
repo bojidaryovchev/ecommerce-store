@@ -22,6 +22,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import postgres from "postgres";
 import { consoleLogger } from "../logger";
+import { refreshProductMedia } from "../media";
 import { runApiSession } from "./api";
 import { childEnvironment, claudeBin, runClaudeSession } from "./claude";
 import { enrichReport, formatReport } from "./report";
@@ -46,6 +47,7 @@ const { values } = parseArgs({
     effort: { type: "string" },
     engine: { type: "string", default: "cli" },
     report: { type: "boolean", default: false },
+    "refresh-media": { type: "boolean", default: false },
     rerun: { type: "string", multiple: true },
   },
 });
@@ -72,6 +74,22 @@ const list = (input: string[] | undefined) =>
     .filter(Boolean);
 const slugs = list(values.slug);
 if (values.force && slugs.length === 0) fail("--force needs --slug");
+
+/**
+ * Asks the live site to refresh these products' pages (POST /api/revalidate), when SITE_URL and
+ * SUPPLIER_SYNC_SECRET are set; otherwise they refresh on the next deploy or catalogue sync.
+ */
+async function revalidate(productIds: string[]): Promise<void> {
+  const site = process.env.SITE_URL?.replace(/\/+$/, "");
+  const secret = process.env.SUPPLIER_SYNC_SECRET;
+  if (productIds.length === 0 || !site || !secret) return;
+  const response = await fetch(`${site}/api/revalidate`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ productIds }),
+  }).catch((error: unknown) => ({ ok: false, status: String(error) }) as const);
+  console.log(response.ok ? "The site refreshed those pages." : `The site did not refresh (${response.status}).`);
+}
 
 /** The repository root, where .claude/skills lives. */
 function repositoryRoot(from: string): string {
@@ -103,6 +121,10 @@ try {
     console.log(`${rows.length} product(s) will be redone on the next run.`);
   } else if (values.report) {
     console.log(formatReport(await enrichReport(db)));
+  } else if (values["refresh-media"]) {
+    const changed = await refreshProductMedia(db);
+    console.log(`Photos, chips and drawings changed for ${changed.length} product(s).`);
+    await revalidate(changed);
   } else {
     const skillsDir = path.join(repositoryRoot(process.cwd()), ".claude", "skills");
     if (values.apply && !existsSync(path.join(skillsDir, "catalog-research", "SKILL.md"))) {
@@ -153,7 +175,10 @@ try {
         2,
       ),
     );
-    if (values.apply) console.log(`\n${formatReport(await enrichReport(db))}`);
+    if (values.apply) {
+      console.log(`\n${formatReport(await enrichReport(db))}`);
+      await revalidate(result.mediaChanged);
+    }
     if (result.stopped?.startsWith("setup")) exitCode = EXIT.setup;
     else if (result.stopped !== null || result.failedSessions > 0) exitCode = EXIT.partial;
   }

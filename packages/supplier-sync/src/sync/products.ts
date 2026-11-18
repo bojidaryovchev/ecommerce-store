@@ -2,6 +2,7 @@ import { products, supplierProducts, type SupplierProduct } from "@ecommerce/dat
 import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { resolveImages } from "../images";
 import type { LockableProductField } from "../locks";
+import { refreshProductMedia } from "../media";
 import { isSameValue, type NormalizedProduct } from "../normalize/product";
 import {
   categoryNames,
@@ -53,7 +54,7 @@ export async function createFromSupplier(ctx: SyncContext, item: FetchedProduct,
   const images = await resolveImages(ctx.imageStore, p.images, ctx.supplier.slug);
   const categoryId = resolveCategoryId(ctx.categories, p.categoryExternalIds);
 
-  await ctx.db.transaction(async (tx) => {
+  const productId = await ctx.db.transaction(async (tx) => {
     const [product] = await tx
       .insert(products)
       .values({
@@ -90,7 +91,10 @@ export async function createFromSupplier(ctx: SyncContext, item: FetchedProduct,
       status: ctx.publishNew ? "applied" : "pending",
     });
     ctx.changedProductIds.add(product.id);
+    return product.id;
   });
+  // Which of its images are photos, icons or tables, from what is already known about them.
+  await refreshProductMedia(ctx.db, [productId]);
   ctx.stats.created += 1;
 }
 
@@ -125,6 +129,7 @@ export async function updateFromSupplier(
   const imagesChanged = !prev || !isSameValue(prev.images, next.images);
   const images = imagesChanged ? await resolveImages(ctx.imageStore, next.images, ctx.supplier.slug) : null;
 
+  let imagesPatched = false;
   await ctx.db.transaction(async (tx) => {
     const product = existing.productId
       ? await tx.query.products.findFirst({
@@ -163,7 +168,10 @@ export async function updateFromSupplier(
         prev?.images.map((i) => i.src),
         next.images.map((i) => i.src),
         () => {
-          if (images) patch.images = images;
+          if (images) {
+            patch.images = images;
+            imagesPatched = true;
+          }
         },
       );
       consider(
@@ -273,6 +281,7 @@ export async function updateFromSupplier(
       .where(eq(supplierProducts.id, existing.id));
   });
 
+  if (imagesPatched && existing.productId) await refreshProductMedia(ctx.db, [existing.productId]);
   if (restored) ctx.stats.restored += 1;
   else ctx.stats.updated += 1;
 }

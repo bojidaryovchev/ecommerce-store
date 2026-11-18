@@ -2,6 +2,7 @@ import { products, supplierCategories, supplierProducts, syncChanges } from "@ec
 import { and, eq, inArray } from "drizzle-orm";
 import { resolveImages, supplierHostedImages, type ImageStore } from "../images";
 import { isLockableField, type LockableProductField } from "../locks";
+import { refreshProductMedia } from "../media";
 import type { Database, DbExecutor } from "../types";
 import { loadAttributeIds } from "./attributes";
 import {
@@ -98,6 +99,7 @@ async function followSupplierInTx(
   }
 
   await tx.update(products).set(patch).where(eq(products.id, productId));
+  if (field === "images") await refreshProductMedia(tx, [productId]);
 
   // Any open "supplier changed a field you locked" entries for this field are now moot.
   await tx

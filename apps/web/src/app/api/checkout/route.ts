@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { CART_SESSION_COOKIE } from "@/lib/cart-utils";
 import { deliveryFee } from "@/lib/delivery";
+import { primaryPhoto } from "@/lib/product-media";
 import { stripe } from "@/lib/stripe";
 import { getCartBySessionId, getCartByUserId } from "@/queries/cart";
 import { db, schema } from "@ecommerce/database";
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     // Build line items with inline price_data
     const lineItems = cart.items.map((item) => {
       const unitAmount = item.price.unitAmount ?? 0;
-      const productImage = item.product.images?.[0];
+      const productImage = primaryPhoto(item.product);
 
       return {
         price_data: {
