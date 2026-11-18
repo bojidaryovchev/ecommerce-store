@@ -426,6 +426,7 @@ function copyItem(overrides: Partial<CopyItem> = {}): CopyItem {
     siblings: [],
     keywords: null,
     retry: null,
+    previous: null,
     ...overrides,
   };
 }

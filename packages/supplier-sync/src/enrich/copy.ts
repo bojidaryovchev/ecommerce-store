@@ -53,6 +53,7 @@ export interface CopyContext {
   siblings: string[];
   keywords: KeywordTarget | null;
   retry: string[] | null;
+  previous?: CopyItem["previous"];
 }
 
 export function buildCopyItem(context: CopyContext): CopyItem {
@@ -77,6 +78,7 @@ export function buildCopyItem(context: CopyContext): CopyItem {
     siblings: context.siblings.slice(0, 12),
     keywords: context.keywords,
     retry: context.retry,
+    previous: context.previous ?? null,
   };
 }
 

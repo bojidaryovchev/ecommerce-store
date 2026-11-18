@@ -164,9 +164,12 @@ const supplierAttributesOf = (product: EnrichProduct) =>
     .filter((value) => value.source === "supplier")
     .map(({ slug, name, unit, value, numericValue }) => ({ slug, name, unit, value, numericValue }));
 
-/** The copy item, without what changes between attempts (siblings, retry notes): its hash is the rewrite's inputs. */
+/**
+ * The copy item, without what changes between attempts (siblings, retry notes, the copy sent back): its hash is
+ * the rewrite's inputs.
+ */
 function copyInputsHash(item: CopyItem): string {
-  return hashOf({ version: STAGE_VERSIONS.rewrite, item: { ...item, siblings: null, retry: null } });
+  return hashOf({ version: STAGE_VERSIONS.rewrite, item: { ...item, siblings: null, retry: null, previous: null } });
 }
 
 export function planWork(
@@ -710,11 +713,12 @@ function copyContext(product: EnrichProduct, state: EnrichState) {
   const previous = product.stages.rewrite;
   const reviewed = product.stages.review;
   // Notes for a retry: the gate's reasons when the last copy failed it, else the reviewer's when it sent it back.
+  const sentBack = previous?.status !== "failed" && reviewed?.status === "failed" && reviewed.errors.length > 0;
   const retry =
     previous?.status === "failed" && previous.errors.length > 0
       ? previous.errors
-      : reviewed?.status === "failed" && reviewed.errors.length > 0
-        ? reviewed.errors.map((issue) => `the reviewer: ${issue}`)
+      : sentBack
+        ? reviewed!.errors.map((issue) => `the reviewer: ${issue}`)
         : null;
   const categoryName = product.category?.name ?? proposed?.name ?? null;
   const keywords = keywordTarget({
@@ -741,6 +745,8 @@ function copyContext(product: EnrichProduct, state: EnrichState) {
       .map((other) => readRewrite(other.stages.rewrite?.output)?.name ?? other.source.name),
     keywords,
     retry,
+    // The copy the reviewer read: a retry corrects it, so what passed review stays as it was.
+    previous: sentBack ? readRewrite(product.stages.rewrite?.output) : null,
   });
   const forbidden = validate.conflicts
     .filter((conflict) => conflict.resolution === "review" || validate.omit.includes(conflict.key))

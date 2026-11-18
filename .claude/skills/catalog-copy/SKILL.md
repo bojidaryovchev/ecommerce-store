@@ -20,6 +20,7 @@ Read the batch file at `$ARGUMENTS` with the Read tool. It is JSON: `{ "version"
 - `siblings`: names of related products (other sizes of the same range);
 - `keywords`: the phrases people in Bulgaria search for that describe this product, from search data: `primary` (with its monthly `volume`) and `secondary`. Null when none has measurable demand. See "Search phrases";
 - `retry`: when present, why your previous attempt was refused, by the automatic checks or by the reviewer (notes starting "the reviewer:"). Fix exactly those problems.
+- `previous`: when present, the copy the reviewer sent back. Start from it and change only what `retry` asks for. Leave every other sentence word for word: the rest has already passed review, and rewriting it brings new mistakes.
 
 Your final answer is the structured output `{ "products": [ { "id", "name", "metaDescription", "description" } ] }`, one entry per product. Nothing else is read.
 

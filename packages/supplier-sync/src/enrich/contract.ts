@@ -203,6 +203,8 @@ export interface CopyItem {
   keywords: KeywordTarget | null;
   /** Why the previous attempt was refused, when this is a retry. */
   retry: string[] | null;
+  /** The copy the reviewer sent back, when it did: the retry edits it rather than starting over. */
+  previous: { name: string; metaDescription: string; description: string } | null;
 }
 
 export interface CopyBatch {
