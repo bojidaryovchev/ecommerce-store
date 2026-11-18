@@ -48,45 +48,52 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
   const listboxId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [value, setValue] = useState(() => searchParams.get("q") ?? "");
+  const urlQuery = searchParams.get("q") ?? "";
+  const [value, setValue] = useState(urlQuery);
+  const [followedQuery, setFollowedQuery] = useState(urlQuery);
   const [suggestions, setSuggestions] = useState<SearchSuggestions>(EMPTY);
   const [open, setOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
   const cache = useRef(new Map<string, SearchSuggestions>());
 
-  // Follow the URL (back button, a search from elsewhere).
-  useEffect(() => {
-    setValue(searchParams.get("q") ?? "");
+  // Follow the URL (back button, a search from elsewhere), adjusting state while rendering rather
+  // than in an effect that would render twice.
+  if (urlQuery !== followedQuery) {
+    setFollowedQuery(urlQuery);
+    setValue(urlQuery);
     setOpen(false);
-  }, [searchParams]);
+  }
 
   const term = value.trim().replace(/\s+/g, " ").slice(0, MAX_TERM);
   const searchable = term.length >= MIN_TERM;
 
   useEffect(() => {
     if (!open || !searchable) return;
-    const cached = cache.current.get(term);
-    if (cached) {
-      setSuggestions(cached);
-      return;
-    }
     const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const response = await fetch(`/api/search/suggest?q=${encodeURIComponent(term)}`, {
-          signal: controller.signal,
-          headers: { accept: "application/json" },
-        });
-        if (!response.ok) return;
-        const data = (await response.json()) as SearchSuggestions;
-        if (data.term !== term) return;
-        if (cache.current.size >= CACHE_LIMIT) cache.current.delete(cache.current.keys().next().value as string);
-        cache.current.set(term, data);
-        setSuggestions(data);
-      } catch {
-        // An aborted or failed lookup leaves the form fully usable.
-      }
-    }, DEBOUNCE_MS);
+    const cached = cache.current.get(term);
+    // A cached term answers at once; a new one waits out the typing.
+    const timer = setTimeout(
+      async () => {
+        if (cached) {
+          setSuggestions(cached);
+          return;
+        }
+        try {
+          const response = await fetch(`/api/search/suggest?q=${encodeURIComponent(term)}`, {
+            signal: controller.signal,
+            headers: { accept: "application/json" },
+          });
+          if (!response.ok) return;
+          const data = (await response.json()) as SearchSuggestions;
+          if (data.term !== term) return;
+          if (cache.current.size >= CACHE_LIMIT) cache.current.delete(cache.current.keys().next().value as string);
+          cache.current.set(term, data);
+          setSuggestions(data);
+        } catch {
+          // An aborted or failed lookup leaves the form fully usable.
+        }
+      },
+      cached ? 0 : DEBOUNCE_MS,
+    );
     return () => {
       clearTimeout(timer);
       controller.abort();
@@ -107,7 +114,19 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
     return rows;
   }, [suggestions, term, resultsHref]);
 
-  useEffect(() => setActiveIndex(-1), [options]);
+  /* The highlighted row belongs to one set of suggestions: a new set starts with none highlighted,
+     without an effect to reset it. */
+  const optionsKey = options.join("\n");
+  const [active, setActive] = useState({ key: "", index: -1 });
+  const activeIndex = active.key === optionsKey ? active.index : -1;
+  const setActiveIndex = useCallback(
+    (update: number | ((index: number) => number)) =>
+      setActive((previous) => {
+        const current = previous.key === optionsKey ? previous.index : -1;
+        return { key: optionsKey, index: typeof update === "function" ? update(current) : update };
+      }),
+    [optionsKey],
+  );
 
   const fresh = suggestions.term === term;
   const showEmpty = open && searchable && fresh && suggestions.total === 0;
@@ -116,7 +135,7 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
   const close = useCallback(() => {
     setOpen(false);
     setActiveIndex(-1);
-  }, []);
+  }, [setActiveIndex]);
 
   const goTo = useCallback(
     (href: string) => {
@@ -150,8 +169,10 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
     }
   };
 
-  let rowIndex = -1;
-  const nextRow = () => (rowIndex += 1);
+  // Row numbers in the order the panel draws them, matching `options`.
+  const categoryOffset = suggestions.products.length;
+  const brandOffset = categoryOffset + suggestions.categories.length;
+  const seeAllIndex = brandOffset + suggestions.brands.length;
   const large = size === "large";
 
   return (
@@ -223,13 +244,13 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
           ) : (
             <ul id={listboxId} role="listbox" aria-label={t("suggestions")}>
               {suggestions.products.length > 0 && <GroupLabel>{t("products")}</GroupLabel>}
-              {suggestions.products.map((product) => {
+              {suggestions.products.map((product, i) => {
                 const href = productHref(product);
                 return (
                   <SuggestionRow
                     key={product.id}
                     id={listboxId}
-                    index={nextRow()}
+                    index={i}
                     activeIndex={activeIndex}
                     href={href}
                     onHover={setActiveIndex}
@@ -258,11 +279,11 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
               })}
 
               {suggestions.categories.length > 0 && <GroupLabel>{t("categories")}</GroupLabel>}
-              {suggestions.categories.map((category) => (
+              {suggestions.categories.map((category, i) => (
                 <SuggestionRow
                   key={category.id}
                   id={listboxId}
-                  index={nextRow()}
+                  index={categoryOffset + i}
                   activeIndex={activeIndex}
                   href={category.href}
                   onHover={setActiveIndex}
@@ -274,11 +295,11 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
               ))}
 
               {suggestions.brands.length > 0 && <GroupLabel>{t("brands")}</GroupLabel>}
-              {suggestions.brands.map((brand) => (
+              {suggestions.brands.map((brand, i) => (
                 <SuggestionRow
                   key={brand.name}
                   id={listboxId}
-                  index={nextRow()}
+                  index={brandOffset + i}
                   activeIndex={activeIndex}
                   href={`/products?brand=${encodeURIComponent(brand.name)}`}
                   onHover={setActiveIndex}
@@ -292,7 +313,7 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
               {suggestions.total > 0 && (
                 <SuggestionRow
                   id={listboxId}
-                  index={nextRow()}
+                  index={seeAllIndex}
                   activeIndex={activeIndex}
                   href={resultsHref(term)}
                   onHover={setActiveIndex}

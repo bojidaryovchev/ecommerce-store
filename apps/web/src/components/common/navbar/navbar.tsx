@@ -19,7 +19,7 @@ import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import NextLink from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import { LocaleSwitcher } from "./locale-switcher";
 import { MainNav } from "./main-nav";
 import { MobileMenu } from "./mobile-menu";
@@ -37,13 +37,20 @@ const isAdmin = (session: Session | null) => session?.user?.role === "ADMIN" || 
  * account and cart. On phones the navigation moves into a drawer and the search gets its own row.
  */
 const Navbar: React.FC<Props> = ({ menu, session }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/85 sticky top-0 z-50 w-full border-b backdrop-blur-md">
+      {/* Dims the page under an open menu panel; purely visual, so leaving the panel still closes it. */}
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-x-0 top-full h-screen bg-slate-950/25 transition-opacity duration-200 ${menuOpen ? "opacity-100" : "opacity-0"}`}
+      />
       <TopBar />
       <div className="max-w-container relative flex h-16 items-center gap-2 lg:gap-6">
         <MobileMenu menu={menu} session={session} isAdmin={isAdmin(session)} className="lg:hidden" />
         <Logo />
-        <MainNav menu={menu} className="hidden lg:flex" />
+        <MainNav menu={menu} className="hidden lg:flex" onOpenChange={setMenuOpen} />
         <SearchField className="ml-auto hidden max-w-md md:block lg:max-w-sm xl:max-w-md" />
         <div className="ml-auto flex items-center gap-1 md:ml-0">
           <LocaleSwitcher className="hidden md:flex" />

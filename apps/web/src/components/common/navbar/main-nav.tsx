@@ -9,8 +9,7 @@ import { ArrowRight, ChevronDown, ChevronRight } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import Image from "next/image";
 import { NavigationMenu as Nav } from "radix-ui";
-import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useState } from "react";
 
 const triggerClass =
   "text-foreground/80 hover:text-foreground data-[state=open]:text-foreground hover:bg-accent data-[state=open]:bg-accent focus-visible:ring-ring/40 inline-flex h-10 items-center gap-1 rounded-full px-4 text-sm font-medium transition-colors outline-none focus-visible:ring-4";
@@ -18,6 +17,8 @@ const triggerClass =
 type Props = {
   menu: CategoryMenuItem[];
   className?: string;
+  /** Tells the header when a panel opens, so it can dim the page beneath. */
+  onOpenChange?: (open: boolean) => void;
 };
 
 /**
@@ -26,14 +27,17 @@ type Props = {
  * The open panel spans the header's content width. The root is `static` so the viewport's absolute
  * wrapper positions against the header's container (which is `relative`), not against this list.
  */
-const MainNav: React.FC<Props> = ({ menu, className }) => {
+const MainNav: React.FC<Props> = ({ menu, className, onOpenChange }) => {
   const t = useTranslations("navigation.navbar");
   const [value, setValue] = useState("");
 
   return (
     <Nav.Root
       value={value}
-      onValueChange={setValue}
+      onValueChange={(next) => {
+        setValue(next);
+        onOpenChange?.(next !== "");
+      }}
       className={cn("static", className)}
       delayDuration={60}
       skipDelayDuration={250}
@@ -79,36 +83,10 @@ const MainNav: React.FC<Props> = ({ menu, className }) => {
         </Nav.Item>
       </Nav.List>
 
-      <Backdrop open={value !== ""} />
       <div className="absolute inset-x-4 top-full z-50">
         <Nav.Viewport className="bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-1 relative mt-2 h-(--radix-navigation-menu-viewport-height) w-full origin-top overflow-hidden rounded-2xl border shadow-2xl shadow-black/10 transition-[height] duration-200" />
       </div>
     </Nav.Root>
-  );
-};
-
-/**
- * Dims the page under the open menu, from the header's bottom edge down. Portalled to <body>: the
- * header's backdrop-filter would otherwise contain a fixed child. Purely visual (no pointer events),
- * so moving the pointer off the menu still closes it.
- */
-const Backdrop: React.FC<{ open: boolean }> = ({ open }) => {
-  const [top, setTop] = useState<number | null>(null);
-  useEffect(() => {
-    if (!open) return;
-    setTop(document.querySelector("header")?.getBoundingClientRect().bottom ?? 0);
-  }, [open]);
-  if (top === null) return null;
-  return createPortal(
-    <div
-      aria-hidden
-      style={{ top }}
-      className={cn(
-        "pointer-events-none fixed inset-x-0 bottom-0 z-40 bg-slate-950/25 backdrop-blur-[1px] transition-opacity duration-200",
-        open ? "opacity-100" : "opacity-0",
-      )}
-    />,
-    document.body,
   );
 };
 
