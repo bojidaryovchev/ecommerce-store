@@ -160,20 +160,21 @@ pnpm dev
 
 ## Available Scripts
 
-| Script               | Description                                                                  |
-| -------------------- | ---------------------------------------------------------------------------- |
-| `pnpm dev`           | Start Next.js dev server (includes SSO check)                                |
-| `pnpm build`         | Build for production                                                         |
-| `pnpm lint`          | Run ESLint across all packages                                               |
-| `pnpm type-check`    | Run TypeScript type checking                                                 |
-| `pnpm format`        | Format code with Prettier                                                    |
-| `pnpm db:generate`   | Generate Drizzle migrations                                                  |
-| `pnpm db:push`       | Push schema to database                                                      |
-| `pnpm db:migrate`    | Run migrations                                                               |
-| `pnpm db:studio`     | Open Drizzle Studio                                                          |
-| `pnpm sync:supplier` | Sync the supplier catalog (`pnpm sync:supplier --full` downloads everything) |
-| `pnpm infra:preview` | Preview infrastructure changes                                               |
-| `pnpm infra:up`      | Deploy infrastructure                                                        |
+| Script               | Description                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| `pnpm dev`           | Start Next.js dev server (includes SSO check)                                                 |
+| `pnpm build`         | Build for production                                                                          |
+| `pnpm lint`          | Run ESLint across all packages                                                                |
+| `pnpm type-check`    | Run TypeScript type checking                                                                  |
+| `pnpm format`        | Format code with Prettier                                                                     |
+| `pnpm db:generate`   | Generate Drizzle migrations                                                                   |
+| `pnpm db:push`       | Push schema to database                                                                       |
+| `pnpm db:migrate`    | Run migrations                                                                                |
+| `pnpm db:studio`     | Open Drizzle Studio                                                                           |
+| `pnpm sync:supplier` | Sync the supplier catalog (`pnpm sync:supplier --full` downloads everything)                  |
+| `pnpm e2e:checkout`  | Buy a product end to end in a real browser (Stripe test mode); see `scripts/e2e-checkout.mjs` |
+| `pnpm infra:preview` | Preview infrastructure changes                                                                |
+| `pnpm infra:up`      | Deploy infrastructure                                                                         |
 
 ## Infrastructure
 

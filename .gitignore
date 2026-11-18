@@ -45,3 +45,6 @@ next-env.d.ts
 **/Pulumi.*.yaml
 !**/Pulumi.dev.yaml
 !**/Pulumi.prod.yaml
+
+# Playwright checkout test screenshots
+e2e-screenshots/

@@ -11,8 +11,7 @@ const bodySchema = z.object({
   supplier: z.string().optional(),
 });
 
-function isAuthorized(request: NextRequest): boolean {
-  const secret = process.env.SUPPLIER_SYNC_SECRET;
+function matchesSecret(request: NextRequest, secret: string | undefined): boolean {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   if (!secret) return false;
   const a = Buffer.from(token);
@@ -20,27 +19,12 @@ function isAuthorized(request: NextRequest): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-/**
- * POST /api/supplier-sync  { "mode": "incremental" | "full" }
- * Called on a schedule by the supplier-sync Lambda (see infra/index.ts): incremental every
- * 4 hours, full nightly. Authenticated with `Authorization: Bearer $SUPPLIER_SYNC_SECRET`.
- */
-export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+const isAuthorized = (request: NextRequest) =>
+  matchesSecret(request, process.env.SUPPLIER_SYNC_SECRET) || matchesSecret(request, process.env.CRON_SECRET);
 
-  const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
-  if (!parsed.success) {
-    return NextResponse.json({ error: z.prettifyError(parsed.error) }, { status: 400 });
-  }
-
+async function sync(mode: "incremental" | "full", supplier?: string) {
   try {
-    const result = await syncSupplierCatalog({
-      mode: parsed.data.mode,
-      supplier: parsed.data.supplier,
-      trigger: "schedule",
-    });
+    const result = await syncSupplierCatalog({ mode, supplier, trigger: "schedule" });
     return NextResponse.json(
       {
         runId: result.runId,
@@ -55,4 +39,33 @@ export async function POST(request: NextRequest) {
     console.error("Supplier sync failed to start:", error);
     return NextResponse.json({ error: "Supplier sync failed to start" }, { status: 500 });
   }
+}
+
+/**
+ * GET /api/supplier-sync?mode=full — for Vercel Cron, which calls GET with
+ * `Authorization: Bearer $CRON_SECRET` (see vercel.json).
+ */
+export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return sync(request.nextUrl.searchParams.get("mode") === "full" ? "full" : "incremental");
+}
+
+/**
+ * POST /api/supplier-sync  { "mode": "incremental" | "full" }
+ * For the supplier-sync Lambda (see infra/index.ts: incremental every 4 hours, full nightly)
+ * and manual runs. Authenticated with `Authorization: Bearer $SUPPLIER_SYNC_SECRET`.
+ */
+export async function POST(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json({ error: z.prettifyError(parsed.error) }, { status: 400 });
+  }
+
+  return sync(parsed.data.mode, parsed.data.supplier);
 }
