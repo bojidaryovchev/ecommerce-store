@@ -31,6 +31,9 @@ async function createReview(data: CreateReviewInput): Promise<ActionResult<Revie
     if (!Number.isInteger(data.rating) || data.rating < 1 || data.rating > 5) {
       return { success: false, error: "Rating must be between 1 and 5" };
     }
+    if (!data.content || data.content.trim().length < 10) {
+      return { success: false, error: "Write a few words about the product with your rating" };
+    }
 
     // Check purchase gate — direct query (not "use cache")
     const completedStatuses = ["paid", "processing", "shipped", "delivered"] as const;

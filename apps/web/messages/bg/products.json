@@ -108,10 +108,11 @@
     "submitted": "Отзивът е изпратен успешно!",
     "rating": "Оценка",
     "rateStars": "{count, plural, one {Оцени с # звезда} other {Оцени с # звезди}}",
-    "content": "Отзив (по желание)",
+    "content": "Отзив",
     "contentPlaceholder": "Споделете мнението си за продукта…",
     "submitting": "Изпращане…",
-    "submit": "Изпрати отзива"
+    "submit": "Изпрати отзива",
+    "contentRequired": "Напишете поне няколко думи за продукта."
   },
   "reviewList": {
     "deleted": "Отзивът е изтрит",

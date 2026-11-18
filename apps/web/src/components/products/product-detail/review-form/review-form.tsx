@@ -27,6 +27,11 @@ const ReviewForm: React.FC<Props> = ({ productId }) => {
         toast.error(t("ratingRequired"));
         return;
       }
+      // A rating without words helps nobody choose (and Google shows reviews only with a comment).
+      if (content.trim().length < 10) {
+        toast.error(t("contentRequired"));
+        return;
+      }
 
       startTransition(async () => {
         const result = await createReview({

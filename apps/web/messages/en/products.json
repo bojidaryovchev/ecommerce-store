@@ -108,10 +108,11 @@
     "submitted": "Review submitted successfully!",
     "rating": "Rating",
     "rateStars": "{count, plural, one {Rate # star} other {Rate # stars}}",
-    "content": "Review (optional)",
+    "content": "Review",
     "contentPlaceholder": "Share your thoughts about this product…",
     "submitting": "Submitting…",
-    "submit": "Submit review"
+    "submit": "Submit review",
+    "contentRequired": "Write at least a few words about the product."
   },
   "reviewList": {
     "deleted": "Review deleted",
