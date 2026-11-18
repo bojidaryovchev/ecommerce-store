@@ -15,6 +15,7 @@ export {
   type InboundAuthentication,
 } from "./authentication";
 export { composeMessage, composeNotification, mailIdentity, type MailIdentity } from "./compose";
+export { recordFormSubmission } from "./forms";
 export {
   handleInboundWebhook,
   parseTimestamp,
@@ -41,6 +42,7 @@ export {
   getThread,
   linkOrder,
   listThreads,
+  markWaiting,
   matchThread,
   orderEmail,
   ordersForAddress,

@@ -1,6 +1,6 @@
 import { sameAddress, singleMailbox } from "./address";
 import { composeMessage, type MailIdentity } from "./compose";
-import { addMessage, createThread, getThread } from "./store";
+import { addMessage, createThread, getThread, markWaiting } from "./store";
 import { referenceChain, replySubject } from "./subject";
 import type { MailTransport, OutgoingAttachment } from "./transport";
 import type { Database } from "./types";
@@ -76,7 +76,14 @@ const attachmentMeta = (attachments: OutgoingAttachment[]) =>
 /** Answer a conversation, to its correspondent, in the customer's existing thread. */
 export async function replyToThread(
   deps: OutboundDeps,
-  input: { threadId: string; body: string; attachments?: OutgoingAttachment[]; sentBy?: string | null },
+  input: {
+    threadId: string;
+    body: string;
+    attachments?: OutgoingAttachment[];
+    sentBy?: string | null;
+    /** An automatic acknowledgement: the conversation stays "waiting for reply". */
+    keepWaiting?: boolean;
+  },
 ): Promise<SendResult> {
   const body = input.body.trim();
   const attachments = input.attachments ?? [];
@@ -127,6 +134,7 @@ export async function replyToThread(
     sentBy: input.sentBy ?? null,
     createdAt: sent.at,
   });
+  if (input.keepWaiting) await markWaiting(deps.db, thread.id);
   return { ok: true, threadId: thread.id, messageId: sent.id };
 }
 

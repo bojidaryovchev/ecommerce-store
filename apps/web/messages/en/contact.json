@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "title": "Contact and site visit request",
+    "description": "Write to us or request a site visit for a heat pump, pellet heating, an air conditioner or underfloor heating."
+  },
+  "eyebrow": "Contact",
+  "title": "How can we help?",
+  "lead": "Tell us about your home and what you want to achieve. We answer every enquiry, and for installations we arrange a site visit.",
+  "form": {
+    "topic": "What are you interested in",
+    "topics": {
+      "ogled": "A site visit and an installation quote",
+      "vapros": "A question about a product or an order"
+    },
+    "system": "Solution",
+    "systems": {
+      "termopompa": "Air-to-water heat pump",
+      "peletno-otoplenie": "Pellet heating",
+      "klimatik": "Air conditioner",
+      "podovo-otoplenie": "Underfloor heating",
+      "drugo": "Other / not sure"
+    },
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "phoneHint": "Optional, for a quicker reply",
+    "city": "Town or city",
+    "message": "Message",
+    "messagePlaceholder": "For example: a 120 m² two-storey house with radiators, we want to replace the solid-fuel boiler…",
+    "consent": "I agree that my details are used to answer me, under the",
+    "consentLink": "privacy policy",
+    "submit": "Send",
+    "sending": "Sending…",
+    "required": "required"
+  },
+  "success": {
+    "title": "Thank you!",
+    "text": "We received your message and will reply to {email}. We have also sent you a confirmation by email.",
+    "again": "Send another message"
+  },
+  "errors": {
+    "name": "Please write your name.",
+    "email": "Please check your email address.",
+    "message": "Please write us a few words.",
+    "consent": "We need your consent to reply to you.",
+    "tooFast": "The form was sent too quickly. Please try again in a moment.",
+    "failed": "The message was not sent. Try again or write to us at {email}."
+  },
+  "aside": {
+    "writeTitle": "Write to us",
+    "writeText": "We reply from the same address, and the whole conversation stays in one place.",
+    "nextTitle": "What happens next",
+    "next": [
+      "We reply and clarify what you need.",
+      "For an installation we arrange a site visit.",
+      "We send a quote for the unit and the installation."
+    ],
+    "guidesTitle": "Not decided yet?",
+    "guidesText": "See our guides and power calculators.",
+    "guidesLink": "To the guides"
+  },
+  "subject": {
+    "ogled": "Site visit request: {system}",
+    "vapros": "Question from the website"
+  },
+  "fields": {
+    "system": "Solution",
+    "city": "Town",
+    "phone": "Phone",
+    "name": "Name",
+    "message": "Message"
+  },
+  "ack": {
+    "greeting": "Hello {name},",
+    "body": "Thank you for your message. We received it and will reply as soon as we can.",
+    "bodyVisit": "Thank you for your request. We received it and will get in touch as soon as we can to arrange a site visit.",
+    "replyHint": "If you want to add anything, just reply to this email.",
+    "copy": "Here is what you sent us:"
+  }
+}

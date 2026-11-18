@@ -331,6 +331,14 @@ export async function setThreadStatus(db: DbExecutor, id: string, status: MailTh
   await db.update(mailThreads).set({ status, updatedAt: new Date() }).where(eq(mailThreads.id, id));
 }
 
+/** Back to "waiting for reply": after an automatic acknowledgement, the customer still awaits a person. */
+export async function markWaiting(db: DbExecutor, threadId: string): Promise<void> {
+  await db
+    .update(mailThreads)
+    .set({ lastMessageDirection: "in", status: "open", updatedAt: new Date() })
+    .where(eq(mailThreads.id, threadId));
+}
+
 /** Tie a thread to an order, unless it is already tied to one. */
 export async function linkOrder(db: DbExecutor, threadId: string, orderId: string): Promise<void> {
   await db

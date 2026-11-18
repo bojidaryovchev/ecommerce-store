@@ -12,6 +12,7 @@ import { randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { mailIdentity } from "../src/compose";
+import { recordFormSubmission } from "../src/forms";
 import { handleInboundWebhook, type InboundDeps } from "../src/inbound";
 import { replyToThread, startThread, UNCLEAR_RECIPIENT } from "../src/outbound";
 import { countThreads, getThread, listThreads, ordersForAddress, setThreadStatus } from "../src/store";
@@ -308,6 +309,39 @@ describe.skipIf(!isLocal)("mailbox (integration)", () => {
     ).toEqual({
       ok: false,
       error: "Enter one email address.",
+    });
+  });
+  it("files a site form as a waiting conversation, acknowledges it without answering it, and threads the reply", async () => {
+    const submitted = await recordFormSubmission(db, {
+      name: "Мария",
+      email: "Maria@ABV.bg",
+      subject: "Заявка за оглед: Термопомпа въздух-вода (Пловдив)",
+      text: "Къща 140 m², искаме оглед.",
+      to: SHOP,
+    });
+    if ("error" in submitted) throw new Error(submitted.error);
+    expect((await getThread(db, submitted.threadId))!).toMatchObject({
+      correspondent: "maria@abv.bg",
+      correspondentName: "Мария",
+    });
+
+    const ack = await replyToThread(
+      { db, transport: resend, identity: deps.identity },
+      { threadId: submitted.threadId, body: "Получихме заявката ви.", keepWaiting: true },
+    );
+    if (!ack.ok) throw new Error(ack.error);
+    expect((await countThreads(db)).waiting).toBe(1);
+
+    const answer = await receive({
+      from: "maria@abv.bg",
+      subject: "Re: Заявка за оглед: Термопомпа въздух-вода (Пловдив)",
+      headers: { "In-Reply-To": `<${ack.messageId}@resend.test>` },
+    });
+    expect(threadIdOf(answer.outcome)).toBe(submitted.threadId);
+    expect(
+      await recordFormSubmission(db, { name: "x", email: "not an address", subject: "s", text: "t", to: SHOP }),
+    ).toEqual({
+      error: "invalid-email",
     });
   });
 });
