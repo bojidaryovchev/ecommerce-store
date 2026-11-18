@@ -28,7 +28,7 @@ const NotFoundHelp: React.FC = async () => {
               <span className="bg-muted relative size-12 shrink-0 overflow-hidden rounded-lg">
                 {root.image && <Image src={root.image} alt="" fill sizes="48px" className="object-cover" />}
               </span>
-              <span className="text-sm leading-snug font-medium">{root.name}</span>
+              <span className="min-w-0 text-sm leading-snug font-medium break-words hyphens-auto">{root.name}</span>
             </Link>
           </li>
         ))}

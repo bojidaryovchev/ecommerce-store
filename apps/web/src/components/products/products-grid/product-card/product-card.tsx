@@ -56,16 +56,14 @@ const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted 
       </div>
       <div className="flex flex-1 flex-col border-t p-4">
         {product.brand && (
-          <p className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">{product.brand}</p>
+          <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">{product.brand}</p>
         )}
-        <h3 className="mt-1 line-clamp-2 text-sm leading-snug font-medium">{product.name}</h3>
+        {/* Three lines in a narrow phone card, or the model that tells products apart is cut off. */}
+        <h3 className="mt-1 line-clamp-3 text-sm leading-snug font-medium sm:line-clamp-2">{product.name}</h3>
         {product.keySpecs && product.keySpecs.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {product.keySpecs.map((spec) => (
-              <li
-                key={spec}
-                className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-[11px] font-medium"
-              >
+              <li key={spec} className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-xs font-medium">
                 {spec}
               </li>
             ))}
@@ -73,11 +71,11 @@ const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted 
         )}
         <div className="mt-auto pt-4">
           {defaultPrice && defaultPrice.unitAmount !== null ? (
-            <p className="flex items-baseline gap-1.5">
+            <p className="flex flex-wrap items-baseline gap-x-1.5">
               <span className="text-lg font-bold tabular-nums">
                 {format.number(defaultPrice.unitAmount / 100, priceFormat(defaultPrice.currency))}
               </span>
-              <span className="text-muted-foreground text-xs">{t("withVat")}</span>
+              <span className="text-muted-foreground text-xs whitespace-nowrap">{t("withVat")}</span>
             </p>
           ) : (
             <p className="text-muted-foreground text-sm font-medium">{t("priceOnRequest")}</p>

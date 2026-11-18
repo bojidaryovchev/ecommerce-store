@@ -14,10 +14,11 @@ const AdminLayout: React.FC<PropsWithChildren> = ({ children }) => {
   setRequestLocale("en");
 
   return (
-    <Providers locale="en">
-      <div className="flex min-h-screen">
+    <Providers locale="en" navbar={false}>
+      <div className="flex min-h-screen flex-col lg:flex-row">
         <AdminSidebar />
-        <main className="flex-1 p-8">{children}</main>
+        {/* min-w-0: wide tables scroll inside the page instead of stretching it. */}
+        <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>
       </div>
     </Providers>
   );

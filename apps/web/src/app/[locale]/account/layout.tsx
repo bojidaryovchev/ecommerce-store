@@ -24,11 +24,17 @@ const AccountLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <h1 className="mb-8 text-3xl font-bold">{t("title")}</h1>
       <div className="flex flex-col gap-8 md:flex-row">
         {/* Sidebar navigation */}
-        <nav className="flex flex-row gap-1 md:w-48 md:flex-col">
+        {/* One scrollable row of tabs on phones, a column beside the page from tablets up. */}
+        <nav className="-mx-4 flex [scrollbar-width:none] flex-row gap-1 overflow-x-auto px-4 md:mx-0 md:w-48 md:shrink-0 md:flex-col md:overflow-visible md:px-0">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
-              <Button key={item.href} asChild variant={isActive ? "secondary" : "ghost"} className="justify-start">
+              <Button
+                key={item.href}
+                asChild
+                variant={isActive ? "secondary" : "ghost"}
+                className="shrink-0 justify-start"
+              >
                 <Link href={item.href}>
                   <item.icon className="mr-2 h-4 w-4" />
                   {t(`nav.${item.label}`)}
@@ -39,7 +45,7 @@ const AccountLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </nav>
 
         {/* Main content */}
-        <div className="flex-1">{children}</div>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
     </main>
   );

@@ -169,7 +169,7 @@ const ProductsPanel: React.FC<{ menu: CategoryMenuItem[] }> = ({ menu }) => {
           <Nav.Link asChild>
             <Link
               href={active.href}
-              className="text-primary inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
+              className="text-primary inline-flex min-h-6 items-center gap-1.5 text-sm font-semibold hover:underline"
             >
               {t("viewAll")}
               <ArrowRight className="size-4" aria-hidden />
@@ -236,7 +236,7 @@ const Highlight: React.FC<{ root: CategoryMenuItem }> = ({ root }) => {
         )}
         <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" aria-hidden />
         <span className="relative mt-auto block p-4">
-          <span className="text-heat-soft block text-[11px] font-semibold tracking-wider uppercase">
+          <span className="text-heat-soft block text-xs font-semibold tracking-wider uppercase">
             {system ? t("installationMenu") : t("browse")}
           </span>
           <span className="mt-1 block text-base leading-snug font-semibold">

@@ -184,7 +184,7 @@ const InstallationPage: React.FC<Props> = async ({ params }) => {
             </div>
             <Link
               href={`/${entry.categorySlug}`}
-              className="text-primary inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
+              className="text-primary inline-flex min-h-6 items-center gap-1.5 text-sm font-semibold hover:underline"
             >
               {t("productsLink")}
               <ArrowRight className="size-4" aria-hidden />

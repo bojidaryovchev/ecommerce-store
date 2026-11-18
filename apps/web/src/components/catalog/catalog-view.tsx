@@ -43,7 +43,8 @@ const CatalogView: React.FC<Props> = async (props) => {
   const facets = await getCatalogFacets({ query: filters.query, categoryId: filters.categoryId });
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
+    // minmax(0, 1fr): a single column on phones must not grow to its widest child.
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="hidden lg:block">
         <CatalogFilters facets={facets} {...props} />
       </aside>

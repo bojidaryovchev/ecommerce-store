@@ -217,7 +217,7 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
             onFocus={() => setOpen(true)}
             onKeyDown={onKeyDown}
             className={cn(
-              "placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent px-2.5 outline-none [&::-webkit-search-cancel-button]:hidden",
+              "placeholder:text-muted-foreground min-w-0 flex-1 self-stretch bg-transparent px-2.5 outline-none [&::-webkit-search-cancel-button]:hidden",
               large ? "text-base" : "text-sm",
             )}
           />
@@ -337,7 +337,7 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
 const GroupLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <li
     role="presentation"
-    className="text-muted-foreground px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wider uppercase"
+    className="text-muted-foreground px-3 pt-2 pb-1 text-xs font-semibold tracking-wider uppercase"
   >
     {children}
   </li>

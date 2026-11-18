@@ -24,7 +24,7 @@ const AdminEnrichmentPage: React.FC<Props> = async ({ searchParams }) => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Catalogue enrichment</h1>
           <p className="text-muted-foreground mt-1 max-w-3xl text-sm">

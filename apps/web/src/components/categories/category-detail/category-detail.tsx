@@ -93,7 +93,7 @@ const CategoryDetail: React.FC<Props> = ({ category, trail, subcategories, child
             {system && (
               <Link
                 href={installationHref(system)}
-                className="text-primary mt-5 inline-flex items-center gap-2 self-start text-sm font-semibold hover:underline"
+                className="text-primary mt-5 inline-flex min-h-6 items-center gap-2 self-start text-sm font-semibold hover:underline"
               >
                 <Wrench className="text-heat size-4" aria-hidden />
                 {t("installation")}
@@ -112,7 +112,7 @@ const CategoryDetail: React.FC<Props> = ({ category, trail, subcategories, child
           {system && (
             <Link
               href={installationHref(system)}
-              className="text-primary inline-flex items-center gap-2 text-sm font-semibold hover:underline"
+              className="text-primary inline-flex min-h-6 items-center gap-2 text-sm font-semibold hover:underline"
             >
               <Wrench className="text-heat size-4" aria-hidden />
               {t("installation")}

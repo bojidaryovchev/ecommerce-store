@@ -86,7 +86,7 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail }) => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="-mt-6 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
+      <div className="-mt-6 grid grid-cols-1 items-start gap-8 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
         <div className="space-y-4">
           <ProductGallery images={productPhotos(product)} name={product.name} />
           {product.media && <ProductChips chips={product.media.chips} />}
@@ -183,7 +183,7 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail }) => {
             </div>
           )}
 
-          <ul className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+          <ul className="grid gap-x-4 gap-y-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
             {services.map(({ icon: Icon, title, text, href }) => (
               <li key={title}>
                 <Link href={href} className="group flex gap-3">

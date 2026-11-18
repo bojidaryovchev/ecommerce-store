@@ -65,13 +65,13 @@ const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
     return query ? `${pathname}?${query}` : pathname;
   };
 
-  const step = (target: number, label: string, icon: React.ReactNode, rel?: "prev" | "next") =>
+  const step = (target: number, label: string, icon: React.ReactNode, rel?: "prev" | "next", className?: string) =>
     target < 1 || target > pageCount || target === page ? (
-      <Button variant="ghost" size="icon" disabled aria-label={label}>
+      <Button variant="ghost" size="icon" disabled aria-label={label} className={className}>
         {icon}
       </Button>
     ) : (
-      <Button asChild variant="ghost" size="icon">
+      <Button asChild variant="ghost" size="icon" className={className}>
         <NextLink href={hrefFor(target)} rel={rel} aria-label={label} scroll>
           {icon}
         </NextLink>
@@ -81,8 +81,9 @@ const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
   const pages = getPageNumbers(page, pageCount);
 
   return (
-    <nav aria-label={t("label")} className="mt-8 flex items-center justify-center gap-1">
-      {step(1, t("first"), <ChevronsLeft className="h-4 w-4" />)}
+    <nav aria-label={t("label")} className="mt-8 flex flex-wrap items-center justify-center gap-1">
+      {/* First and last are for wide screens; on a phone the numbers and arrows are enough. */}
+      {step(1, t("first"), <ChevronsLeft className="h-4 w-4" />, undefined, "hidden sm:inline-flex")}
       {step(page - 1, t("previous"), <ChevronLeft className="h-4 w-4" />, "prev")}
 
       {pages.map((p, i) =>
@@ -104,7 +105,7 @@ const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
       )}
 
       {step(page + 1, t("next"), <ChevronRight className="h-4 w-4" />, "next")}
-      {step(pageCount, t("last"), <ChevronsRight className="h-4 w-4" />)}
+      {step(pageCount, t("last"), <ChevronsRight className="h-4 w-4" />, undefined, "hidden sm:inline-flex")}
     </nav>
   );
 };

@@ -48,11 +48,12 @@ const Navbar: React.FC<Props> = ({ menu, session }) => {
         className={`pointer-events-none absolute inset-x-0 top-full h-screen bg-slate-950/25 transition-opacity duration-200 ${menuOpen ? "opacity-100" : "opacity-0"}`}
       />
       <TopBar />
-      <div className="max-w-container relative flex h-16 items-center gap-2 lg:gap-6">
+      <div className="max-w-container relative flex h-16 items-center gap-2 lg:gap-4 xl:gap-6">
         <MobileMenu menu={menu} session={session} isAdmin={isAdmin(session)} className="lg:hidden" />
         <Logo />
         <MainNav menu={menu} className="hidden lg:flex" onOpenChange={setMenuOpen} />
-        <SearchField className="ml-auto hidden max-w-md md:block lg:max-w-sm xl:max-w-md" />
+        {/* min-w-0: the search gives way first when the row is tight (small laptops). */}
+        <SearchField className="ml-auto hidden min-w-0 flex-1 md:block md:max-w-md lg:max-w-sm xl:max-w-md" />
         <div className="ml-auto flex items-center gap-1 md:ml-0">
           <LocaleSwitcher className="hidden md:flex" />
           <AccountMenu session={session} />
@@ -83,7 +84,7 @@ const TopBar: React.FC = () => {
   const t = useTranslations("navigation.topBar");
   const tn = useTranslations("navigation.navbar");
   const deliveryLine = useDeliveryLine();
-  const item = "inline-flex items-center gap-1.5";
+  const item = "inline-flex min-h-6 items-center gap-1.5 whitespace-nowrap";
 
   return (
     <div className="bg-primary text-primary-foreground/85 text-xs">
@@ -96,7 +97,7 @@ const TopBar: React.FC = () => {
         <ul className="flex items-center gap-5">
           <li className={`${item} text-primary-foreground font-semibold`}>
             <Truck className="text-heat size-3.5" aria-hidden />
-            <Link href="/dostavka" className="hover:underline">
+            <Link href="/dostavka" className="inline-flex min-h-6 items-center hover:underline">
               {deliveryLine}
             </Link>
           </li>
@@ -104,7 +105,8 @@ const TopBar: React.FC = () => {
             <Wrench className="size-3.5" aria-hidden />
             {t("installation")}
           </li>
-          <li className={`${item} hidden lg:inline-flex`}>
+          {/* Not `item`: its inline-flex would beat `hidden` and squeeze the bar on tablets. */}
+          <li className="hidden items-center gap-1.5 whitespace-nowrap lg:inline-flex">
             <BadgeEuro className="size-3.5" aria-hidden />
             {t("prices")}
           </li>
@@ -117,7 +119,7 @@ const TopBar: React.FC = () => {
           </a>
           <Link
             href="/kontakti?tema=ogled"
-            className="bg-heat text-heat-foreground hover:bg-heat/90 rounded-full px-3 py-1 font-semibold transition-colors"
+            className="bg-heat text-heat-foreground hover:bg-heat/90 rounded-full px-3 py-1 font-semibold whitespace-nowrap transition-colors"
           >
             {tn("requestVisit")}
           </Link>
@@ -140,9 +142,10 @@ const Logo: React.FC = () => {
         />
         <Snowflake className="text-primary-foreground absolute -right-0.5 -bottom-0.5 size-5 opacity-90" aria-hidden />
       </span>
-      <span className="hidden leading-tight sm:block">
+      {/* The name beside the mark, except on small laptops, where the full menu needs the room. */}
+      <span className="hidden leading-tight sm:block lg:hidden xl:block">
         <span className="block text-[15px] font-bold tracking-tight">{t("brand")}</span>
-        <span className="text-muted-foreground block text-[11px]">{tm("tagline")}</span>
+        <span className="text-muted-foreground block text-xs">{tm("tagline")}</span>
       </span>
     </Link>
   );

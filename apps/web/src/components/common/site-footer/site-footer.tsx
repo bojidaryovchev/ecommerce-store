@@ -77,7 +77,7 @@ const SiteFooter: React.FC = async () => {
           <p className="text-primary-foreground/70 mt-5 text-sm leading-relaxed">{t("about")}</p>
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="text-primary-foreground mt-5 inline-flex items-center gap-2 text-sm font-medium hover:underline"
+            className="text-primary-foreground mt-5 inline-flex min-h-6 items-center gap-2 text-sm font-medium hover:underline"
           >
             <Mail className="text-heat size-4" aria-hidden />
             {CONTACT_EMAIL}

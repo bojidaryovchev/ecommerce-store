@@ -30,7 +30,7 @@ const SectionHeading: React.FC<Props> = ({ eyebrow, title, description, link, in
         href={link.href}
         data-reveal
         className={cn(
-          "inline-flex items-center gap-1.5 text-sm font-semibold hover:underline",
+          "inline-flex min-h-6 items-center gap-1.5 text-sm font-semibold hover:underline",
           inverted ? "text-primary-foreground" : "text-primary",
         )}
       >

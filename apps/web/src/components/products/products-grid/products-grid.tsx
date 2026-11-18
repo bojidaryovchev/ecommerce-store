@@ -4,8 +4,9 @@ import React from "react";
 import { ProductCard } from "./product-card";
 
 const gridVariants = {
-  default: "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
-  compact: "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3",
+  // Two to a row from the smallest phones up: one card per screen makes a long scroll of a short list.
+  default: "grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4",
+  compact: "grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3",
 };
 
 interface Props {
