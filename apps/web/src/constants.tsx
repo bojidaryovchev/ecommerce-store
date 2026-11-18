@@ -1,5 +1,6 @@
 // Support email
-export const CONTACT_EMAIL = "support@example.com";
+/** The shop's mailbox (EMAIL_FROM): mail to it lands in /admin/mailbox. */
+export const CONTACT_EMAIL = "contact@justpurrrfect.com";
 
 // Site metadata
 export const SITE_TITLE = "Ecommerce Store";

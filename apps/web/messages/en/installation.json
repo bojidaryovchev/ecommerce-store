@@ -1,0 +1,20 @@
+{
+  "systems": {
+    "termopompa": {
+      "title": "Air-to-water heat pump",
+      "short": "Heating, cooling and hot water from one unit"
+    },
+    "peletno-otoplenie": {
+      "title": "Pellet heating",
+      "short": "A water-jacket stove or a boiler, connected to the radiators"
+    },
+    "klimatik": {
+      "title": "Air conditioner",
+      "short": "Choosing the power, installation and commissioning"
+    },
+    "podovo-otoplenie": {
+      "title": "Underfloor heating",
+      "short": "Even warmth underfoot, ideal with a heat pump"
+    }
+  }
+}

@@ -6,5 +6,6 @@ export { getProductById } from "./get-product-by-id.query";
 export { getProductBySlug } from "./get-product-by-slug.query";
 export { getProductsByCategoryId } from "./get-products-by-category-id.query";
 export { getProducts } from "./get-products.query";
+export { getSearchSuggestions, type SearchSuggestions } from "./get-search-suggestions.query";
 export { getSimilarProducts } from "./get-similar-products.query";
 export { searchProducts } from "./search-products.query";

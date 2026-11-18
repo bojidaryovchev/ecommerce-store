@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/common/navbar";
 import { buildCategoryMenu } from "@/lib/category-tree";
 import { categoryHref } from "@/lib/routes";
-import { getCategoryIndex } from "@/queries/categories";
+import { getCategoryIndex, getCategoryStats } from "@/queries/categories";
 import type { Session } from "next-auth";
 import React, { PropsWithChildren } from "react";
 
@@ -10,7 +10,8 @@ interface Props extends PropsWithChildren {
 }
 
 const NavbarProviders: React.FC<Props> = async ({ session, children }) => {
-  const menu = buildCategoryMenu(await getCategoryIndex(), categoryHref);
+  const [index, stats] = await Promise.all([getCategoryIndex(), getCategoryStats()]);
+  const menu = buildCategoryMenu(index, categoryHref, stats);
 
   return (
     <>

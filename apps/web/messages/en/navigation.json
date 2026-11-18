@@ -17,7 +17,26 @@
     "userAvatarAlt": "User",
     "userInitialsFallback": "U",
     "signIn": "Sign In",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "installation": "Installation",
+    "guides": "Guides",
+    "contact": "Contact",
+    "calculators": "Calculators",
+    "requestVisit": "Request a site visit",
+    "allProducts": "All products",
+    "viewAll": "View all",
+    "productCount": "{count, plural, one {# product} other {# products}}",
+    "fromPrice": "from {price}",
+    "productsMenu": "Products by category",
+    "installationMenu": "Turnkey installation",
+    "installationLead": "We choose the unit with you, survey on site, install it and commission the system.",
+    "howWeWork": "How we work",
+    "highlightInstall": "How the installation goes",
+    "highlightGuides": "Not sure what you need?",
+    "highlightGuidesText": "Our guides and calculators will help you choose.",
+    "account": "Account",
+    "language": "Language",
+    "browse": "Browse"
   },
   "searchBar": {
     "placeholder": "Search products...",
@@ -35,5 +54,23 @@
     "delivery": "Delivery and installation across Bulgaria.",
     "prices": "All prices are in euros and include VAT.",
     "rights": "© {name}. All rights reserved."
+  },
+  "topBar": {
+    "delivery": "Delivery across Bulgaria",
+    "installation": "Turnkey installation",
+    "prices": "Prices include VAT",
+    "writeUs": "Write to us"
+  },
+  "search": {
+    "label": "Search the shop",
+    "placeholder": "Search for a product, brand or category…",
+    "submit": "Search",
+    "suggestions": "Search suggestions",
+    "products": "Products",
+    "categories": "Categories",
+    "brands": "Brands",
+    "seeAll": "{count, plural, one {See # result} other {See all # results}}",
+    "noResults": "Nothing found for “{term}”. Try another word.",
+    "suggestionCount": "{count, plural, one {# suggestion} other {# suggestions}} for “{term}”"
   }
 }

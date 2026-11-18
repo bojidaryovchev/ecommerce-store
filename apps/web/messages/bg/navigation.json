@@ -17,7 +17,26 @@
     "userAvatarAlt": "Потребител",
     "userInitialsFallback": "П",
     "signIn": "Вход",
-    "signOut": "Изход"
+    "signOut": "Изход",
+    "installation": "Монтаж",
+    "guides": "Съвети",
+    "contact": "Контакти",
+    "calculators": "Калкулатори",
+    "requestVisit": "Заявете оглед",
+    "allProducts": "Всички продукти",
+    "viewAll": "Виж всички",
+    "productCount": "{count, plural, one {# продукт} other {# продукта}}",
+    "fromPrice": "от {price}",
+    "productsMenu": "Продуктите по категории",
+    "installationMenu": "Монтаж до ключ",
+    "installationLead": "Избираме уреда заедно, оглеждаме на място, монтираме и пускаме системата.",
+    "howWeWork": "Как работим",
+    "highlightInstall": "Как протича монтажът",
+    "highlightGuides": "Не сте сигурни какво ви трябва?",
+    "highlightGuidesText": "Нашите съвети и калкулатори ще ви помогнат да изберете.",
+    "account": "Профил",
+    "language": "Език",
+    "browse": "Разгледайте"
   },
   "searchBar": {
     "placeholder": "Търси продукти…",
@@ -35,5 +54,23 @@
     "delivery": "Доставка и монтаж в цяла България.",
     "prices": "Всички цени са в евро и с включен ДДС.",
     "rights": "© {name}. Всички права запазени."
+  },
+  "topBar": {
+    "delivery": "Доставка в цяла България",
+    "installation": "Монтаж до ключ",
+    "prices": "Цени с ДДС",
+    "writeUs": "Пишете ни"
+  },
+  "search": {
+    "label": "Търсене в магазина",
+    "placeholder": "Търсете продукт, марка или категория…",
+    "submit": "Търси",
+    "suggestions": "Предложения при търсене",
+    "products": "Продукти",
+    "categories": "Категории",
+    "brands": "Марки",
+    "seeAll": "{count, plural, one {Виж # резултат} other {Виж всички # резултата}}",
+    "noResults": "Нищо не намерихме за „{term}“. Опитайте с друга дума.",
+    "suggestionCount": "{count, plural, one {# предложение} other {# предложения}} за „{term}“"
   }
 }

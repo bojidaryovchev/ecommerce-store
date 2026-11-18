@@ -10,219 +10,191 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { CONTACT_EMAIL } from "@/constants";
 import { useCart } from "@/contexts/cart-context";
 import { Link } from "@/i18n/navigation";
 import type { CategoryMenuItem } from "@/lib/category-tree";
-import { Menu, ShoppingCart } from "lucide-react";
+import { BadgeEuro, Flame, Mail, ShoppingBag, Snowflake, Truck, UserRound, Wrench } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import NextLink from "next/link";
-import React, { useState } from "react";
-import { CategoriesMenu } from "./categories-menu";
+import React from "react";
 import { LocaleSwitcher } from "./locale-switcher";
-import { SearchBar } from "./search-bar";
+import { MainNav } from "./main-nav";
+import { MobileMenu } from "./mobile-menu";
+import { SearchField } from "./search-field";
 
 interface Props {
   menu: CategoryMenuItem[];
   session: Session | null;
 }
 
+const isAdmin = (session: Session | null) => session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
+
+/**
+ * The storefront header: a slim top bar with the shop's promises, then logo, navigation, search,
+ * account and cart. On phones the navigation moves into a drawer and the search gets its own row.
+ */
 const Navbar: React.FC<Props> = ({ menu, session }) => {
-  const t = useTranslations("navigation.navbar");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { summary, openCart } = useCart();
-  const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return t("userInitialsFallback");
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
-    <header className="border-border bg-background sticky top-0 z-50 w-full border-b">
-      <div className="max-w-container flex h-16 items-center justify-between">
-        {/* Left side - Logo and Mobile menu toggle */}
-        <div className="flex items-center gap-4">
-          {/* Mobile menu */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="sm:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">{t("toggleMenu")}</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>{t("menuTitle")}</SheetTitle>
-              </SheetHeader>
-              <nav className="mt-6 flex flex-col gap-4">
-                <SearchBar className="sm:hidden" />
-                <LocaleSwitcher className="sm:hidden" onLocaleChange={() => setMobileMenuOpen(false)} />
-                <Link href="/" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                  {t("home")}
-                </Link>
-                <Link href="/products" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                  {t("products")}
-                </Link>
-                <Separator />
-                <Link href="/categories" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                  {t("allCategories")}
-                </Link>
-                {menu.map((root) => (
-                  <div key={root.id} className="flex flex-col gap-2 pl-4">
-                    <Link href={root.href} className="font-medium" onClick={() => setMobileMenuOpen(false)}>
-                      {root.name}
-                    </Link>
-                    {root.children.map((child) => (
-                      <Link
-                        key={child.id}
-                        href={child.href}
-                        className="text-muted-foreground pl-4 text-sm"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        {child.name}
-                      </Link>
-                    ))}
-                  </div>
-                ))}
-                {session && (
-                  <>
-                    <Separator />
-                    <Link
-                      href="/account/profile"
-                      className="text-lg font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {t("profile")}
-                    </Link>
-                    <Link
-                      href="/account/addresses"
-                      className="text-lg font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {t("addresses")}
-                    </Link>
-                    <Link
-                      href="/account/wishlist"
-                      className="text-lg font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {t("wishlist")}
-                    </Link>
-                    <Link
-                      href="/account/orders"
-                      className="text-lg font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {t("orders")}
-                    </Link>
-                  </>
-                )}
-                {session && isAdmin && (
-                  <>
-                    <Separator />
-                    {/* The admin is outside the locale routing, so its links never get a locale prefix. */}
-                    <NextLink href="/admin" className="text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                      {t("admin")}
-                    </NextLink>
-                  </>
-                )}
-              </nav>
-            </SheetContent>
-          </Sheet>
-
-          {/* Logo */}
-          <Link href="/" className="text-xl font-bold">
-            {t("brand")}
-          </Link>
-        </div>
-
-        {/* Center - Desktop navigation */}
-        <nav className="hidden items-center gap-6 sm:flex">
-          <Link href="/" className="hover:text-primary text-sm font-medium transition-colors">
-            {t("home")}
-          </Link>
-          <Link href="/products" className="hover:text-primary text-sm font-medium transition-colors">
-            {t("products")}
-          </Link>
-          <CategoriesMenu menu={menu} />
-          <SearchBar className="hidden lg:block" />
-        </nav>
-
-        {/* Right side - Cart and User menu */}
-        <div className="flex items-center gap-2">
-          {/* Mobile/Tablet search toggle */}
-          <SearchBar className="hidden sm:block lg:hidden" />
-          {/* Language switcher (on mobile it is in the menu sheet) */}
-          <LocaleSwitcher className="hidden sm:flex" />
-          {/* Cart Button */}
-          <Button variant="ghost" size="icon" className="relative" onClick={openCart}>
-            <ShoppingCart className="h-5 w-5" />
-            {summary.itemCount > 0 && (
-              <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium">
-                {summary.itemCount > 99 ? "99+" : summary.itemCount}
-              </span>
-            )}
-            <span className="sr-only">{t("openCart")}</span>
-          </Button>
-
-          {session ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={session.user?.image ?? undefined}
-                      alt={session.user?.name ?? t("userAvatarAlt")}
-                    />
-                    <AvatarFallback>{getInitials(session.user?.name)}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>
-                  <p className="text-sm font-medium">{t("signedInAs")}</p>
-                  <p className="text-muted-foreground text-xs">{session.user?.email}</p>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/account/profile">{t("profile")}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/account/addresses">{t("addresses")}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/account/wishlist">{t("wishlist")}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/account/orders">{t("orders")}</Link>
-                </DropdownMenuItem>
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <NextLink href="/admin">{t("admin")}</NextLink>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => signOut()}>
-                  {t("signOut")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button asChild variant="secondary">
-              <Link href="/login">{t("signIn")}</Link>
-            </Button>
-          )}
+    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/85 sticky top-0 z-50 w-full border-b backdrop-blur-md">
+      <TopBar />
+      <div className="max-w-container relative flex h-16 items-center gap-2 lg:gap-6">
+        <MobileMenu menu={menu} session={session} isAdmin={isAdmin(session)} className="lg:hidden" />
+        <Logo />
+        <MainNav menu={menu} className="hidden lg:flex" />
+        <SearchField className="ml-auto hidden max-w-md md:block lg:max-w-sm xl:max-w-md" />
+        <div className="ml-auto flex items-center gap-1 md:ml-0">
+          <LocaleSwitcher className="hidden md:flex" />
+          <AccountMenu session={session} />
+          <CartButton />
         </div>
       </div>
+      <div className="max-w-container pb-3 md:hidden">
+        <SearchField />
+      </div>
     </header>
+  );
+};
+
+const TopBar: React.FC = () => {
+  const t = useTranslations("navigation.topBar");
+  const tn = useTranslations("navigation.navbar");
+  const item = "inline-flex items-center gap-1.5";
+
+  return (
+    <div className="bg-primary text-primary-foreground/85 hidden text-xs md:block">
+      <div className="max-w-container flex h-9 items-center justify-between gap-6">
+        <ul className="flex items-center gap-5">
+          <li className={item}>
+            <Truck className="size-3.5" aria-hidden />
+            {t("delivery")}
+          </li>
+          <li className={item}>
+            <Wrench className="size-3.5" aria-hidden />
+            {t("installation")}
+          </li>
+          <li className={`${item} hidden lg:inline-flex`}>
+            <BadgeEuro className="size-3.5" aria-hidden />
+            {t("prices")}
+          </li>
+        </ul>
+        <div className="flex items-center gap-5">
+          <a href={`mailto:${CONTACT_EMAIL}`} className={`${item} hover:text-primary-foreground`}>
+            <Mail className="size-3.5" aria-hidden />
+            <span className="sr-only">{t("writeUs")}: </span>
+            {CONTACT_EMAIL}
+          </a>
+          <Link
+            href="/kontakti?tema=ogled"
+            className="bg-heat text-heat-foreground hover:bg-heat/90 rounded-full px-3 py-1 font-semibold transition-colors"
+          >
+            {tn("requestVisit")}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** The mark: warmth and cooling, the two halves of what the shop installs. */
+const Logo: React.FC = () => {
+  const t = useTranslations("navigation.navbar");
+  const tm = useTranslations("metadata");
+  return (
+    <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label={t("brand")}>
+      <span className="bg-primary text-primary-foreground relative grid size-9 place-items-center overflow-hidden rounded-xl">
+        <Flame
+          className="text-heat absolute -top-0.5 -left-0.5 size-6 transition-transform group-hover:-translate-y-0.5"
+          aria-hidden
+        />
+        <Snowflake className="text-primary-foreground absolute -right-0.5 -bottom-0.5 size-5 opacity-90" aria-hidden />
+      </span>
+      <span className="hidden leading-tight sm:block">
+        <span className="block text-[15px] font-bold tracking-tight">{t("brand")}</span>
+        <span className="text-muted-foreground block text-[11px]">{tm("tagline")}</span>
+      </span>
+    </Link>
+  );
+};
+
+const AccountMenu: React.FC<{ session: Session | null }> = ({ session }) => {
+  const t = useTranslations("navigation.navbar");
+
+  if (!session) {
+    return (
+      <Button asChild variant="ghost" size="icon" className="rounded-full">
+        <Link href="/login" aria-label={t("signIn")}>
+          <UserRound className="size-5" />
+        </Link>
+      </Button>
+    );
+  }
+
+  const initials =
+    session.user?.name
+      ?.split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || t("userInitialsFallback");
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full" aria-label={t("account")}>
+          <Avatar className="size-8">
+            <AvatarImage src={session.user?.image ?? undefined} alt={session.user?.name ?? t("userAvatarAlt")} />
+            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          <p className="text-sm font-medium">{t("signedInAs")}</p>
+          <p className="text-muted-foreground truncate text-xs">{session.user?.email}</p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/account/orders">{t("orders")}</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/account/profile">{t("profile")}</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/account/addresses">{t("addresses")}</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/account/wishlist">{t("wishlist")}</Link>
+        </DropdownMenuItem>
+        {isAdmin(session) && (
+          <DropdownMenuItem asChild>
+            {/* The admin is outside the locale routing. */}
+            <NextLink href="/admin">{t("admin")}</NextLink>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => signOut()}>
+          {t("signOut")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+const CartButton: React.FC = () => {
+  const t = useTranslations("navigation.navbar");
+  const { summary, openCart } = useCart();
+  return (
+    <Button variant="ghost" size="icon" className="relative rounded-full" onClick={openCart} aria-label={t("openCart")}>
+      <ShoppingBag className="size-5" />
+      {summary.itemCount > 0 && (
+        <span className="bg-heat text-heat-foreground absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums">
+          {summary.itemCount > 99 ? "99+" : summary.itemCount}
+        </span>
+      )}
+    </Button>
   );
 };
 

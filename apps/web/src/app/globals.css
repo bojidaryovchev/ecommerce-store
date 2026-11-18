@@ -30,6 +30,11 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-heat: var(--heat);
+  --color-heat-foreground: var(--heat-foreground);
+  --color-heat-soft: var(--heat-soft);
+  --color-cool: var(--cool);
+  --color-cool-soft: var(--cool-soft);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -58,38 +63,45 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.75rem;
+  /* Brand: a deep navy for trust and type, a warm "heat" orange for the actions that matter
+     (request a visit, add to cart), and a cool blue for cooling. Greys lean slightly blue. */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --foreground: oklch(0.21 0.025 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.21 0.025 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.21 0.025 255);
+  --primary: oklch(0.33 0.075 253);
+  --primary-foreground: oklch(0.985 0.003 250);
+  --secondary: oklch(0.965 0.008 250);
+  --secondary-foreground: oklch(0.3 0.06 253);
+  --muted: oklch(0.972 0.006 250);
+  --muted-foreground: oklch(0.5 0.02 255);
+  --accent: oklch(0.96 0.012 250);
+  --accent-foreground: oklch(0.3 0.06 253);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.915 0.009 250);
+  --input: oklch(0.9 0.01 250);
+  --ring: oklch(0.6 0.11 253);
+  --heat: oklch(0.66 0.175 45);
+  --heat-foreground: oklch(0.99 0.005 60);
+  --heat-soft: oklch(0.965 0.025 60);
+  --cool: oklch(0.6 0.12 235);
+  --cool-soft: oklch(0.965 0.02 235);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar: oklch(0.985 0.003 250);
+  --sidebar-foreground: oklch(0.21 0.025 255);
+  --sidebar-primary: oklch(0.33 0.075 253);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent: oklch(0.96 0.012 250);
+  --sidebar-accent-foreground: oklch(0.3 0.06 253);
+  --sidebar-border: oklch(0.915 0.009 250);
+  --sidebar-ring: oklch(0.6 0.11 253);
 }
 
 .dark {
@@ -124,6 +136,11 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --heat: oklch(0.72 0.16 50);
+  --heat-foreground: oklch(0.2 0.02 50);
+  --heat-soft: oklch(0.3 0.05 50);
+  --cool: oklch(0.7 0.11 235);
+  --cool-soft: oklch(0.3 0.04 235);
 }
 
 @layer base {
@@ -132,6 +149,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Montserrat switches to the Bulgarian letterforms (т as m, д as g, в as β) for lang="bg". They
+       read as unfamiliar in product names and prices, so the standard Cyrillic forms are kept. */
+    font-feature-settings: "locl" 0;
   }
 }
 
