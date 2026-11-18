@@ -231,6 +231,9 @@ importers:
       '@ecommerce/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ecommerce/mailbox':
+        specifier: workspace:*
+        version: link:../../packages/mailbox
       '@ecommerce/supplier-sync':
         specifier: workspace:*
         version: link:../../packages/supplier-sync
@@ -378,6 +381,28 @@ importers:
       typescript:
         specifier: 6.0.3
         version: 6.0.3
+
+  packages/mailbox:
+    dependencies:
+      '@ecommerce/database':
+        specifier: workspace:*
+        version: link:../database
+      drizzle-orm:
+        specifier: 0.45.4
+        version: 0.45.4(@opentelemetry/api@1.9.1)(postgres@4.1.1)
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
+      postgres:
+        specifier: 4.1.1
+        version: 4.1.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 5.1.0
+        version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/supplier-sync:
     dependencies:
