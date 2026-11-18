@@ -17,6 +17,8 @@ export const MESSAGE_NAMESPACES = [
   "auth",
   "installation",
   "contact",
+  "guides",
+  "tools",
 ] as const;
 
 export type MessageNamespace = (typeof MESSAGE_NAMESPACES)[number];

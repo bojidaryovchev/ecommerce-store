@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "title": "Heating and cooling guides",
+    "description": "How to choose a heat pump, an air conditioner, a pellet stove, radiators and underfloor heating: clear advice before you buy."
+  },
+  "eyebrow": "Guides",
+  "title": "Guides before you buy",
+  "lead": "Clear answers to the questions people ask us most before they choose a heating or cooling unit.",
+  "minutes": "{count} min read",
+  "home": "Home",
+  "contents": "Contents",
+  "products": "Products on the topic",
+  "productsLink": "To the category",
+  "installation": "Installation",
+  "installationText": "See step by step how we install it.",
+  "calculator": "Calculator",
+  "calculatorText": "Work out roughly what you need.",
+  "visitTitle": "Rather ask?",
+  "visitText": "Describe your home and we will suggest a solution and a site visit.",
+  "visitLink": "Request a site visit",
+  "more": "More guides",
+  "note": "The figures in the guides are approximate. We do the exact sizing at the site visit."
+}

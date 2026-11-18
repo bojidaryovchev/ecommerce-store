@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "title": "Power calculators",
+    "description": "Work out roughly the power of a heat pump, an air conditioner and radiators for your home."
+  },
+  "eyebrow": "Calculators",
+  "title": "Work out what you need",
+  "lead": "Approximate calculations following the rules we use ourselves. We do the exact sizing at the site visit.",
+  "home": "Home",
+  "open": "Open the calculator",
+  "approx": "The result is approximate. We set the exact power at the site visit.",
+  "visit": "Request a site visit",
+  "seeProducts": "See suitable units",
+  "guide": "Read the guide",
+  "result": "Result",
+  "termopompa": {
+    "title": "Heat pump power",
+    "short": "By floor area, insulation and climate.",
+    "area": "Heated floor area",
+    "insulation": "Building insulation",
+    "insulations": {
+      "new": "New house, very well insulated",
+      "insulated": "Insulated older house",
+      "none": "Uninsulated house"
+    },
+    "climate": "Climate",
+    "climates": {
+      "lowland": "Lowland and plains",
+      "mountain": "Mountain area"
+    },
+    "water": "Also heats domestic hot water",
+    "people": "People in the household",
+    "heatLoss": "Power needed for heating",
+    "waterAdd": "Allowance for hot water",
+    "recommended": "Recommended heat pump power"
+  },
+  "klimatik": {
+    "title": "Air conditioner power",
+    "short": "How many BTU for your room.",
+    "area": "Room area",
+    "height": "Ceiling height",
+    "sunny": "Lots of sun (south or west windows)",
+    "topFloor": "Top floor under the roof",
+    "kitchen": "Kitchen or many appliances",
+    "people": "People usually in the room",
+    "need": "Cooling power needed",
+    "recommended": "Recommended air conditioner"
+  },
+  "radiatori": {
+    "title": "Radiators for a room",
+    "short": "How many watts and what size.",
+    "area": "Room area",
+    "height": "Ceiling height",
+    "insulation": "Insulation",
+    "insulations": {
+      "good": "Good",
+      "average": "Average",
+      "poor": "Poor"
+    },
+    "regime": "Water temperature",
+    "regimes": {
+      "high": "Boiler, 75/65 °C",
+      "medium": "Condensing boiler, 55/45 °C",
+      "low": "Heat pump, 45/40 °C"
+    },
+    "need": "Heat the room needs",
+    "rated": "Catalogue output (ΔT 50)",
+    "lengths": "Approximate length at 600 mm height",
+    "types": {
+      "11": "Type 11",
+      "22": "Type 22",
+      "33": "Type 33"
+    }
+  },
+  "units": {
+    "m2": "m²",
+    "m": "m",
+    "kw": "kW",
+    "w": "W",
+    "btu": "BTU",
+    "mm": "mm"
+  }
+}
