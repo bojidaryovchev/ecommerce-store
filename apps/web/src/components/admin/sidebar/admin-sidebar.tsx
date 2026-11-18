@@ -12,6 +12,7 @@ const navItems = [
   { href: "/admin/categories", label: "Categories" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/supplier-sync", label: "Supplier sync" },
+  { href: "/admin/enrichment", label: "Enrichment" },
   { href: "/admin/reviews", label: "Reviews" },
   { href: "/admin/coupons", label: "Coupons" },
   { href: "/admin/promotions", label: "Promotions" },

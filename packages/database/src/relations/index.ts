@@ -26,6 +26,7 @@ export * from "./payment-links";
 export * from "./payment-methods";
 export * from "./prices";
 export * from "./product-attribute-values";
+export * from "./product-enrichments";
 export * from "./products";
 export * from "./promotion-codes";
 export * from "./quotes";

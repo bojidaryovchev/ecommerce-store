@@ -4,6 +4,7 @@ import { categories } from "../tables/categories";
 import { orderItems } from "../tables/order-items";
 import { prices } from "../tables/prices";
 import { productAttributeValues } from "../tables/product-attribute-values";
+import { productEnrichments } from "../tables/product-enrichments";
 import { products } from "../tables/products";
 import { reviews } from "../tables/reviews";
 import { supplierProducts } from "../tables/supplier-products";
@@ -24,5 +25,6 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   reviews: many(reviews),
   wishlists: many(wishlists),
   attributeValues: many(productAttributeValues),
+  enrichments: many(productEnrichments),
   supplierProduct: one(supplierProducts),
 }));

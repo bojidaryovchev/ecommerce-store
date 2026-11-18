@@ -20,6 +20,7 @@ const COPY: Record<Change["type"], { label: string; apply: string; dismiss: stri
   restored: { label: "Back at supplier", apply: "Publish again", dismiss: "Keep unpublished" },
   locked_field_changed: { label: "Supplier changed a field we edited", apply: "Use theirs", dismiss: "Keep ours" },
   removed: { label: "Removed by supplier", apply: "OK", dismiss: "Dismiss" },
+  enrichment_flagged: { label: "Data problem", apply: "Review", dismiss: "Ignore" },
 };
 
 function describe(change: Change): React.ReactNode {
@@ -59,6 +60,17 @@ function describe(change: Change): React.ReactNode {
       return <>The supplier lists this product again.</>;
     case "removed":
       return <>Unpublished automatically.</>;
+    case "enrichment_flagged": {
+      const problems = ((change.newValue ?? {}) as { problems?: string[] }).problems ?? [];
+      return (
+        <ul className="list-disc space-y-0.5 pl-4">
+          {problems.slice(0, 3).map((problem) => (
+            <li key={problem}>{problem}</li>
+          ))}
+          {problems.length > 3 && <li>and {problems.length - 3} more</li>}
+        </ul>
+      );
+    }
   }
 }
 
@@ -129,9 +141,15 @@ const SyncChangesTable: React.FC<Props> = ({ changes }) => {
               <TableCell className="text-muted-foreground text-sm">{formatDateTime(change.updatedAt)}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
-                  <Button size="sm" disabled={isPending} onClick={() => act(change.id, "apply")}>
-                    {copy.apply}
-                  </Button>
+                  {change.type === "enrichment_flagged" && change.product ? (
+                    <Button size="sm" asChild>
+                      <Link href={`/admin/enrichment/${change.product.id}`}>{copy.apply}</Link>
+                    </Button>
+                  ) : (
+                    <Button size="sm" disabled={isPending} onClick={() => act(change.id, "apply")}>
+                      {copy.apply}
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline" disabled={isPending} onClick={() => act(change.id, "dismiss")}>
                     {copy.dismiss}
                   </Button>

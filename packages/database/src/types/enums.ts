@@ -1,6 +1,9 @@
 import {
   addressTypeEnum,
   couponDurationEnum,
+  enrichmentStageEnum,
+  enrichmentStatusEnum,
+  imageKindEnum,
   orderStatusEnum,
   priceBillingSchemeEnum,
   priceTypeEnum,
@@ -25,3 +28,6 @@ export type TaxBehavior = (typeof taxBehaviorEnum.enumValues)[number];
 export type CouponDuration = (typeof couponDurationEnum.enumValues)[number];
 export type RefundStatus = (typeof refundStatusEnum.enumValues)[number];
 export type RefundReason = (typeof refundReasonEnum.enumValues)[number];
+export type EnrichmentStage = (typeof enrichmentStageEnum.enumValues)[number];
+export type EnrichmentStatus = (typeof enrichmentStatusEnum.enumValues)[number];
+export type ImageKind = (typeof imageKindEnum.enumValues)[number];
