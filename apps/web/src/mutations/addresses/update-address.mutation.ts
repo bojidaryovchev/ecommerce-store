@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { addressSchema } from "@/schemas/address.schema";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Address } from "@ecommerce/database";
 import { db, schema } from "@ecommerce/database";
@@ -31,6 +32,16 @@ async function updateAddress(
     if (!existing) {
       return { success: false, error: "Address not found" };
     }
+
+    // The form's own schema, again: what the browser checked is checked here too.
+    const checked = addressSchema.safeParse({
+      ...existing,
+      ...data,
+      line2: (data.line2 === undefined ? existing.line2 : data.line2) ?? "",
+      state: (data.state === undefined ? existing.state : data.state) ?? "",
+      phone: (data.phone === undefined ? existing.phone : data.phone) ?? "",
+    });
+    if (!checked.success) return { success: false, error: "invalid" };
 
     // If setting as default, unset other defaults of the same type
     const addressType = data.type ?? existing.type;

@@ -94,7 +94,18 @@
     "save": "Save changes",
     "add": "Add address",
     "added": "Address added",
-    "updated": "Address updated"
+    "updated": "Address updated",
+    "errors": {
+      "name": "Write the full name.",
+      "line1": "Write the address.",
+      "line2": "The address is too long.",
+      "city": "Write the city.",
+      "state": "The region is too long.",
+      "postalCode": "A Bulgarian postcode has four digits.",
+      "country": "Choose a country.",
+      "phone": "Check the phone number: digits, spaces and + only.",
+      "invalid": "Check the address details."
+    }
   },
   "orders": {
     "metadata": {

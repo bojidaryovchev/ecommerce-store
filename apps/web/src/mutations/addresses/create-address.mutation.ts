@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { addressSchema } from "@/schemas/address.schema";
 import type { ActionResult } from "@/types/action-result.type";
 import type { Address } from "@ecommerce/database";
 import { db, insertAddressSchema, schema } from "@ecommerce/database";
@@ -21,6 +22,15 @@ async function createAddress(
     }
 
     const userId = session.user.id;
+
+    // The form's own schema, again: what the browser checked is checked here too.
+    const checked = addressSchema.safeParse({
+      ...data,
+      line2: data.line2 ?? "",
+      state: data.state ?? "",
+      phone: data.phone ?? "",
+    });
+    if (!checked.success) return { success: false, error: "invalid" };
 
     const validated = insertAddressSchema.parse({
       ...data,
