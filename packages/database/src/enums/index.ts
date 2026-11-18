@@ -16,6 +16,8 @@ export * from "./dispute-reason";
 export * from "./dispute-status";
 export * from "./invoice-billing-reason";
 export * from "./invoice-status";
+export * from "./mail-direction";
+export * from "./mail-thread-status";
 export * from "./order-status";
 export * from "./payment-intent-capture-method";
 export * from "./payment-intent-confirmation-method";

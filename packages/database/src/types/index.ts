@@ -17,6 +17,8 @@ export * from "./enums";
 export * from "./invoice-items";
 export * from "./invoice-line-items";
 export * from "./invoices";
+export * from "./mail-messages";
+export * from "./mail-threads";
 export * from "./order-items";
 export * from "./orders";
 export * from "./payment-intents";

@@ -16,6 +16,8 @@ export * from "./disputes";
 export * from "./invoice-items";
 export * from "./invoice-line-items";
 export * from "./invoices";
+export * from "./mail-messages";
+export * from "./mail-threads";
 export * from "./order-items";
 export * from "./order-status-history";
 export * from "./orders";
