@@ -380,7 +380,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
           paragraphs: ["Обработваме само данните, които са ни нужни:"],
           list: [
             "при поръчка: име, имейл, телефон, адрес за доставка и съдържанието на поръчката",
-            "при профил: име и имейл (вход с Google)",
+            "при профил: име и имейл, а при вход с имейл и парола и криптиран отпечатък на паролата (самата парола не пазим)",
             "при запитване или писмо до нас: данните и съдържанието на съобщението, включително прикачени файлове",
             "технически: бисквитките, описани в „Политика за бисквитките“",
           ],
@@ -432,7 +432,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
           paragraphs: ["Only the data we need:"],
           list: [
             "for an order: name, email, phone, delivery address and the order contents",
-            "for an account: name and email (Google sign-in)",
+            "for an account: name and email, and for email-and-password sign-in a one-way hash of the password (never the password itself)",
             "for an enquiry or an email to us: your details and the message, including attachments",
             "technical: the cookies described in the Cookie policy",
           ],

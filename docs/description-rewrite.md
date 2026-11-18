@@ -8,11 +8,15 @@ product per request.
 ## What it does
 
 - Takes every product whose description is still the supplier's (no `description` lock).
-- Sends Claude the name, brand, category, specifications and the supplier's text, and gets back a
-  Bulgarian description and a meta description (structured output, model `claude-opus-5-5`).
+- Sends Claude the name, brand, category, specifications, the supplier's text and the shop's own notes for
+  that section of the catalogue (how to size it, what installing it involves, which guide or calculator
+  helps: `SECTION_NOTES` in rewrite.ts, taken from the guides). That is what makes the result more than the
+  supplier's text reworded, which Google treats as scaled content.
+- Gets back a name that starts with the kind of product ("Пелетна камина Artel Easy S8" rather than "АРТЕЛ –
+  Easy S8"), a Bulgarian description and a meta description (structured output, model `claude-opus-5-5`).
 - Refuses a result that is too short or repeats eight words in a row from the supplier's text.
-- Saves the description, keeps the meta description in `product.metadata.metaDescription` (the
-  product page uses it), and locks the description: the 4-hourly supplier sync stops overwriting it
+- Saves the name and the description, keeps the meta description in `product.metadata.metaDescription`
+  (the product page uses it), and locks both: the 4-hourly supplier sync stops overwriting it
   and reports supplier changes to it in the review queue instead.
 
 Server-side fallbacks are on: if a safety classifier declines a request, the API retries it on a

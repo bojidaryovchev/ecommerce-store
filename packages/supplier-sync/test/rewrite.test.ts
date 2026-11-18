@@ -13,6 +13,7 @@ describe("checkCopy", () => {
     expect(
       checkCopy(
         {
+          name: "Термопомпа въздух-вода Artel MHP 22RP24P3",
           description: original,
           metaDescription:
             "Термопомпа Artel MHP 22RP24P3: трифазна моноблок система въздух-вода за отопление, охлаждане и топла вода.",
@@ -26,17 +27,33 @@ describe("checkCopy", () => {
     // Seven words in a row are a coincidence; eight are copied.
     const seven = `${original} Тя е трифазна моноблок система въздух-вода с голяма мощност.`;
     const lifted = `${original} Тя е трифазна моноблок система въздух-вода с мощност 22 kW, предназначена за отопление.`;
-    expect(checkCopy({ description: seven, metaDescription: "x".repeat(140) }, { description: supplier })).toBeNull();
-    expect(checkCopy({ description: lifted, metaDescription: "x".repeat(140) }, { description: supplier })).toMatch(
-      /8-word/,
-    );
+    expect(
+      checkCopy(
+        { name: "Термопомпа", description: seven, metaDescription: "x".repeat(140) },
+        { description: supplier },
+      ),
+    ).toBeNull();
+    expect(
+      checkCopy(
+        { name: "Термопомпа", description: lifted, metaDescription: "x".repeat(140) },
+        { description: supplier },
+      ),
+    ).toMatch(/8-word/);
   });
 
   it("refuses copy that is too short", () => {
-    expect(checkCopy({ description: "Кратко.", metaDescription: "x".repeat(140) }, { description: supplier })).toMatch(
-      /too short/,
-    );
-    expect(checkCopy({ description: original, metaDescription: "Кратко." }, { description: supplier })).toMatch(/meta/);
+    expect(
+      checkCopy(
+        { name: "Термопомпа", description: "Кратко.", metaDescription: "x".repeat(140) },
+        { description: supplier },
+      ),
+    ).toMatch(/too short/);
+    expect(
+      checkCopy(
+        { name: "Термопомпа Artel MHP 22RP24P3", description: original, metaDescription: "Кратко." },
+        { description: supplier },
+      ),
+    ).toMatch(/meta/);
   });
 });
 
@@ -48,10 +65,12 @@ describe("rewritePrompt", () => {
       brand: "Artel",
       description: supplier,
       category: "Термопомпи моноблок",
+      section: "termopompi",
       specs: [{ name: "мощност отопление kW", value: "22 kW" }],
     });
     expect(prompt).toContain("Brand: Artel");
     expect(prompt).toContain("- мощност отопление kW: 22 kW");
     expect(prompt).toContain(`<<<\n${supplier}\n>>>`);
+    expect(prompt).toContain("The shop's notes for this section:\nSizing: by the home's heat loss");
   });
 });

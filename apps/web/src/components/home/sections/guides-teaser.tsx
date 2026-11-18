@@ -8,7 +8,11 @@ import React from "react";
 import { SectionHeading } from "./section-heading";
 
 const GuidesTeaser: React.FC = async () => {
-  const [t, locale] = await Promise.all([getTranslations("home.guides"), getLocale()]);
+  const [t, tGuides, locale] = await Promise.all([
+    getTranslations("home.guides"),
+    getTranslations("guides"),
+    getLocale(),
+  ]);
   const guides = GUIDES.slice(0, 3);
   if (guides.length === 0) return null;
 
@@ -32,7 +36,7 @@ const GuidesTeaser: React.FC = async () => {
                 </span>
                 <span className="text-muted-foreground mt-4 flex items-center gap-1.5 text-xs">
                   <Clock className="size-3.5" aria-hidden />
-                  {guide.readingMinutes} min
+                  {tGuides("minutes", { count: guide.readingMinutes })}
                 </span>
                 <span className="group-hover:text-primary mt-1.5 block text-lg leading-snug font-semibold transition-colors">
                   {text.title}

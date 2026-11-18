@@ -5,7 +5,7 @@ import { routing } from "@/i18n/routing";
 import type { SearchParamsInput } from "@/lib/catalog-filters";
 import { categoryTrail } from "@/lib/category-tree";
 import { categoryHref } from "@/lib/routes";
-import { getCategoryBySlug, getCategoryIndex } from "@/queries/categories";
+import { getCategoryBySlug, getCategoryIndex, getCategoryStats } from "@/queries/categories";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -37,7 +37,10 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   // sorted views are crawlable but not indexed, with the category itself as canonical.
   const page = typeof search.page === "string" && /^\d+$/.test(search.page) ? Number(search.page) : 1;
   const filtered = Object.keys(search).some((key) => key !== "page");
-  const indexable = locale === routing.defaultLocale && !filtered;
+  // An empty section (all its products withdrawn) is kept out of the index until it has products again.
+  const stats = await getCategoryStats();
+  const empty = (stats[category.id]?.productCount ?? 0) === 0;
+  const indexable = locale === routing.defaultLocale && !filtered && !empty;
 
   // The section's picture as the preview: its own, or its top-level section's.
   const picture = [category, ...categoryTrail(categories, category.id).reverse()]
