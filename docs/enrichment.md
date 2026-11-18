@@ -3,10 +3,11 @@
 The supplier's data (hydrotermbg.com) is copied text with unreliable figures: specification fields contradict
 product names (a "5 kW" heat pump listed at 17.6 kW), the real figures often sit only in pictures of tables,
 and feature icons are mixed in with the product photos. The enrichment pipeline turns each product into the
-shop's own data and copy, with evidence, and nothing of it is published until an admin approves.
+shop's own data and copy, with evidence, written in the words buyers search for. A second reader checks every
+copy before it is published.
 
-Code: `packages/supplier-sync/src/enrich/`. Skills: `.claude/skills/catalog-research` and `catalog-copy`.
-Admin: `/admin/enrichment`.
+Code: `packages/supplier-sync/src/enrich/`. Skills: `.claude/skills/catalog-research`, `catalog-copy` and
+`catalog-review`. Admin: `/admin/enrichment`.
 
 ## The gates
 
@@ -35,14 +36,44 @@ one stopped, and the daily run only touches products the supplier changed.
    a photo shows another model or size than the product.
 4. **Rewrite** (model). The name (kind + brand + model), the description and the meta description in
    Bulgarian, built on validated facts and the shop's section notes (`SECTION_NOTES` in `copy.ts`: sizing,
-   installing, guides). The gate (`checkCopyAnswer`) refuses copy with an 8-word run from the supplier's text,
-   their calls to action, name or contacts, prices, warranty claims, Markdown or exclamation marks, a name
-   without the brand and model, or any figure in doubt. A refused text is retried with the reasons.
-5. **Publish** (admin). The review page shows before and after; the admin can correct the copy and the
-   values, choose which parts to publish (copy, specifications, category) or reject. Published fields are
-   locked (`name`, `description`, `attributes`, `categoryId`), so the sync stops overwriting them and reports
-   the supplier's later changes in the review queue. "Approve all ready" publishes every proposal that passed
-   every gate.
+   installing, guides). The copy is written around the searched phrase (below). The gate (`checkCopyAnswer`)
+   refuses copy that:
+   - has an 8-word run from the supplier's text;
+   - carries the supplier's calls to action, name or contacts;
+   - states prices or warranty claims;
+   - uses Markdown or exclamation marks;
+   - names the product without its brand and model;
+   - states any figure in doubt;
+   - leaves the searched phrase out of the name, meta description or first paragraph, or repeats it more
+     than three times.
+
+   A refused text is retried with the reasons.
+
+5. **Review** (model, `catalog-review`). A separate session reads each copy with the facts it was written
+   from. It checks that every claim is supported, that it is useful to a buyer, that it is written for people
+   (Google's helpful-content questions; no keyword stuffing), and the Bulgarian and the name. It answers
+   `pass`, `revise` (notes the writer gets on a retry, up to three times) or `hold` (for a person).
+6. **Publish**. "Approve all ready" on the admin page, or `enrich --approve`, publishes every proposal the
+   reviewer passed. That includes products the data checks held; they go out without the figures in doubt, so
+   neither the supplier's contested value nor the research's shows until a person settles it. The review page
+   shows before and after; the admin can correct the copy and the values, choose which parts to publish (copy,
+   specifications, category) or reject. Published fields are locked (`name`, `description`, `attributes`,
+   `categoryId`), so the sync stops overwriting them and reports the supplier's later changes in the review
+   queue.
+
+## Search phrases
+
+`search-demand.ts` holds monthly Google searches in Bulgaria for 1,414 phrases, from OpenSEO (DataForSEO,
+Google Ads volumes, fetched 2026-11-18). `keywords.ts` picks each product's phrase:
+
+- the most searched phrase that names its own subtype leads: "електрическа лира за баня" (1,600 a month),
+  "котел на пелети" (880, more than "пелетен котел" at 480), "суха пелетна камина";
+- size, finish and broader phrases support it;
+- one-word head terms ("климатик", "термопомпа") are left to the category pages.
+
+Demand sits at the type level: model codes and exact sizes are rarely searched. To refresh the volumes, a
+Claude session with the OpenSEO MCP runs `research_keywords` on the seeds and `get_keyword_metrics` on the
+candidate phrases. It then rewrites the file, which costs about 700 credits. Then bump `STAGE_VERSIONS.rewrite`.
 
 Published specifications are attribute values with source `enrichment`; they replace the supplier's values
 of the same figure, and supplier attributes the research did not cover stay. Filters, the comparison bars,
@@ -64,10 +95,12 @@ pnpm enrich --apply --limit 1000 --concurrency 3   # a backfill
 pnpm enrich --apply --slug a,b --force      # redo two products
 pnpm enrich --report                        # counts per gate, flagged and failed products
 pnpm enrich --rerun a,b                     # have the next run redo these
+pnpm enrich --approve                       # publish everything the reviewer passed
 ```
 
 Needs `DATABASE_URL`. Downloaded images are cached in `~/.cache/ecommerce-enrich/images`
-(`ENRICH_IMAGE_CACHE`). Models: `ENRICH_RESEARCH_MODEL`, `ENRICH_COPY_MODEL` (default `claude-opus-5-5`).
+(`ENRICH_IMAGE_CACHE`). Models: `ENRICH_RESEARCH_MODEL`, `ENRICH_COPY_MODEL` (default `claude-opus-5-5`) and
+`ENRICH_REVIEW_MODEL` (default: the copy model).
 Exit codes: 0 done, 1 the CLI could not start or sign in, 2 stopped early (usage limit) or some sessions
 failed; the next run picks up where it stopped.
 
