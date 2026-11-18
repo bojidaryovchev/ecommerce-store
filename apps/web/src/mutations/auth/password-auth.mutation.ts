@@ -6,34 +6,44 @@ import { routing } from "@/i18n/routing";
 import { signIn, UnconfirmedEmail } from "@/lib/auth";
 import { consumeAuthToken, createAuthToken, peekAuthToken } from "@/lib/auth-tokens";
 import { sendEmail } from "@/lib/email";
-import { hashPassword, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, verifyPassword } from "@/lib/password";
+import { hashPassword, verifyPassword } from "@/lib/password";
 import { SITE_URL } from "@/lib/site-url";
+import {
+  confirmEmailSchema,
+  fieldErrors,
+  forgotPasswordSchema,
+  registerSchema,
+  resetPasswordSchema,
+  signInSchema,
+  type AuthErrorKey,
+  type AuthField,
+  type ConfirmEmailInput,
+  type ForgotPasswordInput,
+  type RegisterInput,
+  type ResetPasswordInput,
+  type SignInInput,
+} from "@/schemas/auth.schema";
 import { db, schema } from "@ecommerce/database";
 import { eq, sql } from "drizzle-orm";
 import { AuthError } from "next-auth";
-import { getTranslations } from "next-intl/server";
 import React from "react";
-import { z } from "zod";
 
 /**
- * Email-and-password accounts: sign in, register (confirmed by a link), forgotten password, new
- * password. Every answer about an address is the same whether or not it has an account; what differs
- * goes to the address itself by email.
+ * Email-and-password accounts: sign in, register (confirmed by a link), forgotten password, new password.
+ * Every answer about an address is the same whether or not it has an account; what differs goes to the address
+ * itself by email. The forms validate with the same schemas first; answers are message keys under
+ * `auth.password.errors`, which the forms show in the visitor's language.
  */
 export type PasswordFormState = {
   ok?: boolean;
   email?: string;
-  errors?: Partial<Record<"name" | "email" | "password" | "token", string>>;
-  error?: string;
+  errors?: Partial<Record<AuthField, AuthErrorKey>>;
+  error?: AuthErrorKey;
 };
 
-const text = (formData: FormData, key: string) => {
-  const value = formData.get(key);
-  return typeof value === "string" ? value : "";
-};
-const localeOf = (formData: FormData): EmailLocale => emailLocale(text(formData, "locale"));
+type WithLocale<T> = T & { locale: string };
+
 const localePrefix = (locale: EmailLocale) => (locale === routing.defaultLocale ? "" : `/${locale}`);
-const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
 /** Only same-site paths ("/en/account", not "//evil.com" or "https://…"), to avoid open redirects. */
 const safeRedirectPath = (value: string, locale: EmailLocale) =>
@@ -41,42 +51,30 @@ const safeRedirectPath = (value: string, locale: EmailLocale) =>
 
 const findUser = (email: string) => db.query.users.findFirst({ where: sql`lower(${schema.users.email}) = ${email}` });
 
-const emailSchema = z.email().max(200);
-const passwordSchema = z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH);
-
-async function signInWithPasswordAction(_previous: PasswordFormState, formData: FormData): Promise<PasswordFormState> {
-  const locale = localeOf(formData);
-  const t = await getTranslations({ locale, namespace: "auth.password" });
-  const email = normalizeEmail(text(formData, "email"));
-  const password = text(formData, "password");
-  if (!emailSchema.safeParse(email).success) return { errors: { email: t("errors.email") } };
-  if (!password) return { errors: { password: t("errors.passwordMissing") } };
+async function signInWithPasswordAction(
+  input: WithLocale<SignInInput> & { redirectTo?: string },
+): Promise<PasswordFormState> {
+  const locale = emailLocale(input.locale);
+  const parsed = signInSchema.safeParse(input);
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+  const { email, password } = parsed.data;
 
   try {
-    await signIn("password", { email, password, redirectTo: safeRedirectPath(text(formData, "redirectTo"), locale) });
+    await signIn("password", { email, password, redirectTo: safeRedirectPath(input.redirectTo ?? "", locale) });
     return { ok: true };
   } catch (error) {
-    if (error instanceof UnconfirmedEmail) return { error: t("errors.unconfirmed") };
-    if (error instanceof AuthError) {
-      return { error: error.type === "CredentialsSignin" ? t("errors.invalid") : t("errors.failed") };
-    }
+    if (error instanceof UnconfirmedEmail) return { error: "unconfirmed" };
+    if (error instanceof AuthError) return { error: error.type === "CredentialsSignin" ? "invalid" : "failed" };
     // Success redirects by throwing; let it through.
     throw error;
   }
 }
 
-async function registerAction(_previous: PasswordFormState, formData: FormData): Promise<PasswordFormState> {
-  const locale = localeOf(formData);
-  const t = await getTranslations({ locale, namespace: "auth.password" });
-  const name = text(formData, "name").trim();
-  const email = normalizeEmail(text(formData, "email"));
-  const password = text(formData, "password");
-
-  const errors: PasswordFormState["errors"] = {};
-  if (!name || name.length > 120) errors.name = t("errors.name");
-  if (!emailSchema.safeParse(email).success) errors.email = t("errors.email");
-  if (!passwordSchema.safeParse(password).success) errors.password = t("errors.password", { min: PASSWORD_MIN_LENGTH });
-  if (Object.keys(errors).length > 0) return { errors };
+async function registerAction(input: WithLocale<RegisterInput>): Promise<PasswordFormState> {
+  const locale = emailLocale(input.locale);
+  const parsed = registerSchema.safeParse(input);
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+  const { name, email, password } = parsed.data;
 
   const copy = emailCopy(locale);
   try {
@@ -124,18 +122,15 @@ async function registerAction(_previous: PasswordFormState, formData: FormData):
     return { ok: true, email };
   } catch (error) {
     console.error("[auth] Registration failed:", error);
-    return { error: t("errors.failed") };
+    return { error: "failed" };
   }
 }
 
-async function requestPasswordResetAction(
-  _previous: PasswordFormState,
-  formData: FormData,
-): Promise<PasswordFormState> {
-  const locale = localeOf(formData);
-  const t = await getTranslations({ locale, namespace: "auth.password" });
-  const email = normalizeEmail(text(formData, "email"));
-  if (!emailSchema.safeParse(email).success) return { errors: { email: t("errors.email") } };
+async function requestPasswordResetAction(input: WithLocale<ForgotPasswordInput>): Promise<PasswordFormState> {
+  const locale = emailLocale(input.locale);
+  const parsed = forgotPasswordSchema.safeParse(input);
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+  const { email } = parsed.data;
 
   try {
     const user = await findUser(email);
@@ -153,22 +148,21 @@ async function requestPasswordResetAction(
     return { ok: true, email };
   } catch (error) {
     console.error("[auth] Reset request failed:", error);
-    return { error: t("errors.failed") };
+    return { error: "failed" };
   }
 }
 
-async function resetPasswordAction(_previous: PasswordFormState, formData: FormData): Promise<PasswordFormState> {
-  const locale = localeOf(formData);
-  const t = await getTranslations({ locale, namespace: "auth.password" });
-  const password = text(formData, "password");
-  if (!passwordSchema.safeParse(password).success) {
-    return { errors: { password: t("errors.password", { min: PASSWORD_MIN_LENGTH }) } };
-  }
+async function resetPasswordAction(
+  input: WithLocale<ResetPasswordInput> & { token: string },
+): Promise<PasswordFormState> {
+  const parsed = resetPasswordSchema.safeParse(input);
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+  const { password } = parsed.data;
 
   try {
-    const email = await consumeAuthToken("reset", text(formData, "token"));
+    const email = await consumeAuthToken("reset", input.token);
     const user = email ? await findUser(email) : undefined;
-    if (!user) return { errors: { token: t("errors.token") } };
+    if (!user) return { errors: { token: "token" } };
     // The link reached the inbox, which also confirms the address.
     await db
       .update(schema.users)
@@ -181,31 +175,31 @@ async function resetPasswordAction(_previous: PasswordFormState, formData: FormD
     return { ok: true, email: user.email ?? undefined };
   } catch (error) {
     console.error("[auth] Password reset failed:", error);
-    return { error: t("errors.failed") };
+    return { error: "failed" };
   }
 }
 
 /**
- * The page the confirmation email links to: the address is confirmed by someone who has the inbox
- * (the link) and knows the password chosen at registration, and they are signed in. Asking for the
- * password means a stranger who registered someone else's address cannot have it confirmed for them;
- * the owner, not knowing that password, sets a new one by email instead, which also confirms it.
+ * The page the confirmation email links to: the address is confirmed by someone who has the inbox (the link)
+ * and knows the password chosen at registration, and they are signed in. Asking for the password means a
+ * stranger who registered someone else's address cannot have it confirmed for them; the owner, not knowing
+ * that password, sets a new one by email instead, which also confirms it.
  */
-async function confirmEmailAction(_previous: PasswordFormState, formData: FormData): Promise<PasswordFormState> {
-  const locale = localeOf(formData);
-  const t = await getTranslations({ locale, namespace: "auth.password" });
-  const token = text(formData, "token");
-  const password = text(formData, "password");
-  if (!password) return { errors: { password: t("errors.passwordMissing") } };
+async function confirmEmailAction(
+  input: WithLocale<ConfirmEmailInput> & { token: string },
+): Promise<PasswordFormState> {
+  const locale = emailLocale(input.locale);
+  const parsed = confirmEmailSchema.safeParse(input);
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+  const { password } = parsed.data;
 
   let email: string;
   try {
-    const issuedFor = await peekAuthToken("verify", token);
+    const issuedFor = await peekAuthToken("verify", input.token);
     const user = issuedFor ? await findUser(issuedFor) : undefined;
-    if (!user?.email) return { errors: { token: t("errors.confirmToken") } };
-    if (!(await verifyPassword(password, user.passwordHash)))
-      return { errors: { password: t("errors.confirmPassword") } };
-    await consumeAuthToken("verify", token);
+    if (!user?.email) return { errors: { token: "confirmToken" } };
+    if (!(await verifyPassword(password, user.passwordHash))) return { errors: { password: "confirmPassword" } };
+    await consumeAuthToken("verify", input.token);
     if (!user.emailVerified) {
       await db
         .update(schema.users)
@@ -215,7 +209,7 @@ async function confirmEmailAction(_previous: PasswordFormState, formData: FormDa
     email = user.email;
   } catch (error) {
     console.error("[auth] Email confirmation failed:", error);
-    return { error: t("errors.failed") };
+    return { error: "failed" };
   }
   // Signed in straight away; success redirects by throwing, outside the try above.
   await signIn("password", { email, password, redirectTo: `${localePrefix(locale)}/account` });

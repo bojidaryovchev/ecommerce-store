@@ -8,8 +8,8 @@ const COST = { N: 16384, r: 8, p: 1 } as const;
 const KEY_LENGTH = 64;
 const MAX_MEMORY = 64 * 1024 * 1024;
 
-export const PASSWORD_MIN_LENGTH = 8;
-export const PASSWORD_MAX_LENGTH = 200;
+/** The same limits the account forms check (schemas/auth.schema.ts). */
+export { PASSWORD_MAX as PASSWORD_MAX_LENGTH, PASSWORD_MIN as PASSWORD_MIN_LENGTH } from "@/schemas/auth.schema";
 
 const derive = (password: string, salt: Buffer, options: ScryptOptions) =>
   new Promise<Buffer>((resolve, reject) =>
