@@ -1,13 +1,21 @@
 import { WelcomeEmail } from "@/emails";
 import { emailBrand, emailCopy } from "@/emails/copy";
 import { sendEmail } from "@/lib/email";
+import { verifyPassword } from "@/lib/password";
 import { mergeGuestCartToUser } from "@/mutations/cart";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { accounts, db, sessions, users, verificationTokens } from "@ecommerce/database";
 import type { UserRole } from "@ecommerce/database/types/enums";
-import NextAuth from "next-auth";
+import { eq, sql } from "drizzle-orm";
+import NextAuth, { CredentialsSignin } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import React from "react";
+
+/** The password was right, but the address has not been confirmed yet: the sign-in form says so. */
+export class UnconfirmedEmail extends CredentialsSignin {
+  code = "unconfirmed";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -20,6 +28,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      // Google vouches for the address, so signing in with Google opens the account registered with it
+      // by email and password too (see events.linkAccount for an account that was never confirmed).
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           prompt: "consent",
@@ -28,11 +39,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
       },
     }),
+    Credentials({
+      id: "password",
+      credentials: { email: {}, password: {} },
+      async authorize(credentials) {
+        const email = typeof credentials?.email === "string" ? credentials.email.trim().toLowerCase() : "";
+        const password = typeof credentials?.password === "string" ? credentials.password : "";
+        if (!email || !password) return null;
+        const user = await db.query.users.findFirst({ where: sql`lower(${users.email}) = ${email}` });
+        // Checked even without an account, so the answer takes as long either way.
+        const matches = await verifyPassword(password, user?.passwordHash);
+        if (!user || !matches) return null;
+        if (!user.emailVerified) throw new UnconfirmedEmail();
+        return { id: user.id, name: user.name, email: user.email, image: user.image, role: user.role };
+      },
+    }),
   ],
+  pages: { signIn: "/login" },
   session: {
     strategy: "jwt",
   },
   events: {
+    /**
+     * A Google account joined to a user. Google has confirmed the address, so the user is marked
+     * confirmed; a password set by whoever registered the address without ever confirming it is
+     * dropped, so nobody can claim someone else's address ahead of them. A new password is one
+     * "forgotten password" email away.
+     */
+    async linkAccount({ user }) {
+      if (!user.id) return;
+      const current = await db.query.users.findFirst({
+        where: eq(users.id, user.id),
+        columns: { emailVerified: true },
+      });
+      if (current && !current.emailVerified) {
+        await db.update(users).set({ emailVerified: new Date(), passwordHash: null }).where(eq(users.id, user.id));
+      }
+    },
     async signIn({ user, isNewUser }) {
       // Merge guest cart into user cart on login
       if (user.id) {

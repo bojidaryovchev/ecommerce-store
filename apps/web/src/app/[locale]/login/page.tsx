@@ -1,4 +1,4 @@
-import { LoginCard } from "@/components/auth";
+import { LoginCard, type LoginNotice } from "@/components/auth";
 import { getPathname, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import type { Metadata } from "next";
@@ -6,7 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ callbackUrl?: string | string[] }>;
+  searchParams: Promise<{ callbackUrl?: string | string[]; notice?: string; error?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -29,6 +29,13 @@ const getRedirectTo = (callbackUrl: string | string[] | undefined, locale: strin
     ? callbackUrl
     : getPathname({ href: "/", locale });
 
+/** What to say above the form: after confirming the address or a new password, or Auth.js's ?error=. */
+const noticeOf = (notice: string | undefined, error: string | undefined): LoginNotice | undefined => {
+  if (notice === "confirmed" || notice === "reset") return notice;
+  if (error === "OAuthAccountNotLinked") return error;
+  return error ? "error" : undefined;
+};
+
 const LoginPage = async ({ params, searchParams }: Props) => {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -39,13 +46,9 @@ const LoginPage = async ({ params, searchParams }: Props) => {
     return redirect({ href: "/", locale });
   }
 
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, notice, error } = await searchParams;
 
-  return (
-    <main className="max-w-container flex min-h-[60vh] items-center justify-center py-16">
-      <LoginCard redirectTo={getRedirectTo(callbackUrl, locale)} />
-    </main>
-  );
+  return <LoginCard redirectTo={getRedirectTo(callbackUrl, locale)} notice={noticeOf(notice, error)} />;
 };
 
 export default LoginPage;

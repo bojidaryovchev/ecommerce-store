@@ -9,6 +9,8 @@ export const users = pgTable("user", {
   email: text("email").unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
+  /** scrypt hash for email-and-password sign-in; null for accounts that only sign in with Google. */
+  passwordHash: text("password_hash"),
   role: userRoleEnum("role").default("USER").notNull(),
   stripeCustomerId: text("stripe_customer_id").unique(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),

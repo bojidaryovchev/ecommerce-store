@@ -18,9 +18,9 @@ const GoogleSignIn: React.FC<Props> = ({ redirectTo }) => {
       <button
         aria-label={t("label")}
         type="submit"
-        className="flex w-full items-center justify-center rounded-md border border-[#5b5e81] p-0.5 pr-2.5 transition-all hover:bg-[#5b5e81]"
+        className="hover:bg-muted/60 flex h-11 w-full items-center justify-center gap-2.5 rounded-full border bg-white px-4 transition-colors dark:bg-transparent"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-l">
+        <div className="flex size-5 items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5">
             <title>{t("label")}</title>
             <desc>{t("logoDescription")}</desc>
@@ -42,7 +42,7 @@ const GoogleSignIn: React.FC<Props> = ({ redirectTo }) => {
             ></path>
           </svg>
         </div>
-        <span className="text-sm tracking-wide text-white">{t("label")}</span>
+        <span className="text-foreground text-sm font-semibold">{t("label")}</span>
       </button>
     </form>
   );

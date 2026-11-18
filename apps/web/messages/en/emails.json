@@ -46,5 +46,33 @@
     "text": "thank you for creating an account. You will find your orders, addresses and saved products in it.",
     "help": "Not sure what you need? Read our guides and calculators or write to us: we are glad to help.",
     "shop": "Go to the shop"
+  },
+  "account": {
+    "confirm": {
+      "subject": "Confirm your email",
+      "preview": "One more step to your account.",
+      "title": "Confirm your email",
+      "greeting": "Hello {name},",
+      "text": "to finish registering, confirm that this email is yours. The link is valid for 48 hours.",
+      "button": "Confirm my email",
+      "ignore": "If you did not register, just ignore this email."
+    },
+    "reset": {
+      "subject": "A new password for your account",
+      "preview": "A link to set a new password.",
+      "title": "New password",
+      "text": "We received a request for a new password for the account with this email. The link is valid for one hour.",
+      "button": "Set a new password",
+      "ignore": "If you did not ask for a new password, ignore this email: your password stays as it is."
+    },
+    "exists": {
+      "subject": "You already have an account",
+      "preview": "There is already an account with this email.",
+      "title": "You already have an account",
+      "text": "Someone (probably you) tried to create an account with this email, but one already exists. Sign in, or set a new password if you forgot the old one.",
+      "login": "Sign in",
+      "reset": "New password",
+      "ignore": "If it was not you, there is nothing to do."
+    }
   }
 }
