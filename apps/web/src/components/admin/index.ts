@@ -13,6 +13,9 @@ export { AdminCategoriesHeader, CategoriesTableLoader, CategoryFormLoader } from
 // Orders
 export { AdminOrderDetail, AdminOrdersHeader, OrdersTableLoader } from "./orders";
 
+// Mailbox
+export { ComposeLoader, MailboxHeader, ThreadListLoader, ThreadLoader } from "./mailbox";
+
 // Reviews
 export { AdminReviewsHeader, ReviewsTableLoader } from "./reviews";
 

@@ -17,6 +17,7 @@
     "@aws-sdk/credential-provider-sso": "3.973.28",
     "@aws-sdk/s3-request-presigner": "3.1169.0",
     "@ecommerce/database": "workspace:*",
+    "@ecommerce/mailbox": "workspace:*",
     "@ecommerce/supplier-sync": "workspace:*",
     "@hookform/resolvers": "7.0.6",
     "@react-email/render": "2.3.1",

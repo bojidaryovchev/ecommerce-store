@@ -27,10 +27,17 @@ declare namespace NodeJS {
 
     // Email (Resend)
     RESEND_API_KEY: string;
+    // "Shop <contact@example.com>": every email leaves from this address, and mail to it lands in /admin/mailbox
     EMAIL_FROM: string;
+    // Signing secret of the Resend webhook (email.received → /api/webhooks/resend)
+    RESEND_WEBHOOK_SECRET?: string;
+    // Optional: the owner's own inbox, for a heads-up copy of each new message in the mailbox
+    MAIL_TO?: string;
 
     // Public origin for sitemap, robots and absolute URLs, e.g. https://example.bg (see lib/site-url.ts)
     NEXT_PUBLIC_SITE_URL?: string;
+    // "on" lets search engines index the site; anything else sends X-Robots-Tag: noindex (see next.config.ts)
+    SITE_INDEXING?: string;
     // Set by Vercel
     VERCEL_PROJECT_PRODUCTION_URL?: string;
 

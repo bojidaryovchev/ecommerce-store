@@ -47,6 +47,7 @@ A modern, full-stack ecommerce platform built with Next.js 16 and deployed on Ve
 - **Supplier sync** — catalog imported from hydrotermbg.com and kept in sync every 4 h; review queue for new products and big price moves; edited fields stop following the supplier ([docs](docs/supplier-sync.md))
 - **Categories** — CRUD with slug generation
 - **Orders** — list with status filters, detail view with status transitions
+- **Mailbox** — the shop's address is a real inbox: mail to it arrives through Resend, replies leave from the same address, conversations tie to orders ([docs](docs/mailbox.md))
 - **Coupons** — create/edit/delete discount rules (percent or fixed amount)
 - **Promo codes** — create/toggle/delete customer-facing codes linked to coupons
 - **Refunds** — issue full/partial Stripe refunds from order detail
@@ -80,6 +81,7 @@ Search matches product names, brands and categories in either alphabet ("kamina"
 │   └── web/              # Next.js frontend + admin panel
 ├── packages/
 │   ├── database/         # Drizzle schema, validators & client
+│   ├── mailbox/          # The shop's inbox: inbound mail, threading, replies (Resend)
 │   └── supplier-sync/    # Supplier catalog import & sync (WooCommerce)
 ├── infra/                # Pulumi AWS infrastructure + Lambda
 ├── docs/                 # Reference documentation
@@ -130,8 +132,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...    # From Stripe CLI or dashboard
 
-# Resend (email)
-RESEND_API_KEY=re_...
+# Resend (email) and the mailbox, see docs/mailbox.md
+RESEND_API_KEY=re_...              # full access: the mailbox reads received mail
+EMAIL_FROM="Shop <contact@example.com>"
+RESEND_WEBHOOK_SECRET=whsec_...    # webhook email.received → /api/webhooks/resend
 
 # Supplier sync (shared with the supplier-sync Lambda)
 SUPPLIER_SYNC_SECRET=long-random-string
@@ -333,7 +337,11 @@ Add these environment variables in Vercel (Settings → Environment Variables). 
 | `AUTH_GOOGLE_SECRET`       | Google OAuth client secret                | All          |
 | `STRIPE_SECRET_KEY`        | Stripe secret key                         | Per env      |
 | `STRIPE_WEBHOOK_SECRET`    | Stripe webhook signing secret             | Per env      |
-| `RESEND_API_KEY`           | Resend API key                            | All          |
+| `RESEND_API_KEY`           | Resend API key (full access)              | All          |
+| `EMAIL_FROM`               | `Shop <contact@…>`, the mailbox address   | All          |
+| `RESEND_WEBHOOK_SECRET`    | Resend webhook signing secret             | Production   |
+| `NEXT_PUBLIC_SITE_URL`     | `https://<domain>`                        | Production   |
+| `SITE_INDEXING`            | `on` at launch (until then: noindex)      | Production   |
 | `AWS_REGION`               | `eu-central-1`                            | All          |
 | `AWS_S3_BUCKET_NAME`       | From `bucketName` output                  | Per env      |
 | `AWS_S3_ACCESS_KEY_ID`     | From `accessKeyId` output                 | Per env      |
@@ -358,6 +366,9 @@ Add these environment variables in Vercel (Settings → Environment Variables). 
 | `STRIPE_WEBHOOK_SECRET`    | ✅                   | ❌                  | ✅     |
 | **Email**                  |                      |                     |        |
 | `RESEND_API_KEY`           | ✅                   | ❌                  | ✅     |
+| `EMAIL_FROM`               | ✅                   | ❌                  | ✅     |
+| `RESEND_WEBHOOK_SECRET`    | ❌                   | ❌                  | ✅     |
+| `MAIL_TO` (optional)       | ❌                   | ❌                  | ✅     |
 | **Supplier sync**          |                      |                     |        |
 | `SUPPLIER_SYNC_SECRET`     | ✅                   | ❌                  | ✅     |
 | **AWS S3 (Web App)**       |                      |                     |        |

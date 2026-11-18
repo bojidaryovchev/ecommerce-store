@@ -18,7 +18,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { updateOrderStatus } from "@/mutations/orders";
 import type { OrderWithItemsAndUser } from "@/queries/orders";
 import type { OrderStatus } from "@ecommerce/database/schema";
-import { ArrowLeft, CheckCircle, Package, RotateCcw, Truck, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Mail, Package, RotateCcw, Truck, XCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -158,8 +158,16 @@ const AdminOrderDetail: React.FC<Props> = ({ order }) => {
 
       {/* Customer Info */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
           <CardTitle>Customer</CardTitle>
+          {(order.guestEmail || order.user?.email) && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/admin/mailbox/new?orderId=${order.id}`}>
+                <Mail className="mr-1 h-4 w-4" />
+                Email customer
+              </Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <div className="text-sm">

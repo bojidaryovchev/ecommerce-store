@@ -7,6 +7,7 @@ export type {
   CategoryWithProducts,
   CategoryWithProductsAndChildren,
 } from "./category.type";
+export type { MailFormState } from "./mail-form-state.type";
 export type { PaginatedResult } from "./paginated-result.type";
 export type {
   PriceFormData,
