@@ -1,5 +1,5 @@
 import * as schema from "@ecommerce/database/schema";
-import { asc, inArray } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { stableStringify } from "../normalize/product";
 import { renormalize } from "../sync/shared";
@@ -63,6 +63,18 @@ export interface EnrichProduct {
     numericValue: number | null;
     source: "supplier" | "enrichment" | "manual";
   }>;
+  /**
+   * The supplier's attribute values as it delivered them (supplier_product.data, mapped to our attributes as the
+   * sync maps them). Validation compares these, never the product's live rows: publishing deletes the supplier
+   * rows it replaces, and a comparison against those would see a conflict vanish without anyone settling it.
+   */
+  supplierAttributes: Array<{
+    slug: string;
+    name: string;
+    unit: string | null;
+    value: string;
+    numericValue: number | null;
+  }>;
   stages: Partial<Record<Stage, StageRow>>;
 }
 
@@ -85,7 +97,7 @@ export const hashOf = (value: unknown): string => createHash("sha256").update(st
 /** The whole catalogue, or only `productIds` (categories and image kinds are always loaded whole). */
 export async function loadEnrichState(db: DbExecutor, filter: { productIds?: string[] } = {}): Promise<EnrichState> {
   const ids = filter.productIds;
-  const [rows, categoryRows, stageRows, assetRows] = await Promise.all([
+  const [rows, categoryRows, stageRows, assetRows, mappingRows] = await Promise.all([
     db.query.products.findMany({
       ...(ids ? { where: inArray(schema.products.id, ids) } : {}),
       with: {
@@ -104,7 +116,19 @@ export async function loadEnrichState(db: DbExecutor, filter: { productIds?: str
       ? db.select().from(schema.productEnrichments).where(inArray(schema.productEnrichments.productId, ids))
       : db.select().from(schema.productEnrichments),
     db.select().from(schema.imageAssets),
+    // How the sync maps each supplier attribute key to ours (sync/attributes.ts).
+    db
+      .select({
+        supplierId: schema.supplierAttributes.supplierId,
+        key: schema.supplierAttributes.key,
+        slug: schema.attributes.slug,
+        name: schema.attributes.name,
+        unit: schema.attributes.unit,
+      })
+      .from(schema.supplierAttributes)
+      .innerJoin(schema.attributes, eq(schema.attributes.id, schema.supplierAttributes.attributeId)),
   ]);
+  const mapped = new Map(mappingRows.map((row) => [`${row.supplierId}\u0000${row.key}`, row]));
 
   const byId = new Map(categoryRows.map((row) => [row.id, row]));
   const kindOf = (id: string | null): ProductKind | null => {
@@ -180,6 +204,21 @@ export async function loadEnrichState(db: DbExecutor, filter: { productIds?: str
         numericValue: value.numericValue,
         source: value.source,
       })),
+      // One value per row, as the sync writes them (sync/shared.ts, writeSupplierAttributeValues).
+      supplierAttributes:
+        supplier && row.supplierProduct
+          ? supplier.attributes.flatMap((attribute) => {
+              const ours = mapped.get(`${row.supplierProduct!.supplierId}\u0000${attribute.key}`);
+              if (!ours) return [];
+              return attribute.values.map((value) => ({
+                slug: ours.slug,
+                name: ours.name,
+                unit: ours.unit,
+                value: value.text,
+                numericValue: value.number,
+              }));
+            })
+          : [],
       stages: stages.get(row.id) ?? {},
     };
   });

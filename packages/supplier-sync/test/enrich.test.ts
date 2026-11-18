@@ -535,6 +535,7 @@ function product(id: string, overrides: Partial<EnrichProduct> = {}): EnrichProd
       categoryExternalIds: [],
     },
     attributeValues: [],
+    supplierAttributes: [],
     stages: {},
     ...overrides,
   };

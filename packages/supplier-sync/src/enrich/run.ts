@@ -159,10 +159,8 @@ function validateHash(product: EnrichProduct, extract: ExtractOutput, classify: 
   });
 }
 
-const supplierAttributesOf = (product: EnrichProduct) =>
-  product.attributeValues
-    .filter((value) => value.source === "supplier")
-    .map(({ slug, name, unit, value, numericValue }) => ({ slug, name, unit, value, numericValue }));
+/** What the supplier delivered, not the live rows: publishing deletes the rows it replaces (state.ts). */
+const supplierAttributesOf = (product: EnrichProduct) => product.supplierAttributes;
 
 /**
  * The copy item, without what changes between attempts (siblings, retry notes, the copy sent back): its hash is
@@ -893,7 +891,9 @@ function reviewContext(product: EnrichProduct, state: EnrichState): { item: Revi
     keywords: context.item.keywords,
     copy,
   };
-  return { item, hash: hashOf({ version: STAGE_VERSIONS.review, item }) };
+  // The siblings' names are context, not facts: they change whenever a sibling is rewritten, and with them in the
+  // hash every rewrite in a family would send the whole family back to the reviewer.
+  return { item, hash: hashOf({ version: STAGE_VERSIONS.review, item: { ...item, siblings: null } }) };
 }
 
 /**
