@@ -154,8 +154,9 @@ const AccountMenu: React.FC<{ session: Session | null }> = ({ session }) => {
   if (!session) {
     return (
       <Button asChild variant="ghost" size="icon" className="rounded-full">
-        <Link href="/login" aria-label={t("signIn")}>
-          <UserRound className="size-5" />
+        <Link href="/login" title={t("signIn")}>
+          <UserRound className="size-5" aria-hidden />
+          <span className="sr-only">{t("signIn")}</span>
         </Link>
       </Button>
     );

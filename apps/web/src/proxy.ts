@@ -59,7 +59,7 @@ export default auth(async (req) => {
 
   // A catalog page that doesn't exist is a 404 and a category under an outdated path a 308, decided
   // here: with Cache Components the page itself commits to 200 once its shell streams (lib/route-index.ts).
-  const verdict = await catalogVerdict(path);
+  const verdict = await catalogVerdict(path, req.nextUrl.searchParams);
   if (verdict.kind === "moved") {
     return finish(
       NextResponse.redirect(new URL(`${prefix}${verdict.to}${req.nextUrl.search}`, req.url), 308),

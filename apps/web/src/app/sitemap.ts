@@ -58,7 +58,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       bulgarian(categoryHref(categoryTrail(categories, category.id)), { changeFrequency: "weekly", priority: 0.7 }),
     ),
     ...products.map((product) =>
-      bulgarian(productHref(product), { lastModified: product.updatedAt, changeFrequency: "daily", priority: 0.6 }),
+      bulgarian(productHref(product), {
+        lastModified: product.updatedAt,
+        changeFrequency: "daily",
+        priority: 0.6,
+        // The photos, so image search finds them through the page they belong to.
+        images: (product.images ?? [])
+          .slice(0, 10)
+          .map((image) => (image.startsWith("http") ? image : `${SITE_URL}${image}`)),
+      }),
     ),
   ];
 }

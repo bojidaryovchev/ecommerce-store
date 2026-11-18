@@ -3,8 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter, useSearchParams } from "next/navigation";
-import React, { useCallback, useTransition } from "react";
+import NextLink from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import React from "react";
 
 type PaginationProps = {
   page: number;
@@ -42,104 +43,68 @@ function getPageNumbers(page: number, pageCount: number): (number | "ellipsis")[
   return pages;
 }
 
+/**
+ * Page links, real `<a href>`s so crawlers reach every page of a listing (and people can open one in a
+ * new tab). The query is kept, only `page` changes; the path stays the current one, so storefront URLs
+ * keep their locale prefix and the admin, outside the locale routing, works too.
+ */
 const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
   const t = useTranslations("common.pagination");
-  // Plain next/navigation on purpose: this is also used in the admin, which is outside the locale routing.
-  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-
-  const navigate = useCallback(
-    (newPage: number) => {
-      const params = new URLSearchParams(searchParams.toString());
-
-      if (newPage <= 1) {
-        params.delete("page");
-      } else {
-        params.set("page", String(newPage));
-      }
-
-      const queryString = params.toString();
-      // Stays on the current path, so a storefront URL keeps its locale prefix (/en/…).
-      startTransition(() => {
-        router.push(queryString ? `?${queryString}` : window.location.pathname);
-      });
-    },
-    [searchParams, router],
-  );
 
   if (pageCount <= 1) {
     return null;
   }
 
+  const hrefFor = (target: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (target <= 1) params.delete("page");
+    else params.set("page", String(target));
+    const query = params.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  };
+
+  const step = (target: number, label: string, icon: React.ReactNode, rel?: "prev" | "next") =>
+    target < 1 || target > pageCount || target === page ? (
+      <Button variant="ghost" size="icon" disabled aria-label={label}>
+        {icon}
+      </Button>
+    ) : (
+      <Button asChild variant="ghost" size="icon">
+        <NextLink href={hrefFor(target)} rel={rel} aria-label={label} scroll>
+          {icon}
+        </NextLink>
+      </Button>
+    );
+
   const pages = getPageNumbers(page, pageCount);
 
   return (
     <nav aria-label={t("label")} className="mt-8 flex items-center justify-center gap-1">
-      {/* First page */}
-      <Button
-        variant="ghost"
-        size="icon"
-        disabled={page <= 1 || isPending}
-        onClick={() => navigate(1)}
-        aria-label={t("first")}
-      >
-        <ChevronsLeft className="h-4 w-4" />
-      </Button>
+      {step(1, t("first"), <ChevronsLeft className="h-4 w-4" />)}
+      {step(page - 1, t("previous"), <ChevronLeft className="h-4 w-4" />, "prev")}
 
-      {/* Previous */}
-      <Button
-        variant="ghost"
-        size="icon"
-        disabled={page <= 1 || isPending}
-        onClick={() => navigate(page - 1)}
-        aria-label={t("previous")}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-
-      {/* Page numbers */}
       {pages.map((p, i) =>
         p === "ellipsis" ? (
           <span key={`ellipsis-${i}`} className="text-muted-foreground px-2 text-sm">
             …
           </span>
+        ) : p === page ? (
+          <Button key={p} variant="default" size="icon" aria-current="page" aria-label={t("page", { page: p })} asChild>
+            <span>{p}</span>
+          </Button>
         ) : (
-          <Button
-            key={p}
-            variant={p === page ? "default" : "ghost"}
-            size="icon"
-            disabled={isPending}
-            onClick={() => navigate(p)}
-            aria-label={t("page", { page: p })}
-            aria-current={p === page ? "page" : undefined}
-          >
-            {p}
+          <Button key={p} variant="ghost" size="icon" asChild>
+            <NextLink href={hrefFor(p)} aria-label={t("page", { page: p })}>
+              {p}
+            </NextLink>
           </Button>
         ),
       )}
 
-      {/* Next */}
-      <Button
-        variant="ghost"
-        size="icon"
-        disabled={page >= pageCount || isPending}
-        onClick={() => navigate(page + 1)}
-        aria-label={t("next")}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-
-      {/* Last page */}
-      <Button
-        variant="ghost"
-        size="icon"
-        disabled={page >= pageCount || isPending}
-        onClick={() => navigate(pageCount)}
-        aria-label={t("last")}
-      >
-        <ChevronsRight className="h-4 w-4" />
-      </Button>
+      {step(page + 1, t("next"), <ChevronRight className="h-4 w-4" />, "next")}
+      {step(pageCount, t("last"), <ChevronsRight className="h-4 w-4" />)}
     </nav>
   );
 };
