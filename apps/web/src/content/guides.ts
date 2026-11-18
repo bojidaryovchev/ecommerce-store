@@ -29,6 +29,9 @@ export type Guide = {
   installation?: InstallationSystemSlug;
   /** A calculator that answers the guide's question. */
   calculator?: string;
+  /** ISO dates: when it was first published and last changed in substance (shown, and in the Article markup). */
+  published: string;
+  updated: string;
   bg: GuideText;
   en: GuideText;
 };
@@ -38,6 +41,8 @@ export const GUIDES: Guide[] = [
     slug: "kakva-termopompa-mi-tryabva",
     image: "/images/categories/termopompi.webp",
     readingMinutes: 6,
+    published: "2026-11-18",
+    updated: "2026-11-18",
     categorySlug: "termopompi",
     installation: "termopompa",
     calculator: "termopompa",
@@ -148,6 +153,8 @@ export const GUIDES: Guide[] = [
     slug: "peletna-kamina-ili-kotel",
     image: "/images/categories/peletni-kamini.webp",
     readingMinutes: 5,
+    published: "2026-11-18",
+    updated: "2026-11-18",
     categorySlug: "peletni-kamini",
     installation: "peletno-otoplenie",
     bg: {
@@ -233,6 +240,8 @@ export const GUIDES: Guide[] = [
     slug: "kolko-btu-klimatik",
     image: "/images/categories/klimatitsi.webp",
     readingMinutes: 4,
+    published: "2026-11-18",
+    updated: "2026-11-18",
     categorySlug: "klimatitsi",
     installation: "klimatik",
     calculator: "klimatik",
@@ -312,6 +321,8 @@ export const GUIDES: Guide[] = [
     slug: "podovo-otoplenie",
     image: "/images/categories/podovo-otoplenie.webp",
     readingMinutes: 5,
+    published: "2026-11-18",
+    updated: "2026-11-18",
     categorySlug: "podovo-otoplenie",
     installation: "podovo-otoplenie",
     bg: {
@@ -401,6 +412,8 @@ export const GUIDES: Guide[] = [
     slug: "kak-da-izberem-radiator",
     image: "/images/categories/radiatori-i-konvektori.webp",
     readingMinutes: 4,
+    published: "2026-11-18",
+    updated: "2026-11-18",
     categorySlug: "radiatori-i-konvektori",
     calculator: "radiatori",
     bg: {

@@ -9,59 +9,56 @@ import { getCategoryIndex } from "@/queries/categories";
 import { getProducts } from "@/queries/products";
 import type { MetadataRoute } from "next";
 
+type Entry = MetadataRoute.Sitemap[number];
+type Extra = Omit<Entry, "url" | "alternates">;
+
 /**
- * Bulgarian URLs are listed, with English alternates for pages whose content exists in English (the
- * site's own pages); product and category content is Bulgarian-only for now.
+ * Every indexable URL. A page whose content exists in both languages is listed in each, and each
+ * entry names both versions and the Bulgarian x-default (Google wants every version under its own
+ * <url>). Product and category content is Bulgarian only, so those are listed once.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories] = await Promise.all([getProducts(), getCategoryIndex()]);
 
-  const page = (path: string, withEnglish: boolean): MetadataRoute.Sitemap[number] => ({
-    url: `${SITE_URL}${path}`,
-    ...(withEnglish && {
-      alternates: { languages: { bg: `${SITE_URL}${path}`, en: `${SITE_URL}/en${path === "/" ? "" : path}` } },
-    }),
-  });
+  const bilingual = (path: string, extra: Extra): Entry[] => {
+    const bg = `${SITE_URL}${path}`;
+    const en = `${SITE_URL}/en${path === "/" ? "" : path}`;
+    const alternates = { languages: { bg, en, "x-default": bg } };
+    return [
+      { url: bg, alternates, ...extra },
+      { url: en, alternates, ...extra },
+    ];
+  };
+  const bulgarian = (path: string, extra: Extra): Entry => ({ url: `${SITE_URL}${path}`, ...extra });
 
   return [
-    { ...page("/", true), changeFrequency: "daily", priority: 1 },
+    ...bilingual("/", { changeFrequency: "daily", priority: 1 }),
     // Listings of Bulgarian product content: the English versions are not indexed.
-    { ...page("/products", false), changeFrequency: "daily", priority: 0.8 },
-    { ...page("/categories", false), changeFrequency: "weekly", priority: 0.7 },
-    { ...page(installationHref(), true), changeFrequency: "monthly", priority: 0.8 },
-    ...INSTALLATION_SYSTEMS.map((system) => ({
-      ...page(installationHref(system.slug), true),
-      changeFrequency: "monthly" as const,
-      priority: 0.8,
-    })),
-    { ...page(guideHref(), true), changeFrequency: "weekly", priority: 0.6 },
-    ...GUIDES.map((guide) => ({
-      ...page(guideHref(guide.slug), true),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    })),
-    { ...page("/kalkulatori", true), changeFrequency: "monthly", priority: 0.5 },
-    ...TOOLS.map((tool) => ({
-      ...page(`/kalkulatori/${tool}`, true),
-      changeFrequency: "monthly" as const,
-      priority: 0.5,
-    })),
-    { ...page("/kontakti", true), changeFrequency: "yearly", priority: 0.5 },
-    ...[...INFO_SLUGS.map(infoHref), WITHDRAWAL_HREF].map((path) => ({
-      ...page(path, true),
-      changeFrequency: "yearly" as const,
-      priority: 0.3,
-    })),
-    ...categories.map((category) => ({
-      ...page(categoryHref(categoryTrail(categories, category.id)), false),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    })),
-    ...products.map((product) => ({
-      ...page(productHref(product), false),
-      lastModified: product.updatedAt,
-      changeFrequency: "daily" as const,
-      priority: 0.6,
-    })),
+    bulgarian("/products", { changeFrequency: "daily", priority: 0.8 }),
+    bulgarian("/categories", { changeFrequency: "weekly", priority: 0.7 }),
+    ...bilingual(installationHref(), { changeFrequency: "monthly", priority: 0.8 }),
+    ...INSTALLATION_SYSTEMS.flatMap((system) =>
+      bilingual(installationHref(system.slug), { changeFrequency: "monthly", priority: 0.8 }),
+    ),
+    ...bilingual(guideHref(), { changeFrequency: "weekly", priority: 0.6 }),
+    ...GUIDES.flatMap((guide) =>
+      bilingual(guideHref(guide.slug), {
+        lastModified: guide.updated,
+        changeFrequency: "monthly",
+        priority: 0.6,
+      }),
+    ),
+    ...bilingual("/kalkulatori", { changeFrequency: "monthly", priority: 0.5 }),
+    ...TOOLS.flatMap((tool) => bilingual(`/kalkulatori/${tool}`, { changeFrequency: "monthly", priority: 0.5 })),
+    ...bilingual("/kontakti", { changeFrequency: "yearly", priority: 0.5 }),
+    ...[...INFO_SLUGS.map(infoHref), WITHDRAWAL_HREF].flatMap((path) =>
+      bilingual(path, { changeFrequency: "yearly", priority: 0.3 }),
+    ),
+    ...categories.map((category) =>
+      bulgarian(categoryHref(categoryTrail(categories, category.id)), { changeFrequency: "weekly", priority: 0.7 }),
+    ),
+    ...products.map((product) =>
+      bulgarian(productHref(product), { lastModified: product.updatedAt, changeFrequency: "daily", priority: 0.6 }),
+    ),
   ];
 }

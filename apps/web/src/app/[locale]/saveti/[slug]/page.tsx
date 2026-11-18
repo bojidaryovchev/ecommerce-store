@@ -8,7 +8,7 @@ import { SITE_URL } from "@/lib/site-url";
 import { getCategoryProducts } from "@/queries/products";
 import { ArrowRight, Calculator, ChevronRight, Clock, Wrench } from "lucide-react";
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -40,8 +40,10 @@ const GuidePage: React.FC<Props> = async ({ params }) => {
   if (!guide) notFound();
   setRequestLocale(locale);
   const text = guideText(guide, locale);
-  const [t, products] = await Promise.all([
+  const [t, tMeta, format, products] = await Promise.all([
     getTranslations("guides"),
+    getTranslations("metadata"),
+    getFormatter(),
     guide.categorySlug ? getCategoryProducts(guide.categorySlug, 4) : Promise.resolve([]),
   ]);
   const others = GUIDES.filter((other) => other.slug !== guide.slug).slice(0, 3);
@@ -56,6 +58,10 @@ const GuidePage: React.FC<Props> = async ({ params }) => {
           description: text.excerpt,
           image: `${SITE_URL}${guide.image}`,
           inLanguage: locale,
+          datePublished: guide.published,
+          dateModified: guide.updated,
+          author: { "@type": "Organization", name: tMeta("siteTitle"), url: SITE_URL },
+          publisher: { "@type": "Organization", name: tMeta("siteTitle"), logo: `${SITE_URL}/apple-icon.png` },
           mainEntityOfPage: `${SITE_URL}${locale === "en" ? "/en" : ""}${guideHref(guide.slug)}`,
         }}
       />
@@ -75,6 +81,11 @@ const GuidePage: React.FC<Props> = async ({ params }) => {
           <p className="text-muted-foreground mt-4 flex items-center gap-1.5 text-sm">
             <Clock className="size-4" aria-hidden />
             {t("minutes", { count: guide.readingMinutes })}
+            <span aria-hidden>·</span>
+            <span>
+              {guide.updated !== guide.published ? t("updatedOn") : t("publishedOn")}{" "}
+              <time dateTime={guide.updated}>{format.dateTime(new Date(guide.updated), { dateStyle: "long" })}</time>
+            </span>
           </p>
           <p className="mt-5 text-xl leading-relaxed">{text.excerpt}</p>
         </header>

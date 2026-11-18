@@ -29,7 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: { siteName: t("siteTitle"), locale: locale === "bg" ? "bg_BG" : "en_GB", type: "website" },
     // Until launch nothing is indexed (see lib/indexing.ts). Pages that set their own robots only ever
     // set noindex, so this cannot be overridden into an index.
-    ...(!SITE_INDEXABLE && { robots: { index: false, follow: false } }),
+    // Once indexing is on, large image previews are allowed (Discover, image results).
+    robots: SITE_INDEXABLE ? { "max-image-preview": "large" } : { index: false, follow: false },
   };
 }
 

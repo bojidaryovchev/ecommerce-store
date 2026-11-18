@@ -19,5 +19,7 @@
   "visitText": "Describe your home and we will suggest a solution and a site visit.",
   "visitLink": "Request a site visit",
   "more": "More guides",
-  "note": "The figures in the guides are approximate. We do the exact sizing at the site visit."
+  "note": "The figures in the guides are approximate. We do the exact sizing at the site visit.",
+  "publishedOn": "Published",
+  "updatedOn": "Updated"
 }

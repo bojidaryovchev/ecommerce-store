@@ -12,6 +12,9 @@ export const routing = defineRouting({
   localePrefix: "as-needed",
   localeDetection: false,
   localeCookie: false,
+  // hreflang comes from the pages (lib/seo.ts), only where the content exists in both languages; the
+  // middleware's Link header would name English versions of Bulgarian-only pages and drop the query.
+  alternateLinks: false,
 });
 
 export type Locale = (typeof routing.locales)[number];
