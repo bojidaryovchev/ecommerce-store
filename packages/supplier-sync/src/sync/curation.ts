@@ -35,6 +35,9 @@ export async function ensureCuratedCategory(
   return created.id;
 }
 
+/** Where curated category pictures live (apps/web/public/images/categories). */
+const CURATED_IMAGE_PREFIX = "/images/categories/";
+
 /** The curated slug a supplier category belongs to, if any. */
 export function curatedSlugFor(tree: readonly CuratedCategory[], supplierCategoryId: number): string | undefined {
   return tree.find((category) => category.supplierCategoryIds?.includes(supplierCategoryId))?.slug;
@@ -102,16 +105,33 @@ export async function applyCategoryTree(
           bySlug.delete(entry.slug);
           bySlug.set(freed, { ...holder, slug: freed });
         }
+        // The curated picture replaces nothing an admin chose; the intro fills only an empty one.
+        const image =
+          entry.image && (!category.image || category.image.startsWith(CURATED_IMAGE_PREFIX))
+            ? entry.image
+            : category.image;
+        const description = category.description || entry.description || null;
         const changed =
           category.name !== entry.name ||
           category.slug !== entry.slug ||
           category.parentId !== parentId ||
           category.sortOrder !== index ||
-          category.deletedAt !== null;
+          category.deletedAt !== null ||
+          category.image !== image ||
+          category.description !== description;
         if (changed) {
           await tx
             .update(categories)
-            .set({ name: entry.name, slug: entry.slug, parentId, sortOrder: index, deletedAt: null, updatedAt: now })
+            .set({
+              name: entry.name,
+              slug: entry.slug,
+              parentId,
+              sortOrder: index,
+              image,
+              description,
+              deletedAt: null,
+              updatedAt: now,
+            })
             .where(eq(categories.id, category.id));
           result.updated += 1;
         }
@@ -121,7 +141,14 @@ export async function applyCategoryTree(
       } else {
         const [created] = await tx
           .insert(categories)
-          .values({ name: entry.name, slug: entry.slug, parentId, sortOrder: index })
+          .values({
+            name: entry.name,
+            slug: entry.slug,
+            parentId,
+            sortOrder: index,
+            image: entry.image ?? null,
+            description: entry.description ?? null,
+          })
           .returning();
         if (!created) throw new Error(`Could not create category ${entry.slug}`);
         bySlug.set(entry.slug, created);
