@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import { categories } from "../tables/categories";
+import { categoryFaqs } from "../tables/category-faqs";
 import { products } from "../tables/products";
 
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
@@ -10,4 +11,5 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   }),
   children: many(categories, { relationName: "parentChild" }),
   products: many(products),
+  faq: one(categoryFaqs, { fields: [categories.id], references: [categoryFaqs.categoryId] }),
 }));

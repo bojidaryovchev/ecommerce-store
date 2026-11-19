@@ -113,6 +113,20 @@
       "when": 1795031480066,
       "tag": "0015_review_stage",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1795093636176,
+      "tag": "0016_category_faq",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795094582407,
+      "tag": "0017_stock_alert",
+      "breakpoints": true
     }
   ]
 }
