@@ -15,6 +15,16 @@ import React from "react";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
+/** A guide's date as the Article markup wants it, with a time and offset: midnight in Sofia ("2026-11-18T00:00:00+02:00"). */
+function sofiaMidnight(date: string): string {
+  const offset =
+    new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Sofia", timeZoneName: "longOffset" })
+      .formatToParts(new Date(`${date}T12:00:00Z`))
+      .find((part) => part.type === "timeZoneName")
+      ?.value.replace("GMT", "") || "+02:00";
+  return `${date}T00:00:00${offset}`;
+}
+
 export function generateStaticParams() {
   return GUIDES.map((guide) => ({ slug: guide.slug }));
 }
@@ -74,8 +84,8 @@ const GuidePage: React.FC<Props> = async ({ params }) => {
           description: text.excerpt,
           image: `${SITE_URL}${guide.image}`,
           inLanguage: locale,
-          datePublished: guide.published,
-          dateModified: guide.updated,
+          datePublished: sofiaMidnight(guide.published),
+          dateModified: sofiaMidnight(guide.updated),
           author: { "@type": "Organization", name: tMeta("siteTitle"), url: SITE_URL },
           publisher: { "@type": "Organization", name: tMeta("siteTitle"), logo: `${SITE_URL}/apple-icon.png` },
           mainEntityOfPage: `${SITE_URL}${locale === "en" ? "/en" : ""}${guideHref(guide.slug)}`,
