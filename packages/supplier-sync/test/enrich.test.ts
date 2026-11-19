@@ -28,6 +28,7 @@ import {
   normalizeSpecValue,
   toDeltaT50,
   validateResearch,
+  type SupplierAttributeValue,
 } from "../src/enrich/validate";
 
 /* --- Fixtures ------------------------------------------------------------------------------------------- */
@@ -463,6 +464,71 @@ const GOOD = {
     "Термопомпа въздух-вода Artel MHP 22RP24P3: трифазна моноблок система за отопление, охлаждане и топла вода на голяма къща.",
   description: ORIGINAL,
 };
+
+describe("figures nothing checks", () => {
+  const area = (value: string) => ({
+    slug: "suitable-for-sq",
+    name: "подходящ за (кв.)",
+    unit: null,
+    value,
+    numericValue: 0,
+  });
+  const heatingBtu = {
+    slug: "power-heating-btu",
+    name: "мощност отопление BTU",
+    unit: "BTU/h",
+    value: "26000 BTU/h",
+    numericValue: 26000,
+  };
+  const heatPump = (kw: number, extra: ResearchAnswer["specs"] = []) =>
+    answer({
+      specs: [
+        { key: "heatingKw", value: kw, condition: "A7/W35", source: "supplier_image", url: null, confidence: "high" },
+        ...extra,
+      ],
+    });
+  const validate = (research: ResearchAnswer, supplierAttributes: SupplierAttributeValue[], kind = research.kind) =>
+    validateResearch({ name: "Термопомпа Artel", kind, categorySlug: "monoblok", research, supplierAttributes });
+
+  it("drops the supplier's heating BTU on a heat pump: not a figure the shop checks for heat pumps", () => {
+    const result = validate(heatPump(16.3), [heatingBtu]);
+    expect(result.supersede).toContain("power-heating-btu");
+    expect(result.problems).toEqual([]);
+  });
+
+  it("drops an area the output cannot serve and keeps one it can (the supplier's fields are often another model's)", () => {
+    expect(validate(heatPump(16.3), [area("от 50 до 60 кв.м.")]).supersede).toContain("suitable-for-sq");
+    expect(validate(heatPump(4.65), [area("до 160 кв.")]).supersede).toContain("suitable-for-sq");
+    const fits = validate(heatPump(8.6), [area("до 125 кв.")]);
+    expect(fits.supersede).not.toContain("suitable-for-sq");
+    expect(fits.notices.join(" ")).not.toContain("m² per kW");
+  });
+
+  it("leaves out a researched area out of proportion with the output, without holding the product", () => {
+    const result = validate(
+      heatPump(16.3, [{ key: "areaM2", value: 60, condition: null, source: "web", url: null, confidence: "high" }]),
+      [],
+    );
+    expect(result.omit).toContain("areaM2");
+    expect(result.problems).toEqual([]);
+  });
+
+  it("keeps an air conditioner's area and colour, and a radiator's own output field, which their kinds stand for", () => {
+    const ac = validate(
+      answer({
+        kind: "air_conditioner",
+        specs: [
+          { key: "coolingKw", value: 3.5, condition: null, source: "supplier_image", url: null, confidence: "high" },
+        ],
+      }),
+      [area("от 25 до 35 кв.м."), { slug: "color", name: "цвят", unit: null, value: "Бял", numericValue: null }],
+    );
+    expect(ac.supersede).not.toContain("suitable-for-sq");
+    expect(ac.supersede).not.toContain("color");
+    const radiator = validate(answer({ kind: "radiator", specs: [] }), [POWER_17_6]);
+    expect(radiator.supersede).not.toContain("power-heating");
+  });
+});
 
 describe("the copy gate", () => {
   it("passes original copy", () => {

@@ -187,6 +187,29 @@ const NAME_TOLERANCE: Record<"kW" | "BTU/h" | "W", [number, number]> = {
   W: [0.8, 1.25],
 };
 
+/** The spec each of our attributes holds, for reading the supplier's fields. */
+const SPEC_KEY_BY_ATTRIBUTE = new Map<string, SpecKey>(
+  (Object.keys(SPEC_FIELDS) as SpecKey[]).map((key) => [SPEC_FIELDS[key].attribute, key]),
+);
+
+/**
+ * The floor area per kW an area claim can mean, by kind and the output it is set against. Heat pumps: the shop's
+ * own 35–100 W/m² (about 10–29 m² per kW), widened a little; air conditioners about 100 W/m²; stoves and boilers
+ * with the spread their makers' claims have (a 6 kW stove "for 100 m²").
+ */
+const AREA_PER_KW: Partial<Record<ProductKind, { per: SpecKey; band: [number, number] }>> = {
+  heat_pump: { per: "heatingKw", band: [8, 30] },
+  air_conditioner: { per: "coolingKw", band: [5, 15] },
+  pellet_stove: { per: "heatingKw", band: [4, 20] },
+  boiler: { per: "heatingKw", band: [4, 20] },
+};
+
+/** The upper figure of a range as written ("от 60 до 80 кв.м." → 80, "до 160 кв." → 160). */
+function upperFigure(text: string): number | null {
+  const figures = (text.match(/\d+(?:[.,]\d+)?/g) ?? []).map((figure) => Number(figure.replace(",", ".")));
+  return figures.length > 0 ? Math.max(...figures) : null;
+}
+
 /** Which specs a figure of this unit in the name speaks for, in order of preference. */
 const NAME_KEYS: Record<"kW" | "BTU/h" | "W", SpecKey[]> = {
   kW: ["heatingKw", "coolingKw"],
@@ -387,6 +410,28 @@ export function validateResearch(input: ValidateInput): ValidationResult {
     }
   }
 
+  // 3b. The supplier's figures of fields this kind does not have: nothing checks them, so they are not shown (a
+  // heating BTU on a heat pump was another model's). Not where a field of the kind takes their place when found
+  // (a radiator's output stands for the supplier's "power-heating").
+  if (config.research) {
+    const covered = new Set(
+      (Object.keys(config.fields) as SpecKey[]).flatMap((key) => [
+        SPEC_FIELDS[key].attribute,
+        ...((SPEC_FIELDS[key] as SpecField).supersedes ?? []),
+      ]),
+    );
+    for (const attribute of input.supplierAttributes) {
+      const key = SPEC_KEY_BY_ATTRIBUTE.get(attribute.slug);
+      // Figures only: a colour or a type of fuel says nothing that needs checking against the output.
+      if (key === undefined || SPEC_FIELDS[key].type !== "number") continue;
+      if (covered.has(attribute.slug) || supersede.has(attribute.slug)) continue;
+      supersede.add(attribute.slug);
+      notices.push(
+        `${SPEC_FIELDS[key].name}: the supplier's ${attribute.value} is not shown; it is not a figure of this kind.`,
+      );
+    }
+  }
+
   // 4. Fields the kind must have.
   for (const group of config.required) {
     if (!group.some((key) => accepted.has(key))) {
@@ -414,11 +459,27 @@ export function validateResearch(input: ValidateInput): ValidationResult {
       );
     }
   }
-  const area = value("areaM2");
-  if (area !== null && heating !== null && area / heating > 50) {
-    notices.push(
-      `${accepted.get("areaM2")!.text} for ${accepted.get("heatingKw")!.text} is over 50 m² per kW: check the area claim.`,
+  // The floor area a unit is said to serve, against its output: an area outside what that output can heat or cool
+  // is not shown, whoever gave it (the supplier's area fields are often another model's).
+  const areaRule = AREA_PER_KW[kind];
+  const output = areaRule ? value(areaRule.per) : null;
+  if (areaRule && output !== null && output > 0) {
+    const supplierArea = input.supplierAttributes.find(
+      (attribute) => attribute.slug === SPEC_FIELDS.areaM2.attribute && !supersede.has(attribute.slug),
     );
+    const found = accepted.get("areaM2");
+    const claimed = found?.numeric ?? (supplierArea ? upperFigure(supplierArea.value) : null);
+    if (claimed !== null) {
+      const perKw = claimed / output;
+      const [low, high] = areaRule.band;
+      if (perKw < low || perKw > high) {
+        notices.push(
+          `${found?.text ?? supplierArea!.value} for ${accepted.get(areaRule.per)!.text} is ${Math.round(perKw * 10) / 10} m² per kW, outside ${low}–${high}: the area is not shown.`,
+        );
+        if (found) omit.add("areaM2");
+        if (supplierArea) supersede.add(supplierArea.slug);
+      }
+    }
   }
 
   // 6. Identifiers.

@@ -22,7 +22,7 @@ export type ImageAssetRow = typeof schema.imageAssets.$inferSelect;
  */
 // validate 2: a radiator's output compared with the supplier's at its rating; designer-rail and section ranges.
 // rewrite 2: written around the searched phrases (keywords.ts). review 1: the second reader (catalog-review).
-export const STAGE_VERSIONS = { extract: 1, validate: 2, rewrite: 2, review: 1 } as const;
+export const STAGE_VERSIONS = { extract: 1, validate: 3, rewrite: 2, review: 1 } as const;
 
 /** What the supplier says about a product (or, for a product of our own, what we say). */
 export interface SourceFacts {
