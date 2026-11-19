@@ -18,7 +18,7 @@ import type { ValidatedSpec } from "./validate";
  */
 export const SECTION_NOTES: Record<string, string> = {
   termopompi:
-    'Sizing: by the home\'s heat loss, roughly 35 W/m² for a new well-insulated house, 60 W/m² for an insulated older one, 100 W/m² without insulation, about 20% more in the mountains, plus about 0.25 kW per person for hot water. Installing: an outdoor unit on a wall bracket or stand with free airflow, connected to radiators or underfloor heating; monoblock units carry the hydraulics outside, split units have an indoor hydraulic module; a separate electrical supply. Guides: "Каква термопомпа ми трябва?" and the heat pump power calculator.',
+    'Sizing: by the home\'s heat loss, roughly 35 W/m² for a new well-insulated house, 60 W/m² for an insulated older one, 100 W/m² without insulation, about 20% more in the mountains, plus about 0.25 kW per person for hot water. Installing: an outdoor unit on a wall bracket or stand with free airflow, connected to radiators or underfloor heating; monoblock units carry the hydraulics outside, split units have an indoor hydraulic module; a separate electrical supply. Guides: "Каква термопомпа въздух-вода ми трябва?" and the heat pump power calculator ("калкулатора за мощност на термопомпа").',
   klimatitsi:
     'Sizing: about 100 W/m² at a 2.6 m ceiling, more for sunny rooms, top floors and kitchens; 9,000 BTU suits roughly 20–25 m², 12,000 BTU 25–35 m². Installing: indoor and outdoor unit, the refrigerant line between them, a condensate drain and its own electrical line; inverter units heat efficiently too. Guides: "Колко BTU климатик ми трябва?" and the air conditioner calculator.',
   "peletni-kamini":

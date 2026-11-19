@@ -1,5 +1,6 @@
 "use client";
 
+import { LinkedText } from "@/components/common/linked-text";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -28,7 +29,7 @@ const ExpandableText: React.FC<{ text: string; className?: string }> = ({ text, 
           folded && "max-h-[22rem] overflow-hidden",
         )}
       >
-        {text}
+        <LinkedText text={text} />
         {folded && (
           <div
             aria-hidden

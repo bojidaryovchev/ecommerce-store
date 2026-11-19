@@ -1,3 +1,4 @@
+import { LinkedText } from "@/components/common/linked-text";
 import { routing } from "@/i18n/routing";
 import { getCategoryFaq } from "@/queries/categories";
 import { ChevronDown } from "lucide-react";
@@ -40,7 +41,9 @@ const CategoryFaq: React.FC<Props> = async ({ categoryId, categoryName }) => {
                 aria-hidden
               />
             </summary>
-            <p className="text-muted-foreground pb-5 leading-relaxed">{item.answer}</p>
+            <p className="text-muted-foreground pb-5 leading-relaxed">
+              <LinkedText text={item.answer} />
+            </p>
           </details>
         ))}
       </div>
