@@ -7,6 +7,7 @@ export { getFeaturedProducts } from "./get-featured-products.query";
 export { getProductById } from "./get-product-by-id.query";
 export { getProductBySlug } from "./get-product-by-slug.query";
 export { getProductsByCategoryId } from "./get-products-by-category-id.query";
+export { getProductsBySlugs } from "./get-products-by-slugs.query";
 export { getProducts } from "./get-products.query";
 export { getSearchSuggestions, type SearchSuggestions } from "./get-search-suggestions.query";
 export { getSeasonalProducts, type Season } from "./get-seasonal-products.query";

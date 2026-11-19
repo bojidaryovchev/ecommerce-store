@@ -149,5 +149,25 @@
     "title": "Product not found",
     "description": "The product you’re looking for doesn’t exist or has been removed.",
     "browseProducts": "Browse products"
+  },
+  "compare": {
+    "add": "Compare",
+    "remove": "Remove from the comparison",
+    "added": "Added to the comparison",
+    "removed": "Removed from the comparison",
+    "full": "You can compare up to {max} products at a time",
+    "tray": "Compare ({count})",
+    "clear": "Clear",
+    "title": "Compare products",
+    "lead": "The chosen products side by side. The rows where they differ are marked.",
+    "empty": "Pick at least two products with the “Compare” button in the catalogue or on a product page.",
+    "differs": "They differ",
+    "price": "Price",
+    "open": "View the product",
+    "removeColumn": "Remove",
+    "brand": "Brand",
+    "onlyDifferences": "Only the differences",
+    "all": "All characteristics",
+    "mixed": "These products are of different kinds, so they share few characteristics."
   }
 }

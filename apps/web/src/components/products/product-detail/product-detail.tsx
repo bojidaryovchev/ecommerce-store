@@ -18,6 +18,7 @@ import type { getProductBySlug } from "@/queries/products";
 import { ArrowRight, CreditCard, MessageCircleQuestion, ShieldCheck, Truck, Undo2, Wrench } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import React, { Suspense } from "react";
+import { CompareToggle } from "../compare/compare-toggle";
 import { EnergyLabel } from "../energy-label/energy-label";
 import { ExpandableText } from "./expandable-text";
 import { ProductAddToCart } from "./product-add-to-cart";
@@ -165,9 +166,19 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail, energyLabel })
                 stockQuantity={product.stockQuantity}
               />
             </div>
-            <Suspense fallback={null}>
-              <ProductWishlist productId={product.id} />
-            </Suspense>
+            <div className="flex flex-wrap gap-2 [&>*]:flex-1">
+              <Suspense fallback={null}>
+                <ProductWishlist productId={product.id} />
+              </Suspense>
+              <CompareToggle
+                item={{
+                  id: product.id,
+                  slug: product.slug ?? product.id,
+                  name: product.name,
+                  image: productPhotos(product)[0] ?? null,
+                }}
+              />
+            </div>
           </div>
 
           {system && (

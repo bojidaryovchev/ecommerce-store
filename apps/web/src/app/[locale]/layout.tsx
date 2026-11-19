@@ -1,4 +1,5 @@
 import { SiteFooter } from "@/components/common";
+import { CompareTray } from "@/components/products/compare/compare-tray";
 import Providers from "@/components/providers";
 import { routing } from "@/i18n/routing";
 import { SITE_INDEXABLE } from "@/lib/indexing";
@@ -46,6 +47,7 @@ const LocaleLayout: React.FC<Props> = async ({ children, params }) => {
     <Providers locale={locale}>
       {children}
       <SiteFooter />
+      <CompareTray />
     </Providers>
   );
 };

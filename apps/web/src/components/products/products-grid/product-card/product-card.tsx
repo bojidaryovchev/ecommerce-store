@@ -1,3 +1,4 @@
+import { CompareToggle } from "@/components/products/compare/compare-toggle";
 import { WishlistButton } from "@/components/products/wishlist-button";
 import { priceFormat } from "@/i18n/format";
 import { Link } from "@/i18n/navigation";
@@ -35,6 +36,10 @@ const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted 
     <div className="group bg-card hover:border-primary/20 has-[a:focus-visible]:ring-ring relative flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/5 has-[a:focus-visible]:ring-2">
       <div className="relative aspect-square bg-white">
         {isWishlisted !== undefined && <WishlistButton productId={product.id} isWishlisted={isWishlisted} />}
+        <CompareToggle
+          variant="icon"
+          item={{ id: product.id, slug: product.slug ?? product.id, name: product.name, image }}
+        />
         {image ? (
           <Image
             src={image}
