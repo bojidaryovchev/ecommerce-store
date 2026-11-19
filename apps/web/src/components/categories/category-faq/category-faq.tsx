@@ -31,8 +31,8 @@ const CategoryFaq: React.FC<Props> = async ({ categoryId, categoryName }) => {
         </h2>
       </div>
       <div className="divide-y rounded-2xl border">
-        {items.map((item) => (
-          <details key={item.question} className="group px-5 py-1 md:px-6">
+        {items.map((item, index) => (
+          <details key={`${index}-${item.question}`} className="group px-5 py-1 md:px-6">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-4 font-medium [&::-webkit-details-marker]:hidden">
               {item.question}
               <ChevronDown

@@ -1,6 +1,7 @@
 # Catalogue enrichment: research, validation, classification and copy for supplier products that are new or
 # changed since their last run (docs/enrichment.md). Nothing is published here: an admin approves on
-# /admin/enrichment.
+# /admin/enrichment. Then the category pages' questions: only categories with none yet or a draft sent back, so
+# usually nothing; questions the second reader passes are published (docs/enrichment.md, "Category questions").
 #
 # It runs on the owner's Claude subscription: `claude setup-token` (on the owner's machine) prints a
 # long-lived token, stored here as the secret CLAUDE_CODE_OAUTH_TOKEN. Without it the job says so in its
@@ -144,6 +145,25 @@ jobs:
           set -e
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
 
+      # Not when the run was for named products, nor when the CLI could not start or sign in.
+      - name: Category questions
+        id: faq
+        if: steps.config.outputs.ready == 'true' && steps.run.outputs.exit_code != '1' && inputs.slugs == ''
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ""
+          ENRICH_COPY_MODEL: ${{ vars.ENRICH_COPY_MODEL }}
+          APPLY: ${{ github.event_name != 'workflow_dispatch' || inputs.apply }}
+        run: |
+          args=(--faq --concurrency 2)
+          if [ "$APPLY" = "true" ]; then args+=(--apply); fi
+          set +e
+          pnpm --filter @ecommerce/supplier-sync enrich "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/faq.out"
+          code=${PIPESTATUS[0]}
+          set -e
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+
       - name: Summary
         if: always() && steps.run.outcome != 'skipped' && steps.config.outputs.ready == 'true'
         env:
@@ -155,10 +175,14 @@ jobs:
             echo '```'
             sed -n '/^Catalogue enrichment:/,$p' "$RUNNER_TEMP/enrich.out" | head -80
             echo '```'
+            if [ -f "$RUNNER_TEMP/faq.out" ]; then
+              echo
+              echo "Category questions: $(grep -o '"note": "[^"]*"' "$RUNNER_TEMP/faq.out" | tail -1 | cut -d'"' -f4)"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: "FAILED - stopped early (usage limit, or some sessions failed)"
-        if: steps.run.outputs.exit_code == '2'
+        if: steps.run.outputs.exit_code == '2' || steps.faq.outputs.exit_code == '2'
         run: |
           echo "::error title=Enrichment stopped early::A usage limit was reached or some sessions failed. Nothing was written for those products; the next run retries them."
           exit 1
