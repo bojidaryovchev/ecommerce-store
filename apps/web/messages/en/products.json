@@ -80,16 +80,15 @@
     "comparison": {
       "title": "Compared with the other models",
       "lead": "Where this model stands on its main specifications among the models in “{category}”.",
-      "higherThan": "Higher than {below} of {others, plural, one {# other model} other {# other models}}.",
+      "higherThan": "{others, plural, one {Higher than the other model.} other {Higher than {below} of the other # models.}}",
       "highest": "The highest value in the category.",
       "lowest": "The lowest value in the category.",
       "aria": "{name}: {value}, with values in the category from {min} to {max} {unit}"
     },
     "features": "Features",
     "drawings": {
-      "title": "Tables, diagrams and labels",
-      "lead": "The manufacturer's tables, diagrams and energy labels for this model.",
-      "open": "Open {number}",
+      "title": "Tables and diagrams",
+      "lead": "From the manufacturer's documentation. Some tables cover the whole range: look for this model's row.",
       "alt": "{name}: drawing or table {number}"
     },
     "energyLabel": {

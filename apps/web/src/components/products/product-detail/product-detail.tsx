@@ -43,6 +43,9 @@ interface Props {
   energyLabel?: EnergyLabelView | null;
 }
 
+/** A heading-case name inside a sentence: "Термопомпа въздух-вода" → "термопомпа въздух-вода". */
+const midSentence = (name: string) => name.charAt(0).toLocaleLowerCase() + name.slice(1);
+
 /** How many specifications the buy box shows; the rest are in the table below. */
 const KEY_SPECS = 4;
 const BUY_BUTTON_ID = "buy-box";
@@ -190,7 +193,7 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail, energyLabel })
                 <div>
                   <p className="font-semibold">{t("install.title")}</p>
                   <p className="text-muted-foreground mt-1 text-sm">
-                    {t("install.text", { system: tSystems(`${system}.title`) })}
+                    {t("install.text", { system: midSentence(tSystems(`${system}.title`)) })}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
                     <Link href={`/kontakti?tema=ogled&sistema=${system}`} className="text-heat hover:underline">

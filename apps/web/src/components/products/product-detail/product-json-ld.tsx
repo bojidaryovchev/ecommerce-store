@@ -32,10 +32,12 @@ interface Props {
 const LESS_THAN_ESCAPE = String.fromCharCode(92) + "u003c";
 const toScript = (data: unknown) => JSON.stringify(data).replaceAll("<", LESS_THAN_ESCAPE);
 
-/** Cut at a word, not in the middle of one. */
+/** At most `max` characters: whole sentences where they fit, else cut at a word with an ellipsis. */
 const clip = (text: string, max: number) => {
   if (text.length <= max) return text;
   const cut = text.slice(0, max);
+  const sentence = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf(".\n"));
+  if (sentence > max * 0.5) return cut.slice(0, sentence + 1);
   return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), max - 40)).trimEnd()}…`;
 };
 

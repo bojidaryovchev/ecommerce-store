@@ -27,10 +27,15 @@ const ProductDrawings: React.FC<{ images: string[]; name: string }> = ({ images,
             <button
               type="button"
               onClick={() => setOpen(index)}
-              aria-label={t("open", { number: index + 1 })}
               className="hover:border-primary/40 focus-visible:ring-ring relative block aspect-[4/3] w-full overflow-hidden rounded-xl border bg-white transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
-              <Image src={url} alt="" fill sizes="(min-width: 640px) 160px, 33vw" className="object-contain p-2" />
+              <Image
+                src={url}
+                alt={t("alt", { name, number: index + 1 })}
+                fill
+                sizes="(min-width: 640px) 160px, 33vw"
+                className="object-contain p-2"
+              />
             </button>
           </li>
         ))}
