@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FaqItem } from "../src/enrich/contract";
-import { checkFaqAnswer, needsFaqWork, searchesFor, summarizeSpecs } from "../src/enrich/faq";
+import { checkFaqAnswer, factsHash, needsFaqWork, searchesFor, summarizeSpecs } from "../src/enrich/faq";
 
 const item = (overrides: Partial<FaqItem> = {}): FaqItem => ({
   slug: "termopompi",
@@ -146,5 +146,33 @@ describe("needsFaqWork", () => {
     expect(needsFaqWork(row("held"), false)).toBe(false);
     expect(needsFaqWork(row("published"), true)).toBe(true);
     expect(needsFaqWork(row("published", "admin"), true)).toBe(false);
+  });
+});
+
+describe("keeping published text current", () => {
+  const facts = (power: string, count: number) => ({
+    subcategories: ["Термопомпи моноблок"],
+    facts: {
+      products: count,
+      brands: [{ name: "Artel", products: count }],
+      specs: [{ name: "Мощност отопление", summary: `${power} (${count} of ${count} products)` }],
+    },
+  });
+
+  it("sees a new range or brand, not a new count", () => {
+    expect(factsHash(facts("4–16 kW", 10))).toBe(factsHash(facts("4–16 kW", 12)));
+    expect(factsHash(facts("4–16 kW", 10))).not.toBe(factsHash(facts("4–30,1 kW", 10)));
+  });
+
+  it("brings published text up to date when its facts changed, once they were recorded", () => {
+    const published = (hash: string | null) =>
+      ({ status: "published", source: "generated", intro: null, factsHash: hash }) as Parameters<
+        typeof needsFaqWork
+      >[0];
+    expect(needsFaqWork(published("old"), false, false, "new")).toBe(true);
+    expect(needsFaqWork(published("same"), false, false, "same")).toBe(false);
+    expect(needsFaqWork(published(null), false, false, "new")).toBe(false);
+    const admins = { status: "published", source: "admin", factsHash: "old" } as Parameters<typeof needsFaqWork>[0];
+    expect(needsFaqWork(admins, false, false, "new")).toBe(false);
   });
 });

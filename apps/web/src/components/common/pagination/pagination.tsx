@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { routing } from "@/i18n/routing";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import NextLink from "next/link";
@@ -44,13 +45,23 @@ function getPageNumbers(page: number, pageCount: number): (number | "ellipsis")[
 }
 
 /**
+ * The page's own path. The default language's pages have no prefix in their URLs ("as-needed"), but the path a
+ * page renders under carries it ("/bg/liri-za-banya"): linked as it is, each page link would answer a redirect.
+ */
+function publicPath(pathname: string): string {
+  const prefix = `/${routing.defaultLocale}`;
+  if (pathname === prefix) return "/";
+  return pathname.startsWith(`${prefix}/`) ? pathname.slice(prefix.length) : pathname;
+}
+
+/**
  * Page links, real `<a href>`s so crawlers reach every page of a listing (and people can open one in a
- * new tab). The query is kept, only `page` changes; the path stays the current one, so storefront URLs
- * keep their locale prefix and the admin, outside the locale routing, works too.
+ * new tab). The query is kept, only `page` changes; the path stays the current one, so English URLs keep
+ * their /en prefix and the admin, outside the locale routing, works too.
  */
 const Pagination: React.FC<PaginationProps> = ({ page, pageCount }) => {
   const t = useTranslations("common.pagination");
-  const pathname = usePathname();
+  const pathname = publicPath(usePathname());
   const searchParams = useSearchParams();
 
   if (pageCount <= 1) {

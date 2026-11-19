@@ -1,0 +1,1 @@
+ALTER TABLE "category_faq" ADD COLUMN "facts_hash" text;

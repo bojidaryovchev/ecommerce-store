@@ -29,6 +29,8 @@ export const categoryFaqs = pgTable("category_faq", {
    */
   intro: text("intro"),
   metaDescription: text("meta_description"),
+  /** The catalogue facts the published text was written from (brands, ranges): when they change, it is updated. */
+  factsHash: text("facts_hash"),
   draft: jsonb("draft").$type<CategoryFaqItem[] | null>(),
   status: text("status").$type<CategoryFaqStatus>().notNull(),
   /** The second reader's notes on the last draft. */

@@ -1,6 +1,7 @@
 import type { CategoryFaqItem, CategoryFaqStatus } from "@ecommerce/database/schema";
 import * as schema from "@ecommerce/database/schema";
 import { eq, inArray, isNull, ne } from "drizzle-orm";
+import { createHash } from "node:crypto";
 import { rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
@@ -63,6 +64,27 @@ export const FAQ_MIN_PRODUCTS = 8;
 
 /** A category without a description of its own gets an introduction and a meta description from this many on. */
 export const FAQ_MIN_INTRO_PRODUCTS = 3;
+
+const FACTS_CHANGED =
+  "The catalogue changed since these were written: correct every figure or brand that no longer matches `facts`, and keep the rest as it is.";
+
+/**
+ * What the published text rests on, as a hash: the brands and the ranges or values of the specifications, not
+ * how many products have them (the text states no counts). When it changes, the text is brought up to date.
+ */
+export function factsHash(item: Pick<FaqItem, "facts" | "subcategories">): string {
+  const uncounted = (summary: string) =>
+    summary
+      .replace(/;?\s*\(?\d+ of \d+ products\)?/g, "")
+      .replace(/\s*\(\d+\)/g, "")
+      .trim();
+  const basis = {
+    brands: item.facts.brands.map((brand) => brand.name).sort(),
+    specs: item.facts.specs.map((spec) => `${spec.name}: ${uncounted(spec.summary)}`).sort(),
+    subcategories: [...item.subcategories].sort(),
+  };
+  return createHash("sha256").update(JSON.stringify(basis)).digest("hex").slice(0, 16);
+}
 
 const KEEP_QUESTIONS =
   "Keep these questions and answers as they are unless one of them is wrong; write the introduction and the meta description.";
@@ -393,11 +415,18 @@ async function loadFaqRows(db: Database): Promise<Map<string, FaqRow>> {
 }
 
 /** Whether a category's questions are to be written this run: also published ones still missing their introduction. */
-export function needsFaqWork(row: FaqRow | undefined, force: boolean, writeIntro = false): boolean {
+export function needsFaqWork(
+  row: FaqRow | undefined,
+  force: boolean,
+  writeIntro = false,
+  facts: string | null = null,
+): boolean {
   if (!row) return true;
   if (row.source === "admin") return false;
   if (row.status === "revise") return true;
   if (writeIntro && row.status === "published" && !row.intro) return true;
+  // The catalogue's brands or ranges changed under published text: bring its figures up to date.
+  if (row.status === "published" && row.factsHash && facts && row.factsHash !== facts) return true;
   return force;
 }
 
@@ -406,7 +435,7 @@ async function saveFaq(
   db: Database,
   categoryId: string,
   values: { status: CategoryFaqStatus } & Partial<
-    Pick<FaqRow, "items" | "intro" | "metaDescription" | "draft" | "notes" | "attempts" | "model">
+    Pick<FaqRow, "items" | "intro" | "metaDescription" | "factsHash" | "draft" | "notes" | "attempts" | "model">
   >,
 ): Promise<void> {
   await db
@@ -476,12 +505,25 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
   const log = options.logger;
   const contexts = await loadFaqContexts(options.db);
   let rows = await loadFaqRows(options.db);
+  const hashes = new Map(contexts.map((context) => [context.id, factsHash(context.item)]));
+  if (options.apply) {
+    // Text published before the facts were recorded is taken as current: record them, so a later change shows.
+    for (const context of contexts) {
+      const row = rows.get(context.id);
+      if (row?.status !== "published" || row.source === "admin" || row.factsHash) continue;
+      await options.db
+        .update(schema.categoryFaqs)
+        .set({ factsHash: hashes.get(context.id)! })
+        .where(eq(schema.categoryFaqs.categoryId, context.id));
+    }
+    rows = await loadFaqRows(options.db);
+  }
   const wanted =
     options.slugs && options.slugs.length > 0
       ? contexts.filter((context) => options.slugs!.includes(context.slug))
       : contexts;
   const planned = wanted.filter((context) =>
-    needsFaqWork(rows.get(context.id), options.force ?? false, context.item.writeIntro),
+    needsFaqWork(rows.get(context.id), options.force ?? false, context.item.writeIntro, hashes.get(context.id) ?? null),
   );
   const result: FaqResult = {
     planned: planned.map((context) => context.slug),
@@ -513,7 +555,9 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
           ? { questions: row.draft, notes: (row.notes ?? "").split("\n").filter(Boolean) }
           : row?.status === "published" && context.item.writeIntro && !row.intro && !options.force
             ? { questions: row.items, notes: [KEEP_QUESTIONS] }
-            : null;
+            : row?.status === "published" && !options.force && row.factsHash && row.factsHash !== hashes.get(context.id)
+              ? { questions: row.items, intro: row.intro, metaDescription: row.metaDescription, notes: [FACTS_CHANGED] }
+              : null;
       return { context, attempts: options.force ? 0 : (row?.attempts ?? 0), previous };
     });
 
@@ -591,6 +635,7 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
                 items: answer.questions,
                 intro: entry.context.item.writeIntro ? (answer.intro?.trim() ?? null) : null,
                 metaDescription: entry.context.item.writeIntro ? (answer.metaDescription?.trim() ?? null) : null,
+                factsHash: hashes.get(entry.context.id) ?? null,
                 draft: null,
                 notes: null,
                 attempts: 0,

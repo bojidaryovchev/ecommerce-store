@@ -126,6 +126,8 @@ The category pages end with "Въпроси и отговори" (Bulgarian page
 - **What gets published:** only passed questions. Three drafts without a pass, or a held draft, wait for the
   admin. The admin's own questions (written on the category's admin page) are never rewritten.
 - **Running it again:** a run only writes categories with no questions yet and drafts that were sent back.
+  Published text records the facts it was written from (brands and ranges, not counts, `factsHash`). When they
+  change, the next run brings the figures up to date and keeps the rest.
   `--force` writes the published, held and failed ones again; add `--slug` to limit it.
 
 ## Running it
