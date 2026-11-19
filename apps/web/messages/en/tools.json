@@ -32,7 +32,8 @@
     "people": "People in the household",
     "heatLoss": "Power needed for heating",
     "waterAdd": "Allowance for hot water",
-    "recommended": "Recommended heat pump power"
+    "recommended": "Recommended heat pump power",
+    "metaDescription": "Work out the air-to-water heat pump output your home needs from its floor area, insulation and climate, with an allowance for hot water, and see the models that fit."
   },
   "klimatik": {
     "title": "Air conditioner power",
@@ -44,7 +45,8 @@
     "kitchen": "Kitchen or many appliances",
     "people": "People usually in the room",
     "need": "Cooling power needed",
-    "recommended": "Recommended air conditioner"
+    "recommended": "Recommended air conditioner",
+    "metaDescription": "Work out how many BTU your air conditioner needs from the room's area and height, the sun, the floor and the number of people, and see the models that fit."
   },
   "radiatori": {
     "title": "Radiators for a room",
@@ -70,7 +72,8 @@
       "11": "Type 11",
       "22": "Type 22",
       "33": "Type 33"
-    }
+    },
+    "metaDescription": "Work out the heat output a room's radiators need from its area, height and insulation, and how long a panel radiator to choose."
   },
   "units": {
     "m2": "m²",

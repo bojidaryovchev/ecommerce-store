@@ -20,7 +20,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: "tools" });
   return {
     title: t(`${tool}.title`),
-    description: t(`${tool}.short`),
+    // A whole sentence for the search result; `short` is the card's label.
+    description: t(`${tool}.metaDescription`),
     alternates: localizedAlternates(`/kalkulatori/${tool}`, locale),
   };
 }
