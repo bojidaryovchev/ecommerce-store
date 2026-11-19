@@ -218,6 +218,11 @@ describe.skipIf(!isLocal)("category questions (integration)", () => {
     const forced = await run(revising.generate, { force: true });
     expect(forced.failed).toEqual(["termopompi"]);
     expect(revising.writes).toHaveLength(3);
+    // Forced, the held draft is fixed from the reader's notes rather than written from nothing.
+    expect(revising.writes[0]!.categories[0]!.previous).toEqual({
+      questions: questions("Термопомпи", 5),
+      notes: ["The facts are too thin to answer the sizing question."],
+    });
     expect(await faqOf(root.id)).toMatchObject({ status: "failed", attempts: 3, notes: "Still vague." });
     expect((await faqOf(section.id))!.source).toBe("admin");
   });

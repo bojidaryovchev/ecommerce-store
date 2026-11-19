@@ -462,8 +462,10 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
   const runBatch = async (batch: FaqContext[]): Promise<void> => {
     let pending: Pending[] = batch.map((context) => {
       const row = rows.get(context.id);
+      // A draft that did not pass (sent back, held or given up on) is fixed from the reader's notes, even when
+      // forced; only published questions are written afresh.
       const previous =
-        row?.status === "revise" && row.draft && !options.force
+        row && row.status !== "published" && row.draft
           ? { questions: row.draft, notes: (row.notes ?? "").split("\n").filter(Boolean) }
           : null;
       return { context, attempts: options.force ? 0 : (row?.attempts ?? 0), previous };
