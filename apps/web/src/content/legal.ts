@@ -382,6 +382,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
             "при поръчка: име, имейл, телефон, адрес за доставка и съдържанието на поръчката",
             "при профил: име и имейл, а при вход с имейл и парола и криптиран отпечатък на паролата (самата парола не пазим)",
             "при запитване или писмо до нас: данните и съдържанието на съобщението, включително прикачени файлове",
+            "при заявка за известие за наличност: имейлът ви и продуктът, за който питате",
             "технически: бисквитките, описани в „Политика за бисквитките“",
             "статистика на посещенията: отворената страница, откъде сте дошли, приблизително местоположение (държава и град), вид устройство, операционна система и браузър. Без бисквитки, без да пазим IP адреса ви и без връзка с профила или поръчките ви",
           ],
@@ -389,7 +390,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
         {
           heading: "Защо и на какво основание",
           paragraphs: [
-            "За да изпълним поръчката или монтажа (договор), да водим счетоводство и да издаваме документи (законово задължение), да отговорим на запитванията ви и да пазим магазина от злоупотреби (легитимен интерес). Статистиката на посещенията ни показва кои страници се ползват и къде магазинът трябва да стане по-удобен (легитимен интерес). Данните на платежните карти обработва само Stripe.",
+            "За да изпълним поръчката или монтажа (договор), да водим счетоводство и да издаваме документи (законово задължение), да отговорим на запитванията ви и да пазим магазина от злоупотреби (легитимен интерес). Статистиката на посещенията ни показва кои страници се ползват и къде магазинът трябва да стане по-удобен (легитимен интерес). Известието за наличност изпращаме с ваше съгласие, което можете да оттеглите по всяко време с бутона на страницата на продукта или с писмо до нас. Данните на платежните карти обработва само Stripe.",
           ],
         },
         {
@@ -412,7 +413,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
         {
           heading: "Колко време ги пазим",
           paragraphs: [
-            "Данните за поръчките и счетоводните документи пазим толкова, колкото изисква Законът за счетоводството. Кореспонденцията пазим, докато е нужна за отговор и за евентуални рекламации. За статистиката посетителят се разпознава най-много 24 часа; след това остават само обобщени числа.",
+            "Данните за поръчките и счетоводните документи пазим толкова, колкото изисква Законът за счетоводството. Кореспонденцията пазим, докато е нужна за отговор и за евентуални рекламации. За статистиката посетителят се разпознава най-много 24 часа; след това остават само обобщени числа. Заявката за известие за наличност изтриваме, щом изпратим писмото или я оттеглите, а най-късно след 6 месеца.",
           ],
         },
         {
@@ -435,6 +436,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
             "for an order: name, email, phone, delivery address and the order contents",
             "for an account: name and email, and for email-and-password sign-in a one-way hash of the password (never the password itself)",
             "for an enquiry or an email to us: your details and the message, including attachments",
+            "for a stock alert: your email and the product you asked about",
             "technical: the cookies described in the Cookie policy",
             "visit statistics: the page opened, where you came from, approximate location (country and city), device type, operating system and browser. No cookies, your IP address is not kept, and nothing ties it to your account or orders",
           ],
@@ -442,7 +444,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
         {
           heading: "Why, and on what basis",
           paragraphs: [
-            "To fulfil the order or installation (contract), to keep accounts and issue documents (legal obligation), and to answer you and protect the shop from abuse (legitimate interest). Visit statistics show us which pages are used and where the shop needs to work better (legitimate interest). Card data is processed only by Stripe.",
+            "To fulfil the order or installation (contract), to keep accounts and issue documents (legal obligation), and to answer you and protect the shop from abuse (legitimate interest). Visit statistics show us which pages are used and where the shop needs to work better (legitimate interest). A stock alert is sent with your consent, which you can withdraw at any time with the button on the product page or by email. Card data is processed only by Stripe.",
           ],
         },
         {
@@ -465,7 +467,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
         {
           heading: "How long we keep it",
           paragraphs: [
-            "Order data and accounting documents for as long as the Accountancy Act requires; correspondence for as long as needed to answer and handle any complaints. For visit statistics a visitor is recognised for at most 24 hours; after that only totals remain.",
+            "Order data and accounting documents for as long as the Accountancy Act requires; correspondence for as long as needed to answer and handle any complaints. For visit statistics a visitor is recognised for at most 24 hours; after that only totals remain. A stock alert is deleted once its email is sent or you withdraw it, and after 6 months at the latest.",
           ],
         },
         {

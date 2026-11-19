@@ -1,4 +1,5 @@
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { sendStockAlerts } from "@/lib/stock-alerts";
 import { db } from "@ecommerce/database";
 import { runSupplierSync, type SyncMode, type SyncRunResult, type SyncTrigger } from "@ecommerce/supplier-sync";
 import { revalidateTag, updateTag } from "next/cache";
@@ -38,5 +39,12 @@ export async function syncSupplierCatalog(options: {
     categoriesChanged: result.categoriesChanged,
     immediate: options.immediate,
   });
+  // Stock changes with the sync: tell whoever asked about a product that is back. Never fails the sync.
+  try {
+    const alerts = await sendStockAlerts();
+    if (alerts.sent + alerts.failed + alerts.expired > 0) console.log("[stock-alerts]", alerts);
+  } catch (error) {
+    console.error("[stock-alerts] Could not send the stock alerts:", error);
+  }
   return result;
 }

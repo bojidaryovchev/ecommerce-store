@@ -74,5 +74,14 @@
       "reset": "New password",
       "ignore": "If it was not you, there is nothing to do."
     }
+  },
+  "stockAlert": {
+    "subject": "Back in stock: {product}",
+    "preview": "{product} is back in stock.",
+    "title": "The product is back in stock",
+    "text": "{product}, which you asked us to tell you about, is back in stock.",
+    "price": "Price with VAT: {price}",
+    "open": "View the product",
+    "why": "You are receiving this because you asked for an alert on the product page. It is the only email for that request: your address has been deleted from it."
   }
 }

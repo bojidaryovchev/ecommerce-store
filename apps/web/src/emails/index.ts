@@ -1,3 +1,5 @@
+export { BackInStockEmail } from "./back-in-stock";
+export type { BackInStockEmailProps } from "./back-in-stock";
 export { OrderConfirmationEmail } from "./order-confirmation";
 export type { OrderConfirmationEmailProps } from "./order-confirmation";
 export { OrderShippedEmail } from "./order-shipped";

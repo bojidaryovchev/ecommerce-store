@@ -28,7 +28,7 @@ async function sendEmail({ to, subject, react }: SendEmailOptions) {
   const resend = getResendClient();
 
   if (!resend) {
-    console.warn(`[email] Skipping email to ${to} — RESEND_API_KEY not set`);
+    console.warn(`[email] Skipping "${subject}" — RESEND_API_KEY not set`);
     return null;
   }
 
@@ -45,7 +45,8 @@ async function sendEmail({ to, subject, react }: SendEmailOptions) {
       return null;
     }
 
-    console.log(`[email] Sent "${subject}" to ${to} (id: ${data?.id})`);
+    // The id finds it in Resend; the address stays out of the logs.
+    console.log(`[email] Sent "${subject}" (id: ${data?.id})`);
     return data;
   } catch (err) {
     console.error("[email] Unexpected error:", err);

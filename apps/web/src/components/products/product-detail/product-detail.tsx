@@ -31,6 +31,7 @@ import { ReviewSection } from "./review-section";
 import { SimilarProducts } from "./similar-products";
 import { SpecComparison } from "./spec-comparison";
 import { StickyBuyBar } from "./sticky-buy-bar";
+import { StockAlertForm } from "./stock-alert-form";
 
 type Product = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
 
@@ -166,6 +167,7 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail, energyLabel })
                 stockQuantity={product.stockQuantity}
               />
             </div>
+            {outOfStock && product.active && <StockAlertForm productId={product.id} />}
             <div className="flex flex-wrap gap-2 [&>*]:flex-1">
               <Suspense fallback={null}>
                 <ProductWishlist productId={product.id} />

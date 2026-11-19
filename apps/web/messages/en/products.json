@@ -98,6 +98,27 @@
       "heating": "Heating",
       "cooling": "Cooling",
       "fiche": "Product fiche"
+    },
+    "stockAlert": {
+      "title": "Tell me when it is back",
+      "text": "We will email you once, as soon as the product is back in stock. That one email and nothing else.",
+      "email": "Email",
+      "consent": "I agree to receive one email when the product is back, under the",
+      "consentLink": "privacy policy",
+      "submit": "Notify me",
+      "sending": "Saving…",
+      "done": "Done. We will email {email} as soon as the product is back.",
+      "cancel": "Cancel the alert",
+      "cancelled": "The alert is cancelled and your email deleted.",
+      "errors": {
+        "email": "Enter a valid email address.",
+        "consent": "We need your consent to email you.",
+        "tooFast": "Please try again in a moment.",
+        "unavailable": "This product is no longer offered.",
+        "inStock": "The product is in stock already: you can order it.",
+        "tooMany": "This email already has many alerts. Cancel one or write to us.",
+        "failed": "Something went wrong. Please try again or write to us."
+      }
     }
   },
   "productAddToCart": {
