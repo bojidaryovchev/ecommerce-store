@@ -18,7 +18,7 @@ const AdminEnrichmentPage: React.FC<Props> = async ({ searchParams }) => {
   const params = await searchParams;
   const tab = (ENRICHMENT_TABS as readonly string[]).includes(params.tab ?? "")
     ? (params.tab as EnrichmentTab)
-    : "review";
+    : "attention";
   const page = Math.max(1, Number(params.page) || 1);
   const query = params.q ?? "";
 

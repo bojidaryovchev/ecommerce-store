@@ -11,7 +11,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type { ResearchAnswer } from "../src/enrich/contract";
-import { approveAllReady, approveEnrichment, rejectEnrichment } from "../src/enrich/publish";
+import { approveAllReady, approveEnrichment, rejectEnrichment, saveAdminFacts } from "../src/enrich/publish";
 import { loadEnrichState } from "../src/enrich/state";
 import { markPending, proposalHash, saveStage, syncReviewFlag } from "../src/enrich/store";
 import { validateResearch } from "../src/enrich/validate";
@@ -282,6 +282,33 @@ describe.skipIf(!isLocal)("publishing enrichment (integration)", () => {
     await rejectEnrichment(db, flagged.product.id, null, now);
     expect((await stageOf(flagged.product.id, "publish"))!.status).toBe("rejected");
     expect((await queue())[0]!.status).toBe("dismissed");
+  });
+
+  it("saves an admin's value in place of the supplier's, locks the attributes, and refuses a bad one", async () => {
+    const { product } = await seed("admin-facts", { flagged: true });
+    expect(
+      (await saveAdminFacts(db, product.id, [{ key: "heatingKw", value: "много" }], now)).errors.map((e) => e.key),
+    ).toEqual(["heatingKw"]);
+
+    const result = await saveAdminFacts(db, product.id, [{ key: "heatingKw", value: "4,65" }], now);
+    expect(result).toMatchObject({ saved: ["heatingKw"], errors: [] });
+    const after = await db.query.products.findFirst({
+      where: eq(schema.products.id, product.id),
+      with: { attributeValues: { with: { attribute: true } } },
+    });
+    // The supplier's contested 17.6 kW is gone; the admin's value is a manual row the sync leaves alone.
+    expect(after!.attributeValues.map((v) => `${v.attribute.slug}=${v.value}:${v.source}`).sort()).toEqual([
+      "color=Бял:supplier",
+      "power-heating=4,65 kW:manual",
+    ]);
+    expect(after!.lockedFields).toContain("attributes");
+
+    // An empty value takes it back out.
+    await saveAdminFacts(db, product.id, [{ key: "heatingKw", value: "" }], now);
+    const cleared = await db.query.productAttributeValues.findMany({
+      where: eq(schema.productAttributeValues.productId, product.id),
+    });
+    expect(cleared.map((row) => row.source)).toEqual(["supplier"]);
   });
 
   it("asks again when the proposal changes after approval", async () => {

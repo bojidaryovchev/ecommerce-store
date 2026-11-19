@@ -13,12 +13,22 @@ import { ApproveAllButton } from "./approve-all-button";
 import { StageBadges } from "./stage-badges";
 
 const TAB_LABELS: Record<EnrichmentTab, string> = {
-  review: "Needs review",
-  ready: "Ready to approve",
+  attention: "Needs attention",
+  missing: "Missing details",
+  ready: "Ready to publish",
   approved: "Published",
-  failed: "Failed",
-  waiting: "Not done yet",
+  hidden: "Hidden",
+  waiting: "In progress",
   all: "All",
+};
+
+/** What each view is for, under the filters. */
+const TAB_HINTS: Partial<Record<EnrichmentTab, string>> = {
+  attention:
+    "Not in the shop with its own text yet. Open one to fill in what is missing, or hide it from the shop. Values you fill in are written into the copy on the next enrichment run.",
+  missing:
+    "Characteristics nobody could find, or that the supplier and the research disagree on. Published products are here too: they are live without these figures.",
+  hidden: "Taken out of the shop: not listed, not sold and not indexed. Their page says the product is unavailable.",
 };
 
 const STAGE_ORDER = ["extract", "validate", "classify", "rewrite", "review", "publish"] as const;
@@ -80,6 +90,8 @@ const EnrichmentList: React.FC<{ tab: EnrichmentTab; page: number; query: string
           ))}
         </nav>
 
+        {TAB_HINTS[tab] && <p className="text-muted-foreground max-w-3xl text-sm">{TAB_HINTS[tab]}</p>}
+
         <form action="/admin/enrichment" className="max-w-sm">
           <input type="hidden" name="tab" value={tab} />
           <Input name="q" defaultValue={query} placeholder="Search by name or slug" aria-label="Search products" />
@@ -94,33 +106,42 @@ const EnrichmentList: React.FC<{ tab: EnrichmentTab; page: number; query: string
             <TableHeader>
               <TableRow>
                 <TableHead>PRODUCT</TableHead>
+                <TableHead>WHAT TO DEAL WITH</TableHead>
                 <TableHead>GATES</TableHead>
-                <TableHead>PROBLEMS</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {list.rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="max-w-md whitespace-normal">
+                  <TableCell className="max-w-sm whitespace-normal">
                     <Link href={`/admin/enrichment/${row.id}`} className="font-medium hover:underline">
                       {row.name}
                     </Link>
-                    <p className="text-muted-foreground text-xs">
+                    <p className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5 text-xs">
                       {row.category ?? "No category"}
-                      {!row.active && " · unpublished"}
+                      {row.published && (
+                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                          Live
+                        </Badge>
+                      )}
+                      {!row.active && (
+                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                          Hidden
+                        </Badge>
+                      )}
                     </p>
+                  </TableCell>
+                  <TableCell className="max-w-md text-sm whitespace-normal">
+                    {row.reason ? (
+                      <span className={row.reason.startsWith("Missing") ? "text-amber-900 dark:text-amber-200" : ""}>
+                        {row.reason}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">–</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <StageBadges stages={row.stages} />
-                  </TableCell>
-                  <TableCell>
-                    {row.problems > 0 ? (
-                      <Badge variant="outline" className="border-amber-600/40 text-amber-900 dark:text-amber-200">
-                        {row.problems}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">–</span>
-                    )}
                   </TableCell>
                 </TableRow>
               ))}

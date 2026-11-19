@@ -35,7 +35,10 @@ export const CONFIDENCES = ["high", "medium", "low"] as const;
 export type Confidence = (typeof CONFIDENCES)[number];
 
 /** Where a value came from: the supplier's text, their attribute fields, their images, or a web page. */
-export const SPEC_SOURCES = ["supplier_text", "supplier_attribute", "supplier_image", "web"] as const;
+/** Where the research may say a figure came from. */
+export const RESEARCH_SPEC_SOURCES = ["supplier_text", "supplier_attribute", "supplier_image", "web"] as const;
+/** …and "admin": a value a person typed in on the admin page, which outranks every other source. */
+export const SPEC_SOURCES = [...RESEARCH_SPEC_SOURCES, "admin"] as const;
 export type SpecSource = (typeof SPEC_SOURCES)[number];
 
 export const NOMINAL_UNITS = ["kW", "BTU/h", "W"] as const;
@@ -119,7 +122,7 @@ export const researchSpecSchema = z
     value: z.union([z.number(), z.string(), z.boolean()]),
     /** The test condition the figure belongs to, when the source gives one ("A7/W35", "35 °C"). */
     condition: nullableText(LIMITS.condition),
-    source: z.enum(SPEC_SOURCES),
+    source: z.enum(RESEARCH_SPEC_SOURCES),
     /** The page or image the value was read from. */
     url: nullableText(LIMITS.url),
     confidence: z.enum(CONFIDENCES),

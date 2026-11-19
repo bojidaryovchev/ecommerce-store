@@ -13,6 +13,7 @@ export {
   type SpecField,
   type SpecKey,
 } from "./fields";
+export { productGaps, type ProductGaps } from "./gaps";
 export {
   readClassify,
   readExtract,
@@ -30,6 +31,8 @@ export {
   approveAllReady,
   approveEnrichment,
   rejectEnrichment,
+  saveAdminFacts,
+  type AdminFactsResult,
   type ApproveRequest,
 } from "./publish";
 export { enrichReport, formatReport, type EnrichReport } from "./report";

@@ -1,4 +1,10 @@
-import { EnrichmentReviewForm, StageBadges, toReviewData } from "@/components/admin/enrichment";
+import {
+  CharacteristicsForm,
+  EnrichmentReviewForm,
+  StageBadges,
+  VisibilityToggle,
+  toReviewData,
+} from "@/components/admin/enrichment";
 import { TableSkeleton } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { getEnrichmentDetail } from "@/queries/enrichment";
@@ -19,6 +25,9 @@ const Review: React.FC<{ id: string }> = async ({ id }) => {
   const detail = await getEnrichmentDetail(id);
   if (!detail) notFound();
   const data = toReviewData(detail);
+  const missing = data.characteristics.missing.length;
+  const contested = data.characteristics.contested.length;
+  const filled = data.characteristics.filled.length;
 
   return (
     <div className="space-y-8">
@@ -42,10 +51,37 @@ const Review: React.FC<{ id: string }> = async ({ id }) => {
             </Link>
           </div>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/admin/enrichment">Back to the list</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <VisibilityToggle productId={data.productId} active={data.active} />
+          <Button asChild variant="outline">
+            <Link href="/admin/enrichment">Back to the list</Link>
+          </Button>
+        </div>
       </div>
+      {!data.active && (
+        <p className="rounded-lg border p-4 text-sm">
+          Hidden from the shop: not listed, not sold and not indexed. Its page says the product is unavailable.
+        </p>
+      )}
+      {(missing > 0 || contested > 0 || filled > 0) && (
+        <section className="space-y-4 rounded-lg border border-amber-600/40 p-4">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">What this product lacks</h2>
+            <p className="text-muted-foreground text-sm">
+              {missing > 0 && "Nobody found these characteristics, the supplier nor the web research. "}
+              {contested > 0 && "The supplier and the research disagree on these, so neither value is shown. "}
+              Fill in what you know (from the manufacturer, a datasheet or the supplier), or hide the product from the
+              shop. What you save shows in the shop at once; the next enrichment run writes it into the copy.
+            </p>
+          </div>
+          {/* Keyed by what it shows: after a save the fields move (missing → filled) and the form starts afresh. */}
+          <CharacteristicsForm
+            key={JSON.stringify(data.characteristics)}
+            productId={data.productId}
+            characteristics={data.characteristics}
+          />
+        </section>
+      )}
       <EnrichmentReviewForm data={data} />
     </div>
   );

@@ -79,6 +79,25 @@ Published specifications are attribute values with source `enrichment`; they rep
 of the same figure, and supplier attributes the research did not cover stay. Filters, the comparison bars,
 the spec chips and the structured data read them like any attribute. GTIN and MPN go to `product.metadata`.
 
+## What the admin deals with
+
+When the research comes back empty, that is an answer too: the figure stays out, and `/admin/enrichment`
+shows it to the admin.
+
+- **Needs attention:** products not in the shop with their own text yet, each with its reason ("Missing:
+  Топлинна мощност", "Contested: Мощност охлаждане", or the reviewer's note).
+- **Missing details:** every product lacking a characteristic its kind needs, or with a contested one,
+  published or not.
+
+On a product's page the admin can:
+
+- **Fill in what they know.** `saveAdminFacts` stores each value as a manual attribute value, which the sync
+  never touches. It replaces the supplier's value of that field and locks the attributes. It shows in the shop
+  at once. The next run takes it as a fact that outranks the research (source `admin`): it settles a contested
+  figure and fills a missing one. The copy is then rewritten with it and reviewed again.
+- **Hide the product** (`active = false`). It is no longer listed, sold or indexed, and its page says it is
+  unavailable.
+
 ## Running it
 
 It runs on the Claude subscription, like buy-a-coffee's catalogue copywriter: `claude -p` with the machine's

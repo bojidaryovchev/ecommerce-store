@@ -1,6 +1,14 @@
 import type { EnrichmentDetail } from "@/queries/enrichment";
 import type { EnrichmentStage, EnrichmentStatus } from "@ecommerce/database/schema";
-import { SPEC_FIELDS, isSpecKey } from "@ecommerce/supplier-sync/enrich";
+import { SPEC_FIELDS, isSpecKey, productGaps, type SpecKey } from "@ecommerce/supplier-sync/enrich";
+
+export type CharacteristicField = { key: string; name: string; unit: string | null };
+
+const fieldOf = (key: SpecKey): CharacteristicField => ({
+  key,
+  name: SPEC_FIELDS[key].name,
+  unit: SPEC_FIELDS[key].unit,
+});
 
 /**
  * What the review page shows, worked out on the server: plain data for the client form, so none of the
@@ -35,6 +43,16 @@ export type ReviewData = {
     issues: string[];
     keywords: { primary: string; volume: number; secondary: string[] } | null;
   } | null;
+  /** Whether the product is shown in the shop (an admin can hide it). */
+  active: boolean;
+  /** What the product lacks, for the admin to fill in (productGaps). */
+  characteristics: {
+    missing: Array<{ label: string; fields: CharacteristicField[] }>;
+    contested: Array<CharacteristicField & { supplier: string | null; found: string | null }>;
+    filled: Array<CharacteristicField & { value: string }>;
+    /** Radiators and towel rails compare outputs at ΔT50: the admin types the figure at that rating. */
+    outputAtDeltaT50: boolean;
+  };
   note: string | null;
   sources: string[];
   features: string[];
@@ -91,7 +109,12 @@ export function toReviewData(detail: EnrichmentDetail): ReviewData {
       reason: entry.reason,
     })),
     problems: [
-      ...(validate?.problems ?? []),
+      // A "Missing …" the admin has filled in since is settled (the next run re-checks it with the value).
+      ...(validate?.problems ?? []).filter(
+        (problem) =>
+          !problem.startsWith("Missing ") ||
+          productGaps(validate, product.attributes).missing.some((gap) => problem === `Missing ${gap.label}.`),
+      ),
       ...(detail.stages.classify?.status === "flagged" ? detail.stages.classify.errors : []),
     ],
     notices: validate?.notices ?? [],
@@ -99,6 +122,16 @@ export function toReviewData(detail: EnrichmentDetail): ReviewData {
     review: detail.review
       ? { verdict: detail.review.verdict, issues: detail.review.issues, keywords: detail.review.keywords }
       : null,
+    active: product.active,
+    characteristics: (() => {
+      const gaps = productGaps(validate, product.attributes);
+      return {
+        missing: gaps.missing.map((gap) => ({ label: gap.label, fields: gap.keys.map(fieldOf) })),
+        contested: gaps.contested.map((gap) => ({ ...fieldOf(gap.key), supplier: gap.supplier, found: gap.found })),
+        filled: gaps.filled.map((gap) => ({ ...fieldOf(gap.key), value: gap.value })),
+        outputAtDeltaT50: validate?.kind === "radiator" || validate?.kind === "towel_rail",
+      };
+    })(),
     note: extract?.note || null,
     sources: extract?.sources ?? [],
     features: extract?.features ?? [],

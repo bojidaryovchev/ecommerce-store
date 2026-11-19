@@ -332,6 +332,26 @@ describe("validateResearch", () => {
     expect(radiator(2962, 1962).conflicts.map((conflict) => conflict.resolution)).toEqual(["review"]);
   });
 
+  it("takes an admin's value as the fact: it fills what is missing and settles what is contested", () => {
+    const rail = (adminFacts?: Array<{ key: "outputW"; value: string }>) =>
+      validateResearch({
+        name: "Алуминиева лира Guardian 6 450/700",
+        kind: "towel_rail",
+        categorySlug: "aluminievi-liri",
+        research: answer({ kind: "towel_rail", specs: [] }),
+        supplierAttributes: [{ ...POWER_17_6, value: "900 W", numericValue: 0.9 }],
+        ...(adminFacts && { adminFacts }),
+      });
+    // Without it: no output found, so the rail is held for it.
+    expect(rail().problems.join(" ")).toMatch(/Missing Топлинна мощност/);
+    // With it: the output is the admin's, the supplier's 900 W is replaced without a conflict.
+    const filled = rail([{ key: "outputW", value: "412 W" }]);
+    expect(filled.problems).toEqual([]);
+    expect(filled.conflicts).toEqual([]);
+    expect(filled.specs.find((spec) => spec.key === "outputW")).toMatchObject({ text: "412 W", source: "admin" });
+    expect(filled.supersede).toEqual(["power-heating"]);
+  });
+
   it("accepts the 36 mm bottom-centre connection of a designer towel rail, not a figure in cm", () => {
     const rail = (centreDistanceMm: number) =>
       validateResearch({

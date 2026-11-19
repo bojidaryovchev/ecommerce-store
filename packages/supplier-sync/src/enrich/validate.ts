@@ -75,6 +75,11 @@ export interface ValidateInput {
   categorySlug: string | null;
   research: ResearchAnswer;
   supplierAttributes: SupplierAttributeValue[];
+  /**
+   * Values a person typed in on the admin page: they outrank the research, settle a contested figure and fill a
+   * missing one. Only the shop's own decision, so neither the name nor the supplier's fields are held against them.
+   */
+  adminFacts?: ReadonlyArray<{ key: SpecKey; value: string }>;
 }
 
 const CONFIDENCE_RANK: Record<Confidence, number> = { high: 3, medium: 2, low: 1 };
@@ -277,6 +282,25 @@ export function validateResearch(input: ValidateInput): ValidationResult {
     }
   }
 
+  // 1b. What a person typed in on the admin page replaces whatever the research had for that field.
+  const decided = new Set<SpecKey>();
+  for (const fact of input.adminFacts ?? []) {
+    if (!(fact.key in config.fields)) continue;
+    const normalized = normalizeSpecValue(fact.key, fact.value);
+    if (!normalized.ok) continue;
+    accepted.set(fact.key, {
+      key: fact.key,
+      value: normalized.value,
+      text: formatSpecValue(fact.key, normalized.value),
+      numeric: typeof normalized.value === "number" ? normalized.value : null,
+      condition: null,
+      source: "admin",
+      url: null,
+      confidence: "high",
+    });
+    decided.add(fact.key);
+  }
+
   // 2. The name against the specs.
   const nameChecked = new Map<SpecKey, boolean>();
   const figures = nameFigures(input.name);
@@ -296,6 +320,8 @@ export function validateResearch(input: ValidateInput): ValidationResult {
       continue;
     }
     const spec = accepted.get(key)!;
+    // A person settled this figure: the supplier's name does not overrule them.
+    if (decided.has(key)) continue;
     const found = convertUnit(spec.numeric ?? NaN, SPEC_FIELDS[key].unit, figure.unit);
     if (found === null || !Number.isFinite(found) || found <= 0) continue;
     const ratio = figure.value / found;
@@ -331,6 +357,8 @@ export function validateResearch(input: ValidateInput): ValidationResult {
     const slugs = [field.attribute, ...(field.supersedes ?? [])];
     for (const attribute of input.supplierAttributes.filter((a) => slugs.includes(a.slug))) {
       supersede.add(attribute.slug);
+      // A person settled this figure: the supplier's field is replaced, not weighed against it.
+      if (decided.has(spec.key)) continue;
       if (spec.numeric === null) {
         if (field.type === "text" && attribute.value.trim().toLowerCase() !== String(spec.value).toLowerCase()) {
           notices.push(`${field.name}: the supplier says “${attribute.value}”, the shop will show “${spec.text}”.`);

@@ -35,8 +35,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const path = productHref(product);
   const photo = primaryPhoto(product);
   // Product content is Bulgarian; the English pages only translate the interface, so they stay out of the index.
-  // So does a page whose text is still the supplier's, until its own copy is published.
-  const indexable = locale === routing.defaultLocale && hasOwnCopy(product);
+  // So does a page whose text is still the supplier's, until its own copy is published, and a hidden product's.
+  const indexable = locale === routing.defaultLocale && hasOwnCopy(product) && product.active;
 
   return {
     title: product.name,

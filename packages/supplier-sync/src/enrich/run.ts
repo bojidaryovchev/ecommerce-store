@@ -24,7 +24,16 @@ import {
   type ReviewItem,
 } from "./contract";
 import { buildCopyItem, checkCopyAnswer, figureSpellings } from "./copy";
-import { KINDS, PRODUCT_KINDS, effectiveKind, fieldBrief, kindFields, type ProductKind } from "./fields";
+import {
+  KINDS,
+  PRODUCT_KINDS,
+  SPEC_FIELDS,
+  effectiveKind,
+  fieldBrief,
+  kindFields,
+  type ProductKind,
+  type SpecKey,
+} from "./fields";
 import { guessImageKind, prepareImages } from "./images";
 import { keywordTarget } from "./keywords";
 import {
@@ -156,11 +165,26 @@ function validateHash(product: EnrichProduct, extract: ExtractOutput, classify: 
     name: product.source.name,
     category: product.category?.slug ?? classify?.category?.slug ?? null,
     attributes: supplierAttributesOf(product),
+    admin: adminFactsOf(product),
   });
 }
 
 /** What the supplier delivered, not the live rows: publishing deletes the rows it replaces (state.ts). */
 const supplierAttributesOf = (product: EnrichProduct) => product.supplierAttributes;
+
+const fieldByAttribute = new Map<string, SpecKey>(
+  (Object.entries(SPEC_FIELDS) as Array<[SpecKey, (typeof SPEC_FIELDS)[SpecKey]]>).map(([key, field]) => [
+    field.attribute,
+    key,
+  ]),
+);
+
+/** Values an admin typed in (manual attribute rows of our fields): facts that outrank the research. */
+const adminFactsOf = (product: EnrichProduct) =>
+  product.attributeValues.flatMap((value) => {
+    const key = value.source === "manual" ? fieldByAttribute.get(value.slug) : undefined;
+    return key ? [{ key, value: value.value }] : [];
+  });
 
 /**
  * The copy item, without what changes between attempts (siblings, retry notes, the copy sent back): its hash is
@@ -675,6 +699,7 @@ async function runValidation(
     categorySlug: current.category?.slug ?? classify?.category?.slug ?? null,
     research: answer,
     supplierAttributes: supplierAttributesOf(current),
+    adminFacts: adminFactsOf(current),
   });
   const classifyProblems = current.stages.classify?.status === "flagged" ? current.stages.classify.errors : [];
   const problems = [...validation.problems, ...classifyProblems];

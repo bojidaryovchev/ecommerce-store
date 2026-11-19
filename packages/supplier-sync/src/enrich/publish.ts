@@ -2,7 +2,7 @@ import * as schema from "@ecommerce/database/schema";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { addLocks, type LockableProductField } from "../locks";
 import type { Database, DbExecutor } from "../types";
-import { SPEC_FIELDS, formatSpecValue, type SpecField, type SpecKey } from "./fields";
+import { SPEC_FIELDS, formatSpecValue, isSpecKey, type SpecField, type SpecKey } from "./fields";
 import { readClassify, readExtract, readRewrite, readValidate } from "./outputs";
 import type { Stage, StageRow } from "./state";
 import { proposalHash } from "./store";
@@ -110,6 +110,8 @@ export async function approveEnrichment(db: Database, request: ApproveRequest, n
       const edits = new Map((request.edits?.specs ?? []).map((edit) => [edit.key, edit]));
       const rows: Array<{ key: SpecKey; text: string; numeric: number | null }> = [];
       for (const spec of validate.specs) {
+        // An admin's own value is shown by its manual row already (saveAdminFacts).
+        if (spec.source === "admin") continue;
         const edit = edits.get(spec.key);
         if (edit && !edit.include) continue;
         if (edit && edit.value.trim() !== spec.text) {
@@ -232,6 +234,98 @@ export async function approveEnrichment(db: Database, request: ApproveRequest, n
 }
 
 /** Turns a proposal down: nothing is published; the product is asked about again only when its inputs change. */
+export interface AdminFactsResult {
+  saved: SpecKey[];
+  cleared: SpecKey[];
+  errors: Array<{ key: string; message: string }>;
+}
+
+/**
+ * An admin fills in or corrects characteristics (the ones the research could not find or that are contested).
+ * Each value is checked like any other (type, unit), stored as a manual attribute value the sync never touches,
+ * and replaces the supplier's value of the same field; the product's attributes are locked so a sync does not put
+ * the supplier's figure back. An empty value removes the admin's value. The next enrichment run reads these as
+ * facts (validate.ts), so the copy is rewritten with them and reviewed before it is published.
+ */
+export async function saveAdminFacts(
+  db: Database,
+  productId: string,
+  facts: ReadonlyArray<{ key: string; value: string }>,
+  now = new Date(),
+): Promise<AdminFactsResult> {
+  const result: AdminFactsResult = { saved: [], cleared: [], errors: [] };
+  const valid: Array<{ key: SpecKey; text: string; numeric: number | null }> = [];
+  for (const fact of facts) {
+    if (!isSpecKey(fact.key)) {
+      result.errors.push({ key: fact.key, message: "Unknown characteristic" });
+      continue;
+    }
+    const value = fact.value.trim();
+    if (value === "") {
+      result.cleared.push(fact.key);
+      continue;
+    }
+    const normalized = normalizeSpecValue(fact.key, value);
+    if (!normalized.ok) {
+      result.errors.push({ key: fact.key, message: normalized.reason });
+      continue;
+    }
+    valid.push({
+      key: fact.key,
+      text: formatSpecValue(fact.key, normalized.value),
+      numeric: typeof normalized.value === "number" ? normalized.value : null,
+    });
+  }
+  if (result.errors.length > 0) return result;
+
+  await db.transaction(async (tx) => {
+    const product = await tx.query.products.findFirst({
+      where: eq(schema.products.id, productId),
+      columns: { id: true, lockedFields: true },
+    });
+    if (!product) throw new EnrichmentReviewError("Product not found");
+    const keys = [...valid.map((fact) => fact.key), ...result.cleared];
+    const attributeIds = await ensureAttributes(tx, keys, now);
+    // The supplier's value of the same figure goes too: the admin's value stands for it.
+    const slugs = keys.flatMap((key) => [
+      SPEC_FIELDS[key].attribute,
+      ...((SPEC_FIELDS[key] as SpecField).supersedes ?? []),
+    ]);
+    const replaced = await tx
+      .select({ id: schema.attributes.id })
+      .from(schema.attributes)
+      .where(inArray(schema.attributes.slug, slugs));
+    await tx.delete(schema.productAttributeValues).where(
+      and(
+        eq(schema.productAttributeValues.productId, productId),
+        inArray(
+          schema.productAttributeValues.attributeId,
+          replaced.map((row) => row.id),
+        ),
+        inArray(schema.productAttributeValues.source, ["manual", "supplier"]),
+      ),
+    );
+    if (valid.length > 0) {
+      await tx.insert(schema.productAttributeValues).values(
+        valid.map((fact) => ({
+          productId,
+          attributeId: attributeIds.get(fact.key)!,
+          value: fact.text,
+          numericValue: fact.numeric,
+          source: "manual" as const,
+          sortOrder: 0,
+        })),
+      );
+    }
+    await tx
+      .update(schema.products)
+      .set({ lockedFields: addLocks(product.lockedFields, ["attributes"]), updatedAt: now })
+      .where(eq(schema.products.id, productId));
+  });
+  result.saved = valid.map((fact) => fact.key);
+  return result;
+}
+
 export async function rejectEnrichment(db: Database, productId: string, userId: string | null, now = new Date()) {
   await db.transaction(async (tx) => {
     const stages = await stagesOf(tx, productId);
