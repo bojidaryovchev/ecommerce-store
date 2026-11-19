@@ -1,4 +1,5 @@
 import { SiteFooter } from "@/components/common";
+import { SiteAnalytics } from "@/components/common/site-analytics";
 import { CompareTray } from "@/components/products/compare/compare-tray";
 import Providers from "@/components/providers";
 import { routing } from "@/i18n/routing";
@@ -48,6 +49,7 @@ const LocaleLayout: React.FC<Props> = async ({ children, params }) => {
       {children}
       <SiteFooter />
       <CompareTray />
+      <SiteAnalytics />
     </Providers>
   );
 };

@@ -23,7 +23,7 @@ export type InfoSlug = (typeof INFO_SLUGS)[number];
 /** While true, every page says it is a draft awaiting legal review. */
 export const LEGAL_DRAFT = true;
 /** When the texts last changed, shown on every page. */
-export const LEGAL_UPDATED = "2026-11-18";
+export const LEGAL_UPDATED = "2026-11-19";
 
 /** Short names for menus and the footer. */
 export const INFO_NAV: Record<InfoSlug, { bg: string; en: string }> = {
@@ -383,12 +383,13 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
             "при профил: име и имейл, а при вход с имейл и парола и криптиран отпечатък на паролата (самата парола не пазим)",
             "при запитване или писмо до нас: данните и съдържанието на съобщението, включително прикачени файлове",
             "технически: бисквитките, описани в „Политика за бисквитките“",
+            "статистика на посещенията: отворената страница, откъде сте дошли, приблизително местоположение (държава и град), вид устройство, операционна система и браузър. Без бисквитки, без да пазим IP адреса ви и без връзка с профила или поръчките ви",
           ],
         },
         {
           heading: "Защо и на какво основание",
           paragraphs: [
-            "За да изпълним поръчката или монтажа (договор), да водим счетоводство и да издаваме документи (законово задължение), да отговорим на запитванията ви и да пазим магазина от злоупотреби (легитимен интерес). Данните на платежните карти обработва само Stripe.",
+            "За да изпълним поръчката или монтажа (договор), да водим счетоводство и да издаваме документи (законово задължение), да отговорим на запитванията ви и да пазим магазина от злоупотреби (легитимен интерес). Статистиката на посещенията ни показва кои страници се ползват и къде магазинът трябва да стане по-удобен (легитимен интерес). Данните на платежните карти обработва само Stripe.",
           ],
         },
         {
@@ -397,7 +398,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
           list: [
             "Stripe: плащания",
             "Resend: изпращане и получаване на имейли",
-            "Vercel и Amazon Web Services: хостинг и файлове",
+            "Vercel и Amazon Web Services: хостинг, файлове и статистиката на посещенията",
             "Neon: базата данни",
             "куриери и монтажни партньори: само данните, нужни за доставката или монтажа",
           ],
@@ -411,7 +412,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
         {
           heading: "Колко време ги пазим",
           paragraphs: [
-            "Данните за поръчките и счетоводните документи пазим толкова, колкото изисква Законът за счетоводството. Кореспонденцията пазим, докато е нужна за отговор и за евентуални рекламации.",
+            "Данните за поръчките и счетоводните документи пазим толкова, колкото изисква Законът за счетоводството. Кореспонденцията пазим, докато е нужна за отговор и за евентуални рекламации. За статистиката посетителят се разпознава най-много 24 часа; след това остават само обобщени числа.",
           ],
         },
         {
@@ -435,12 +436,13 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
             "for an account: name and email, and for email-and-password sign-in a one-way hash of the password (never the password itself)",
             "for an enquiry or an email to us: your details and the message, including attachments",
             "technical: the cookies described in the Cookie policy",
+            "visit statistics: the page opened, where you came from, approximate location (country and city), device type, operating system and browser. No cookies, your IP address is not kept, and nothing ties it to your account or orders",
           ],
         },
         {
           heading: "Why, and on what basis",
           paragraphs: [
-            "To fulfil the order or installation (contract), to keep accounts and issue documents (legal obligation), and to answer you and protect the shop from abuse (legitimate interest). Card data is processed only by Stripe.",
+            "To fulfil the order or installation (contract), to keep accounts and issue documents (legal obligation), and to answer you and protect the shop from abuse (legitimate interest). Visit statistics show us which pages are used and where the shop needs to work better (legitimate interest). Card data is processed only by Stripe.",
           ],
         },
         {
@@ -449,7 +451,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
           list: [
             "Stripe: payments",
             "Resend: sending and receiving email",
-            "Vercel and Amazon Web Services: hosting and files",
+            "Vercel and Amazon Web Services: hosting, files and visit statistics",
             "Neon: the database",
             "couriers and installation partners: only what delivery or installation needs",
           ],
@@ -463,7 +465,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
         {
           heading: "How long we keep it",
           paragraphs: [
-            "Order data and accounting documents for as long as the Accountancy Act requires; correspondence for as long as needed to answer and handle any complaints.",
+            "Order data and accounting documents for as long as the Accountancy Act requires; correspondence for as long as needed to answer and handle any complaints. For visit statistics a visitor is recognised for at most 24 hours; after that only totals remain.",
           ],
         },
         {
@@ -478,7 +480,7 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
   biskvitki: {
     bg: {
       title: "Политика за бисквитките",
-      description: "Кои бисквитки ползва магазинът и защо.",
+      description: "Кои бисквитки ползва магазинът, какво пази в браузъра ви и как броим посещенията без бисквитки.",
       sections: [
         {
           heading: "Само необходимите",
@@ -490,6 +492,18 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
             "authjs.session-token: пази входа в профила ви; 30 дни",
             "authjs.csrf-token и authjs.callback-url: защитават входа и ви връщат на страницата, от която сте влезли; до затваряне на браузъра",
             "authjs.state, authjs.pkce.code_verifier, authjs.nonce: само по време на вход с Google; 15 минути",
+          ],
+        },
+        {
+          heading: "Статистика без бисквитки",
+          paragraphs: [
+            "Посещенията броим с Vercel Web Analytics. Тя не записва бисквитки и нищо друго на устройството ви: посетителят се разпознава по еднопосочен отпечатък от заявката, който изчезва до 24 часа, а IP адресът не се пази. Страниците на профила ви не се броят. Повече в „Политика за поверителност“.",
+          ],
+        },
+        {
+          heading: "Сравнението",
+          paragraphs: [
+            "Продуктите, които сте избрали за сравнение, се пазят в браузъра ви (localStorage, ключ compare-products), докато не ги премахнете. До нас стигат само като част от адреса, когато отворите сравнението.",
           ],
         },
         {
@@ -506,7 +520,8 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
     },
     en: {
       title: "Cookie policy",
-      description: "Which cookies the shop uses and why.",
+      description:
+        "Which cookies the shop uses, what it keeps in your browser and how we count visits without cookies.",
       sections: [
         {
           heading: "Only the necessary ones",
@@ -518,6 +533,18 @@ export const INFO_PAGES: Record<InfoSlug, { bg: InfoText; en: InfoText }> = {
             "authjs.session-token: keeps you signed in; 30 days",
             "authjs.csrf-token and authjs.callback-url: protect signing in and bring you back to the page you came from; until you close the browser",
             "authjs.state, authjs.pkce.code_verifier, authjs.nonce: only while signing in with Google; 15 minutes",
+          ],
+        },
+        {
+          heading: "Statistics without cookies",
+          paragraphs: [
+            "We count visits with Vercel Web Analytics. It stores no cookies or anything else on your device: a visitor is recognised by a one-way hash of the request that is gone within 24 hours, and the IP address is not kept. Your account pages are not counted. More in the Privacy policy.",
+          ],
+        },
+        {
+          heading: "The comparison",
+          paragraphs: [
+            "The products you pick to compare are kept in your browser (localStorage, key compare-products) until you remove them. They reach us only as part of the address when you open the comparison.",
           ],
         },
         {
