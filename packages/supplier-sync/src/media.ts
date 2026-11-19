@@ -13,7 +13,17 @@ import type { DbExecutor } from "./types";
  */
 
 type ImageKind = (typeof schema.imageKindEnum.enumValues)[number];
-type Known = { kind: ImageKind; label: string | null };
+type Known = { kind: ImageKind; label: string | null; width?: number | null; height?: number | null };
+
+/**
+ * Whether an "energy label" image is the EU label itself, which is a tall portrait sheet, rather than a class badge
+ * (a small "A++" graphic): only the label meets the display rules when the class arrow opens it.
+ */
+const isWholeLabel = (known: Known) =>
+  typeof known.width === "number" &&
+  typeof known.height === "number" &&
+  known.height >= 300 &&
+  known.height >= known.width * 1.4;
 
 // An energy label is not a chip: "A++" next to "A+++" says nothing without the water temperature each is for,
 // so the labels are shown whole, with the tables and drawings.
@@ -29,6 +39,7 @@ export function deriveMedia(
   const rangePhotos: string[] = [];
   const chips: ProductMedia["chips"] = [];
   const drawings: string[] = [];
+  const energyLabels: string[] = [];
   const labels = new Set<string>();
 
   for (const url of images) {
@@ -43,6 +54,8 @@ export function deriveMedia(
       chips.push({ url, kind: known.kind as ProductMedia["chips"][number]["kind"], label: known.label });
     } else if (DRAWING_KINDS.has(known.kind)) {
       drawings.push(url);
+      // The energy label also opens from the class arrow next to the price (energy-label.ts).
+      if (known.kind === "energy_label" && isWholeLabel(known)) energyLabels.push(url);
     }
     // Logos and anything else stay out.
   }
@@ -50,7 +63,7 @@ export function deriveMedia(
   // Never an empty gallery: photos of the range's other sizes before nothing at all.
   if (photos.length === 0) photos.push(...rangePhotos);
   if (photos.length === 0 && images[0]) photos.push(images[0]);
-  return { photos, chips, drawings };
+  return { photos, chips, drawings, labels: energyLabels };
 }
 
 /**
@@ -67,7 +80,13 @@ export async function refreshProductMedia(db: DbExecutor, productIds?: readonly 
   const [assets, classified] = await Promise.all([
     urls.length > 0
       ? db
-          .select({ url: schema.imageAssets.url, kind: schema.imageAssets.kind, label: schema.imageAssets.label })
+          .select({
+            url: schema.imageAssets.url,
+            kind: schema.imageAssets.kind,
+            label: schema.imageAssets.label,
+            width: schema.imageAssets.width,
+            height: schema.imageAssets.height,
+          })
           .from(schema.imageAssets)
           .where(inArray(schema.imageAssets.url, urls))
       : Promise.resolve([]),

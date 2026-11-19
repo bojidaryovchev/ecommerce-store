@@ -1,5 +1,6 @@
 import {
   CharacteristicsForm,
+  DocumentsForm,
   EnrichmentReviewForm,
   StageBadges,
   VisibilityToggle,
@@ -80,6 +81,22 @@ const Review: React.FC<{ id: string }> = async ({ id }) => {
             productId={data.productId}
             characteristics={data.characteristics}
           />
+        </section>
+      )}
+      {data.documents && (
+        <section
+          className={`space-y-4 rounded-lg border p-4 ${data.documents.missing.length > 0 ? "border-amber-600/40" : ""}`}
+        >
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">Energy label and product fiche</h2>
+            <p className="text-muted-foreground text-sm">
+              EU law wants both shown next to the price of this product.{" "}
+              {data.documents.missing.length > 0
+                ? `Missing: ${data.documents.missing.join(", ").toLowerCase()}. Find the product on eprel.ec.europa.eu (by its model) and paste its link as the fiche: the page carries the label too. The class arrow appears next to the price once there is a label.`
+                : "The class arrow next to the price opens the label."}
+            </p>
+          </div>
+          <DocumentsForm key={JSON.stringify(data.documents)} productId={data.productId} documents={data.documents} />
         </section>
       )}
       <EnrichmentReviewForm data={data} />

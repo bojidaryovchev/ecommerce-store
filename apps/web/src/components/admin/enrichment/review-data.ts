@@ -45,6 +45,14 @@ export type ReviewData = {
   } | null;
   /** Whether the product is shown in the shop (an admin can hide it). */
   active: boolean;
+  /** The EU energy label and product fiche, for a product the labelling rules cover; null otherwise. */
+  documents: {
+    energyLabel: string;
+    productFiche: string;
+    /** A label image found among the supplier's pictures, which the arrow opens when no link is given. */
+    labelImage: string | null;
+    missing: string[];
+  } | null;
   /** What the product lacks, for the admin to fill in (productGaps). */
   characteristics: {
     missing: Array<{ label: string; fields: CharacteristicField[] }>;
@@ -123,6 +131,19 @@ export function toReviewData(detail: EnrichmentDetail): ReviewData {
       ? { verdict: detail.review.verdict, issues: detail.review.issues, keywords: detail.review.keywords }
       : null,
     active: product.active,
+    documents: (() => {
+      const gaps = productGaps(validate, product.attributes, { media: product.media, metadata: product.metadata });
+      const inScope =
+        gaps.documents.length > 0 ||
+        Boolean(product.metadata.energyLabel || product.metadata.productFiche || product.media?.labels?.length);
+      if (!inScope) return null;
+      return {
+        energyLabel: product.metadata.energyLabel ?? "",
+        productFiche: product.metadata.productFiche ?? "",
+        labelImage: product.media?.labels?.[0] ?? null,
+        missing: gaps.documents.map((gap) => gap.label),
+      };
+    })(),
     characteristics: (() => {
       const gaps = productGaps(validate, product.attributes);
       return {

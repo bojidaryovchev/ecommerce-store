@@ -10,6 +10,7 @@ import {
 import { priceFormat } from "@/i18n/format";
 import { Link } from "@/i18n/navigation";
 import type { CategoryNode } from "@/lib/category-tree";
+import type { EnergyLabelView } from "@/lib/energy-label";
 import { INSTALLATION_FOR_CATEGORY, installationHref } from "@/lib/installation-systems";
 import { productPhotos } from "@/lib/product-media";
 import { categoryHref } from "@/lib/routes";
@@ -17,6 +18,7 @@ import type { getProductBySlug } from "@/queries/products";
 import { ArrowRight, CreditCard, MessageCircleQuestion, ShieldCheck, Truck, Undo2, Wrench } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import React, { Suspense } from "react";
+import { EnergyLabel } from "../energy-label/energy-label";
 import { ExpandableText } from "./expandable-text";
 import { ProductAddToCart } from "./product-add-to-cart";
 import { ProductChips } from "./product-chips";
@@ -35,13 +37,15 @@ interface Props {
   product: Product;
   /** The product's category and its ancestors, root first. */
   categoryTrail: CategoryNode[];
+  /** The EU energy label next to the price (lib/energy-label.ts); null when there is none to show. */
+  energyLabel?: EnergyLabelView | null;
 }
 
 /** How many specifications the buy box shows; the rest are in the table below. */
 const KEY_SPECS = 4;
 const BUY_BUTTON_ID = "buy-box";
 
-const ProductDetail: React.FC<Props> = ({ product, categoryTrail }) => {
+const ProductDetail: React.FC<Props> = ({ product, categoryTrail, energyLabel }) => {
   const t = useTranslations("products.detail");
   const tReviews = useTranslations("products.reviews");
   const tSystems = useTranslations("installation.systems");
@@ -136,6 +140,11 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail }) => {
                 </>
               ) : (
                 <p className="text-xl font-semibold">{t("priceOnRequest")}</p>
+              )}
+              {energyLabel && (
+                <div className="mt-3">
+                  <EnergyLabel {...energyLabel} className={price ? "text-3xl" : "text-xl"} />
+                </div>
               )}
               <p className="mt-3 flex items-center gap-2 text-sm font-medium">
                 <span

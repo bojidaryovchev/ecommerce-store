@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth-guard";
 import { revalidateCatalog } from "@/lib/supplier-sync";
 import { characteristicsSchema, type CharacteristicsInput } from "@/schemas/characteristics.schema";
 import { enrichmentReviewSchema, type EnrichmentReviewInput } from "@/schemas/enrichment-review.schema";
+import { productDocumentsSchema, type ProductDocumentsInput } from "@/schemas/product-documents.schema";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
 import {
@@ -11,6 +12,7 @@ import {
   SPEC_FIELDS,
   approveAllReady,
   approveEnrichment,
+  eprelRegistration,
   isSpecKey,
   rejectEnrichment,
   requestRerun,
@@ -132,11 +134,42 @@ async function setProductVisibilityAction(productId: string, visible: boolean): 
   }
 }
 
+/**
+ * The energy label and product fiche links of a product (product.metadata), which the class arrow by the price
+ * opens. An EPREL fiche link also gives the label and the registration number the structured data cites.
+ */
+async function saveProductDocumentsAction(productId: string, input: ProductDocumentsInput): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const parsed = productDocumentsSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: z.prettifyError(parsed.error) };
+    const product = await db.query.products.findFirst({
+      where: eq(schema.products.id, productId),
+      columns: { metadata: true },
+    });
+    if (!product) return { success: false, error: "Product not found" };
+    const metadata: Record<string, string> = { ...product.metadata };
+    const set = (key: string, value: string | null) => {
+      if (value) metadata[key] = value;
+      else delete metadata[key];
+    };
+    set("energyLabel", parsed.data.energyLabel || null);
+    set("productFiche", parsed.data.productFiche || null);
+    set("eprel", eprelRegistration(parsed.data.productFiche) ?? eprelRegistration(parsed.data.energyLabel));
+    await db.update(schema.products).set({ metadata, updatedAt: new Date() }).where(eq(schema.products.id, productId));
+    revalidateCatalog([productId], { immediate: true });
+    return { success: true, data: undefined };
+  } catch (error) {
+    return failure(error, "Could not save the label and fiche");
+  }
+}
+
 export {
   approveAllReadyAction,
   approveEnrichmentAction,
   rejectEnrichmentAction,
   rerunEnrichmentAction,
   saveCharacteristicsAction,
+  saveProductDocumentsAction,
   setProductVisibilityAction,
 };

@@ -1,5 +1,6 @@
 import { ProductDetail } from "@/components/products";
 import { categoryTrail } from "@/lib/category-tree";
+import { energyLabelOf } from "@/lib/energy-label";
 import { productPhotos } from "@/lib/product-media";
 import { categoryHref, productHref } from "@/lib/routes";
 import { SITE_URL } from "@/lib/site-url";
@@ -77,7 +78,19 @@ const ProductLoader: React.FC<Props> = async ({ slug }) => {
           { name: product.name, url },
         ]}
       />
-      <ProductDetail product={product} categoryTrail={trail} />
+      <ProductDetail
+        product={product}
+        categoryTrail={trail}
+        energyLabel={energyLabelOf(
+          product,
+          [...trail].reverse().map((category) => category.slug),
+          product.attributeValues.map((value) => ({
+            slug: value.attribute.slug,
+            value: value.value,
+            numericValue: value.numericValue,
+          })),
+        )}
+      />
     </>
   );
 };

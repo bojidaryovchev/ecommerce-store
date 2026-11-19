@@ -7,6 +7,8 @@ export type ProductMedia = {
   photos: string[];
   chips: Array<{ url: string; kind: "icon" | "badge" | "energy_label"; label: string | null }>;
   drawings: string[];
+  /** The EU energy label images among the drawings: the class arrow by the price opens the first. */
+  labels?: string[];
 };
 
 export const products = pgTable(

@@ -8,13 +8,23 @@ import { connection } from "next/server";
  * The admin's views of the catalogue, by what there is to do:
  * - attention: not in the shop with its own text, and held (missing or contested data, the reviewer, a failure);
  * - missing: lacks a characteristic or has a contested one, whether published or not;
+ * - labels: covered by the EU energy labelling rules, and the shop has no label or product fiche for it yet;
  * - ready: passed every check, waiting to be published;
  * - approved: in the shop with its own text;
  * - hidden: taken out of the shop by an admin (or withdrawn by the supplier);
  * - waiting: still going through the pipeline.
  * A product can be in more than one (a published towel rail without its output is in "approved" and "missing").
  */
-export const ENRICHMENT_TABS = ["attention", "missing", "ready", "approved", "hidden", "waiting", "all"] as const;
+export const ENRICHMENT_TABS = [
+  "attention",
+  "missing",
+  "labels",
+  "ready",
+  "approved",
+  "hidden",
+  "waiting",
+  "all",
+] as const;
 export type EnrichmentTab = (typeof ENRICHMENT_TABS)[number];
 
 const PAGE_SIZE = 50;
@@ -41,7 +51,7 @@ async function getEnrichmentList(options: { tab?: EnrichmentTab; page?: number; 
   await connection();
   const [products, stages] = await Promise.all([
     db.query.products.findMany({
-      columns: { id: true, slug: true, name: true, active: true, lockedFields: true },
+      columns: { id: true, slug: true, name: true, active: true, lockedFields: true, media: true, metadata: true },
       with: {
         category: { columns: { name: true } },
         attributeValues: { columns: { value: true, source: true }, with: { attribute: { columns: { slug: true } } } },
@@ -74,6 +84,7 @@ async function getEnrichmentList(options: { tab?: EnrichmentTab; page?: number; 
         value: value.value,
         source: value.source,
       })),
+      { media: product.media, metadata: product.metadata },
     );
     const published = product.lockedFields.includes("description");
     const review = stage("review");
@@ -87,7 +98,9 @@ async function getEnrichmentList(options: { tab?: EnrichmentTab; page?: number; 
             ? `Reviewer: ${review.errors[0] ?? "held"}`
             : rewrite?.status === "failed"
               ? `Copy: ${rewrite.errors[0] ?? "failed"}`
-              : (stage("validate")?.errors[0] ?? null);
+              : gaps.documents.length > 0
+                ? `Needs: ${gaps.documents.map((gap) => gap.label.toLowerCase()).join(", ")}`
+                : (stage("validate")?.errors[0] ?? null);
     const ready =
       !published &&
       statuses.publish === "pending" &&
@@ -106,6 +119,7 @@ async function getEnrichmentList(options: { tab?: EnrichmentTab; page?: number; 
     else {
       if (held) tabs.push("attention");
       if (gaps.missing.length > 0 || gaps.contested.length > 0) tabs.push("missing");
+      if (gaps.documents.length > 0) tabs.push("labels");
     }
     if (published) tabs.push("approved");
     else if (ready) tabs.push("ready");

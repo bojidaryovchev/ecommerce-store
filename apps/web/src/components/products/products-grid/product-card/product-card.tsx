@@ -7,6 +7,7 @@ import type { ProductWithPrices } from "@/types/product.type";
 import { useFormatter, useTranslations } from "next-intl";
 import Image from "next/image";
 import React from "react";
+import { CardEnergyLabel } from "./card-energy-label";
 
 interface Props {
   product: ProductWithPrices;
@@ -16,8 +17,11 @@ interface Props {
 
 /**
  * A product in a listing: the photo whole on white (product shots are cut-outs; cropping them to a
- * square cut units in half), the brand, the name and the price with VAT. No description: the
- * supplier's text is not ours to repeat on every card.
+ * square cut units in half), the brand, the name and the price with VAT, and the energy label next to
+ * the price where the rules want one. No description: the supplier's text is not ours to repeat on every card.
+ *
+ * The whole card is clickable through the name's link, stretched over it, so the controls on the card (the
+ * wishlist heart, the energy label) are buttons of their own rather than buttons inside a link.
  */
 const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted }) => {
   const t = useTranslations("products.productCard");
@@ -28,10 +32,7 @@ const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted 
   const badge = !product.active ? t("unavailable") : outOfStock ? t("outOfStock") : null;
 
   return (
-    <Link
-      href={productHref(product)}
-      className="group bg-card hover:border-primary/20 flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/5"
-    >
+    <div className="group bg-card hover:border-primary/20 has-[a:focus-visible]:ring-ring relative flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/5 has-[a:focus-visible]:ring-2">
       <div className="relative aspect-square bg-white">
         {isWishlisted !== undefined && <WishlistButton productId={product.id} isWishlisted={isWishlisted} />}
         {image ? (
@@ -59,7 +60,11 @@ const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted 
           <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">{product.brand}</p>
         )}
         {/* Three lines in a narrow phone card, or the model that tells products apart is cut off. */}
-        <h3 className="mt-1 line-clamp-3 text-sm leading-snug font-medium sm:line-clamp-2">{product.name}</h3>
+        <h3 className="mt-1 line-clamp-3 text-sm leading-snug font-medium sm:line-clamp-2">
+          <Link href={productHref(product)} className="after:absolute after:inset-0 focus-visible:outline-none">
+            {product.name}
+          </Link>
+        </h3>
         {product.keySpecs && product.keySpecs.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {product.keySpecs.map((spec) => (
@@ -80,9 +85,12 @@ const ProductCard: React.FC<Props> = ({ product, priority = false, isWishlisted 
           ) : (
             <p className="text-muted-foreground text-sm font-medium">{t("priceOnRequest")}</p>
           )}
+          <div className="mt-2 empty:hidden">
+            <CardEnergyLabel productId={product.id} className="text-lg" />
+          </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 

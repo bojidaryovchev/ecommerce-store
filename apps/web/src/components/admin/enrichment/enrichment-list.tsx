@@ -15,6 +15,7 @@ import { StageBadges } from "./stage-badges";
 const TAB_LABELS: Record<EnrichmentTab, string> = {
   attention: "Needs attention",
   missing: "Missing details",
+  labels: "Energy labels",
   ready: "Ready to publish",
   approved: "Published",
   hidden: "Hidden",
@@ -29,6 +30,8 @@ const TAB_HINTS: Partial<Record<EnrichmentTab, string>> = {
   missing:
     "Characteristics nobody could find, or that the supplier and the research disagree on. Published products are here too: they are live without these figures.",
   hidden: "Taken out of the shop: not listed, not sold and not indexed. Their page says the product is unavailable.",
+  labels:
+    "EU law wants the energy label and the product fiche shown next to the price of these products. The class arrow appears once a label is here: paste the product's EPREL link (eprel.ec.europa.eu, it carries both), or links to the label and the fiche from the supplier or the manufacturer.",
 };
 
 const STAGE_ORDER = ["extract", "validate", "classify", "rewrite", "review", "publish"] as const;

@@ -24,6 +24,16 @@ describe("deriveMedia", () => {
     expect(media.drawings).toEqual(["table.png", "label.jpg", "schema.png"]);
   });
 
+  it("takes only the whole EU label, a tall sheet, for the class arrow to open, not a class badge", () => {
+    const labelled = new Map([
+      ["eu-label.png", { kind: "energy_label" as const, label: "A+++", width: 600, height: 1200 }],
+      ["badge-a.jpg", { kind: "energy_label" as const, label: "A++", width: 90, height: 47 }],
+    ]);
+    const media = deriveMedia(["badge-a.jpg", "eu-label.png"], labelled);
+    expect(media.labels).toEqual(["eu-label.png"]);
+    expect(media.drawings).toEqual(["badge-a.jpg", "eu-label.png"]);
+  });
+
   it("shows one chip per label", () => {
     expect(deriveMedia(["icon-wifi.png", "icon-wifi-2.png"], kinds).chips).toHaveLength(1);
   });

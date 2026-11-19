@@ -2,6 +2,7 @@ export { getAllProducts, type GetAllProductsOptions } from "./get-all-products.q
 export { getCatalogFacets, type CatalogFacets, type RangeFacet, type ValueFacet } from "./get-catalog-facets.query";
 export { getCatalogPage } from "./get-catalog-page.query";
 export { getCategoryProducts } from "./get-category-products.query";
+export { getEnergyLabels } from "./get-energy-labels.query";
 export { getFeaturedProducts } from "./get-featured-products.query";
 export { getProductById } from "./get-product-by-id.query";
 export { getProductBySlug } from "./get-product-by-slug.query";

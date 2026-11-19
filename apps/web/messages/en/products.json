@@ -91,6 +91,13 @@
       "lead": "The manufacturer's tables, diagrams and energy labels for this model.",
       "open": "Open {number}",
       "alt": "{name}: drawing or table {number}"
+    },
+    "energyLabel": {
+      "title": "Energy label",
+      "open": "Energy class {value}: see the energy label",
+      "heating": "Heating",
+      "cooling": "Cooling",
+      "fiche": "Product fiche"
     }
   },
   "productAddToCart": {

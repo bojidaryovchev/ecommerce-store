@@ -4,16 +4,25 @@
  */
 export { IMAGE_KINDS, type ImageKind } from "./contract";
 export {
+  ENERGY_SCALES,
+  energyLabelInfo,
+  eprelRegistration,
+  type EnergyArrow,
+  type EnergyLabelInfo,
+  type EnergyScale,
+} from "./energy-label";
+export {
   ENERGY_CLASSES,
   KINDS,
   SPEC_FIELDS,
   formatSpecValue,
   isSpecKey,
+  kindOfCategory,
   type ProductKind,
   type SpecField,
   type SpecKey,
 } from "./fields";
-export { productGaps, type ProductGaps } from "./gaps";
+export { productGaps, type ProductDocuments, type ProductGaps } from "./gaps";
 export {
   readClassify,
   readExtract,

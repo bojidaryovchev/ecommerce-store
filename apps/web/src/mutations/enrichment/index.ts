@@ -4,5 +4,6 @@ export {
   rejectEnrichmentAction,
   rerunEnrichmentAction,
   saveCharacteristicsAction,
+  saveProductDocumentsAction,
   setProductVisibilityAction,
 } from "./enrichment.mutation";

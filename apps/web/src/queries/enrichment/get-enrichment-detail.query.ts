@@ -33,6 +33,8 @@ async function getEnrichmentDetail(productId: string) {
       name: product.name,
       description: product.description,
       metaDescription: product.metadata.metaDescription ?? null,
+      metadata: product.metadata,
+      media: product.media,
       active: product.active,
       lockedFields: product.lockedFields,
       category: product.category,
