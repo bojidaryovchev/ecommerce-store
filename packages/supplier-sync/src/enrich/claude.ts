@@ -26,7 +26,7 @@ import path from "node:path";
 
 export interface SessionRequest {
   /** The skill to run: its folder under .claude/skills in the workspace. */
-  skill: "catalog-research" | "catalog-copy" | "catalog-review";
+  skill: "catalog-research" | "catalog-copy" | "catalog-review" | "catalog-faq" | "catalog-faq-review";
   /** The session's working directory: the batch's temporary workspace. */
   workspace: string;
   /** The batch file, relative to the workspace. */

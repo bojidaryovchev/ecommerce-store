@@ -8,7 +8,7 @@ export { AdminSidebar } from "./sidebar";
 export { AdminProductsHeader, ProductFormLoader, ProductsTableLoader } from "./products";
 
 // Categories
-export { AdminCategoriesHeader, CategoriesTableLoader, CategoryFormLoader } from "./categories";
+export { AdminCategoriesHeader, CategoriesTableLoader, CategoryFaqLoader, CategoryFormLoader } from "./categories";
 
 // Orders
 export { AdminOrderDetail, AdminOrdersHeader, OrdersTableLoader } from "./orders";

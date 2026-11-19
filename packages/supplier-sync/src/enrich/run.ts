@@ -318,7 +318,8 @@ const truncate = (text: string | null, max: number) =>
   text === null ? null : text.length > max ? `${text.slice(0, max)}…` : text;
 
 /** A temporary workspace holding only the skill: what the model may read is what it is given. */
-async function createWorkspace(skillsDir: string, skill: SessionRequest["skill"]): Promise<string> {
+/** An empty temporary directory holding only the skill: the session can read nothing else. */
+export async function createWorkspace(skillsDir: string, skill: SessionRequest["skill"]): Promise<string> {
   const workspace = await mkdtemp(path.join(tmpdir(), `${skill}-`));
   const skillDir = path.join(workspace, ".claude", "skills", skill);
   await mkdir(skillDir, { recursive: true });

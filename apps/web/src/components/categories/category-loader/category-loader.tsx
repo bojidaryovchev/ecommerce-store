@@ -1,5 +1,5 @@
 import { CatalogView } from "@/components/catalog";
-import { CategoryDetail } from "@/components/categories";
+import { CategoryDetail, CategoryFaq } from "@/components/categories";
 import { permanentRedirect } from "@/i18n/navigation";
 import { parseCatalogFilters, type SearchParamsInput } from "@/lib/catalog-filters";
 import { categoryTrail } from "@/lib/category-tree";
@@ -53,6 +53,7 @@ const CategoryLoader: React.FC<Props> = async ({ path, searchParams }) => {
         links={subcategories}
         linksTitle={t("subcategories")}
       />
+      <CategoryFaq categoryId={category.id} categoryName={category.name} />
     </CategoryDetail>
   );
 };

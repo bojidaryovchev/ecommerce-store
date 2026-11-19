@@ -98,6 +98,32 @@ On a product's page the admin can:
 - **Hide the product** (`active = false`). It is no longer listed, sold or indexed, and its page says it is
   unavailable.
 
+## Category questions
+
+The category pages end with "Въпроси и отговори" (Bulgarian pages only), made the same way as product copy
+(`enrich/faq.ts`, `pnpm enrich --faq --apply`).
+
+- **Who gets them:** categories with a topic in `FAQ_TOPICS` and at least `FAQ_MIN_PRODUCTS` (8) live products:
+  5 to 7 questions for a top-level category, 3 to 5 for a section.
+- **What the writer gets** (the `catalog-faq` skill):
+  - the searches for the category's topic (`search-demand.ts`, minus other shops, towns, second-hand goods and
+    laundry dryers);
+  - what the catalogue holds there: brands, and the range of the specifications most of its products have;
+  - the section's rules of thumb (`SECTION_NOTES`) and what the shop installs;
+  - for a section, the questions its parent's page already answers.
+
+  It gets no prices and no product counts: they change, and the listing shows them.
+
+- **The checks:**
+  1. Code checks the form: the number of questions, question marks, Bulgarian, plain text, no prices, links or
+     contacts, and no repeat of the parent's questions.
+  2. A second reader (`catalog-faq-review`, with the web to confirm general claims) passes the draft, sends it
+     back with notes, or holds it.
+- **What gets published:** only passed questions. Three drafts without a pass, or a held draft, wait for the
+  admin. The admin's own questions (written on the category's admin page) are never rewritten.
+- **Running it again:** a run only writes categories with no questions yet and drafts that were sent back.
+  `--force` writes the published, held and failed ones again; add `--slug` to limit it.
+
 ## Running it
 
 It runs on the Claude subscription, like buy-a-coffee's catalogue copywriter: `claude -p` with the machine's
@@ -115,6 +141,7 @@ pnpm enrich --apply --slug a,b --force      # redo two products
 pnpm enrich --report                        # counts per gate, flagged and failed products
 pnpm enrich --rerun a,b                     # have the next run redo these
 pnpm enrich --approve                       # publish everything the reviewer passed
+pnpm enrich --faq --apply                   # questions and answers for the category pages
 ```
 
 Needs `DATABASE_URL`. Downloaded images are cached in `~/.cache/ecommerce-enrich/images`

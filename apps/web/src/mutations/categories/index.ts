@@ -1,3 +1,4 @@
+export { resetCategoryFaqAction, saveCategoryFaqAction } from "./category-faq.mutation";
 export { createCategory } from "./create-category.mutation";
 export { deleteCategory } from "./delete-category.mutation";
 export { restoreCategory } from "./restore-category.mutation";

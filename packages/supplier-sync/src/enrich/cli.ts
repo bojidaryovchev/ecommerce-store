@@ -8,6 +8,7 @@
  *   pnpm --filter @ecommerce/supplier-sync enrich --report           # counts per gate, flagged and failed
  *   pnpm --filter @ecommerce/supplier-sync enrich --rerun a,b        # mark products to be redone next run
  *   pnpm --filter @ecommerce/supplier-sync enrich --approve          # publish everything the reviewer passed
+ *   pnpm --filter @ecommerce/supplier-sync enrich --faq --apply      # questions and answers for the category pages
  *
  * Runs on the Claude subscription by default (`claude -p`, the machine's sign-in or CLAUDE_CODE_OAUTH_TOKEN);
  * `--engine api` uses ANTHROPIC_API_KEY instead. Exit codes: 0 done, 1 configuration (the CLI could not start
@@ -26,6 +27,7 @@ import { consoleLogger } from "../logger";
 import { refreshProductMedia } from "../media";
 import { runApiSession } from "./api";
 import { childEnvironment, claudeBin, runClaudeSession } from "./claude";
+import { runCategoryFaq } from "./faq";
 import { approveAllReady } from "./publish";
 import { enrichReport, formatReport } from "./report";
 import { runEnrich, type Generate } from "./run";
@@ -53,6 +55,7 @@ const { values } = parseArgs({
     "refresh-media": { type: "boolean", default: false },
     rerun: { type: "string", multiple: true },
     approve: { type: "boolean", default: false },
+    faq: { type: "boolean", default: false },
   },
 });
 
@@ -77,7 +80,7 @@ const list = (input: string[] | undefined) =>
     .map((item) => item.trim())
     .filter(Boolean);
 const slugs = list(values.slug);
-if (values.force && slugs.length === 0) fail("--force needs --slug");
+if (values.force && slugs.length === 0 && !values.faq) fail("--force needs --slug");
 
 /**
  * Asks the live site to refresh these products' pages (POST /api/revalidate), when SITE_URL and
@@ -136,7 +139,10 @@ try {
     await revalidate(changed);
   } else {
     const skillsDir = path.join(repositoryRoot(process.cwd()), ".claude", "skills");
-    if (values.apply && !existsSync(path.join(skillsDir, "catalog-research", "SKILL.md"))) {
+    const needed = values.faq
+      ? ["catalog-faq", "catalog-faq-review"]
+      : ["catalog-research", "catalog-copy", "catalog-review"];
+    if (values.apply && needed.some((skill) => !existsSync(path.join(skillsDir, skill, "SKILL.md")))) {
       fail(`The skills are missing (${skillsDir})`);
     }
     const researchModel = values.model ?? process.env.ENRICH_RESEARCH_MODEL ?? "claude-opus-5-5";
@@ -151,47 +157,78 @@ try {
         ? (request, model) => runApiSession(request, { model, ...(effort ? { effort } : {}) })
         : (request, model) => runClaudeSession(request, { bin, model, env, ...(effort ? { effort } : {}) });
 
-    const result = await runEnrich({
-      db,
-      logger: consoleLogger,
-      apply: values.apply,
-      limit,
-      ...(slugs.length > 0 ? { slugs } : {}),
-      stages: values.stage as "all" | "research" | "copy",
-      force: values.force,
-      concurrency,
-      researchModel,
-      copyModel,
-      reviewModel,
-      generate,
-      skillsDir,
-      imageCacheDir: process.env.ENRICH_IMAGE_CACHE ?? path.join(homedir(), ".cache", "ecommerce-enrich", "images"),
-    });
+    if (values.faq) {
+      // The category pages' questions: written by the copy model, checked by the review model.
+      const faq = await runCategoryFaq({
+        db,
+        logger: consoleLogger,
+        apply: values.apply,
+        ...(slugs.length > 0 ? { slugs } : {}),
+        force: values.force,
+        model: copyModel,
+        reviewModel,
+        generate,
+        skillsDir,
+        concurrency,
+      });
+      console.log(
+        JSON.stringify(
+          {
+            command: "faq",
+            ...faq,
+            note: values.apply
+              ? `Published ${faq.published.length}, held ${faq.held.length}, gave up on ${faq.failed.length}.`
+              : `Plan only; nothing was sent or written. --apply would write questions for ${faq.planned.length} categories.`,
+          },
+          null,
+          2,
+        ),
+      );
+      if (faq.stopped?.startsWith("setup")) exitCode = EXIT.setup;
+      else if (faq.stopped !== null || faq.failedSessions > 0) exitCode = EXIT.partial;
+    } else {
+      const result = await runEnrich({
+        db,
+        logger: consoleLogger,
+        apply: values.apply,
+        limit,
+        ...(slugs.length > 0 ? { slugs } : {}),
+        stages: values.stage as "all" | "research" | "copy",
+        force: values.force,
+        concurrency,
+        researchModel,
+        copyModel,
+        reviewModel,
+        generate,
+        skillsDir,
+        imageCacheDir: process.env.ENRICH_IMAGE_CACHE ?? path.join(homedir(), ".cache", "ecommerce-enrich", "images"),
+      });
 
-    console.log(
-      JSON.stringify(
-        {
-          command: "enrich",
-          engine: values.engine,
-          researchModel,
-          copyModel,
-          ...result,
-          planned: result.planned.length,
-          plan: values.apply ? undefined : result.planned,
-          note: result.applied
-            ? `Researched ${result.researched}, flagged ${result.flagged}, wrote copy for ${result.copyWritten} (rejected ${result.copyRejected}); the reviewer passed ${result.reviewPassed}, sent back ${result.reviewRevised}, held ${result.reviewHeld}; ${result.pendingApproval} newly waiting for approval.`
-            : `Plan only; nothing was sent or written. --apply would work on ${result.planned.length} product(s).`,
-        },
-        null,
-        2,
-      ),
-    );
-    if (values.apply) {
-      console.log(`\n${formatReport(await enrichReport(db))}`);
-      await revalidate(result.mediaChanged);
+      console.log(
+        JSON.stringify(
+          {
+            command: "enrich",
+            engine: values.engine,
+            researchModel,
+            copyModel,
+            ...result,
+            planned: result.planned.length,
+            plan: values.apply ? undefined : result.planned,
+            note: result.applied
+              ? `Researched ${result.researched}, flagged ${result.flagged}, wrote copy for ${result.copyWritten} (rejected ${result.copyRejected}); the reviewer passed ${result.reviewPassed}, sent back ${result.reviewRevised}, held ${result.reviewHeld}; ${result.pendingApproval} newly waiting for approval.`
+              : `Plan only; nothing was sent or written. --apply would work on ${result.planned.length} product(s).`,
+          },
+          null,
+          2,
+        ),
+      );
+      if (values.apply) {
+        console.log(`\n${formatReport(await enrichReport(db))}`);
+        await revalidate(result.mediaChanged);
+      }
+      if (result.stopped?.startsWith("setup")) exitCode = EXIT.setup;
+      else if (result.stopped !== null || result.failedSessions > 0) exitCode = EXIT.partial;
     }
-    if (result.stopped?.startsWith("setup")) exitCode = EXIT.setup;
-    else if (result.stopped !== null || result.failedSessions > 0) exitCode = EXIT.partial;
   }
 } finally {
   await client.end();

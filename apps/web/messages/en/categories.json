@@ -25,5 +25,8 @@
     "title": "Category Not Found",
     "description": "The category you're looking for doesn't exist or has been removed.",
     "browseAll": "Browse All Categories"
+  },
+  "faq": {
+    "title": "Questions and answers"
   }
 }

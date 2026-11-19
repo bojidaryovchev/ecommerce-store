@@ -8,6 +8,7 @@ export const CACHE_TAGS = {
   categories: "categories",
   category: (id: string) => `category:${id}`,
   categoryBySlug: (slug: string) => `category-slug:${slug}`,
+  categoryFaq: (categoryId: string) => `category-faq:${categoryId}`,
 
   // Products
   products: "products",

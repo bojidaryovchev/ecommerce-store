@@ -1,4 +1,4 @@
-import { CategoryFormLoader } from "@/components/admin";
+import { CategoryFaqLoader, CategoryFormLoader } from "@/components/admin";
 import { FormSkeleton } from "@/components/common";
 import type { Metadata } from "next";
 import React, { Suspense } from "react";
@@ -11,17 +11,27 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-const EditCategoryPage: React.FC<Props> = async ({ params }) => {
+/** Inside the page's Suspense: `params` is request data, so reading it outside would block the whole page. */
+const EditCategory: React.FC<Props> = async ({ params }) => {
   const { id } = await params;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Edit Category</h1>
-      <Suspense fallback={<FormSkeleton rows={5} />}>
-        <CategoryFormLoader categoryId={id} />
+    <>
+      <CategoryFormLoader categoryId={id} />
+      <Suspense fallback={<FormSkeleton rows={3} />}>
+        <CategoryFaqLoader categoryId={id} />
       </Suspense>
-    </div>
+    </>
   );
 };
+
+const EditCategoryPage: React.FC<Props> = ({ params }) => (
+  <div className="space-y-6">
+    <h1 className="text-3xl font-bold">Edit Category</h1>
+    <Suspense fallback={<FormSkeleton rows={5} />}>
+      <EditCategory params={params} />
+    </Suspense>
+  </div>
+);
 
 export default EditCategoryPage;

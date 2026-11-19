@@ -268,6 +268,83 @@ export type ReviewAnswer = z.infer<typeof reviewProductSchema>;
 
 export const reviewOutputSchema = z.object({ products: z.array(reviewProductSchema) }).strict();
 
+/* --- Category questions (faq.ts) ------------------------------------------------------------------------ */
+
+export interface FaqItem {
+  /** The category's slug: echo it exactly. */
+  slug: string;
+  name: string;
+  /** The category above it, when there is one. */
+  parent: string | null;
+  /** Its sections, for a category that has them. */
+  subcategories: string[];
+  /** The category's own introduction on its page. */
+  description: string | null;
+  /** The shop's rules of thumb for its section (sizing, installing, its guides): the answers may apply them. */
+  sectionNotes: string | null;
+  /**
+   * What the catalogue holds there: the only figures about the products the answers may state. No prices: they
+   * change, and the listing shows them.
+   */
+  facts: {
+    products: number;
+    brands: Array<{ name: string; products: number }>;
+    /** Specifications most of its products have: a range of figures or the values found, with counts. */
+    specs: Array<{ name: string; summary: string }>;
+  };
+  /** Installation the shop offers for the section, when it does: the answers may say so. */
+  installation: string | null;
+  /** What people in Bulgaria search for about it, with monthly searches: the questions start from these. */
+  searches: Array<{ phrase: string; volume: number }>;
+  /** Questions the parent category's page already answers: not to be asked again. */
+  answeredAbove: string[];
+  /** The last draft and the second reader's notes on it, when it was sent back. */
+  previous: { questions: Array<{ question: string; answer: string }>; notes: string[] } | null;
+}
+
+export interface FaqBatch {
+  version: 1;
+  categories: FaqItem[];
+}
+
+export const faqEntrySchema = z
+  .object({
+    question: z.string().min(8).max(160),
+    answer: z.string().min(40).max(900),
+  })
+  .strict();
+
+export const faqCategorySchema = z
+  .object({
+    slug: z.string().min(1),
+    questions: z.array(faqEntrySchema).max(8),
+  })
+  .strict();
+export type FaqAnswer = z.infer<typeof faqCategorySchema>;
+
+export const faqOutputSchema = z.object({ categories: z.array(faqCategorySchema) }).strict();
+
+export interface FaqReviewItem extends Omit<FaqItem, "previous"> {
+  questions: Array<{ question: string; answer: string }>;
+}
+
+export interface FaqReviewBatch {
+  version: 1;
+  categories: FaqReviewItem[];
+}
+
+export const faqReviewCategorySchema = z
+  .object({
+    slug: z.string().min(1),
+    verdict: z.enum(REVIEW_VERDICTS),
+    /** For "revise": what the writer must change, one point each; for "hold": why a person must look. */
+    issues: z.array(z.string().min(3).max(400)).max(10),
+  })
+  .strict();
+export type FaqReviewAnswer = z.infer<typeof faqReviewCategorySchema>;
+
+export const faqReviewOutputSchema = z.object({ categories: z.array(faqReviewCategorySchema) }).strict();
+
 /* --- Shared --------------------------------------------------------------------------------------------- */
 
 /** The JSON Schema the CLI enforces (`claude -p --json-schema`). */
@@ -280,6 +357,8 @@ export function jsonSchemaOf(schema: z.ZodType): Record<string, unknown> {
 export const RESEARCH_OUTPUT_JSON_SCHEMA = jsonSchemaOf(researchOutputSchema);
 export const COPY_OUTPUT_JSON_SCHEMA = jsonSchemaOf(copyOutputSchema);
 export const REVIEW_OUTPUT_JSON_SCHEMA = jsonSchemaOf(reviewOutputSchema);
+export const FAQ_OUTPUT_JSON_SCHEMA = jsonSchemaOf(faqOutputSchema);
+export const FAQ_REVIEW_OUTPUT_JSON_SCHEMA = jsonSchemaOf(faqReviewOutputSchema);
 
 /** The envelope: per-product answers are parsed one by one. */
 const envelopeSchema = z.object({ products: z.array(z.unknown()) });
