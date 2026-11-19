@@ -16,7 +16,7 @@ interface Props {
  * <details>, as on the home page: they work without JavaScript and are read by search engines and screen readers.
  */
 const CategoryFaq: React.FC<Props> = async ({ categoryId, categoryName }) => {
-  const [locale, items] = await Promise.all([getLocale(), getCategoryFaq(categoryId)]);
+  const [locale, { items }] = await Promise.all([getLocale(), getCategoryFaq(categoryId)]);
   if (locale !== routing.defaultLocale || items.length === 0) return null;
   const t = await getTranslations("categories.faq");
 

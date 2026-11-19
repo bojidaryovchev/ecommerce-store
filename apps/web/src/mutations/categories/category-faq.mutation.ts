@@ -20,6 +20,8 @@ async function saveCategoryFaqAction(categoryId: string, input: CategoryFaqInput
     if (!parsed.success) return { success: false, error: z.prettifyError(parsed.error) };
     const values = {
       items: parsed.data.items,
+      intro: parsed.data.intro || null,
+      metaDescription: parsed.data.metaDescription || null,
       draft: null,
       status: "published" as const,
       notes: null,

@@ -15,6 +15,9 @@ export const categoryFaqSchema = z.object({
       }),
     )
     .max(8, "At most eight questions"),
+  /** For a category without its own description: the page's introduction and meta description (empty: none). */
+  intro: z.string().trim().max(800, "Keep the introduction under 800 characters"),
+  metaDescription: z.string().trim().max(200, "Keep the meta description under 200 characters"),
 });
 
 export type CategoryFaqInput = z.infer<typeof categoryFaqSchema>;

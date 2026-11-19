@@ -63,12 +63,24 @@ describe.skipIf(!isLocal)("category questions (integration)", () => {
   const client = postgres(url ?? "postgres://localhost/none", { max: 1, onnotice: () => {} });
   const db = drizzle(client, { schema });
 
-  /** "Термопомпи" with its section "Термопомпи моноблок" holding ten Artel heat pumps from 4 to 16 kW. */
-  async function seed() {
-    const [root] = await db.insert(schema.categories).values({ name: "Термопомпи", slug: "termopompi" }).returning();
+  /**
+   * "Термопомпи" with its section "Термопомпи моноблок" holding ten Artel heat pumps from 4 to 16 kW. Both have
+   * their own description, unless `intro` asks for a section that has none.
+   */
+  async function seed(options: { sectionDescription?: string | null } = {}) {
+    const [root] = await db
+      .insert(schema.categories)
+      .values({ name: "Термопомпи", slug: "termopompi", description: "Термопомпите въздух-вода на магазина." })
+      .returning();
     const [section] = await db
       .insert(schema.categories)
-      .values({ name: "Термопомпи моноблок", slug: "monoblok", parentId: root!.id })
+      .values({
+        name: "Термопомпи моноблок",
+        slug: "monoblok",
+        parentId: root!.id,
+        description:
+          options.sectionDescription === undefined ? "Моноблоковете на магазина." : options.sectionDescription,
+      })
       .returning();
     const [power] = await db
       .insert(schema.attributes)
@@ -173,6 +185,50 @@ describe.skipIf(!isLocal)("category questions (integration)", () => {
     // The reader never saw the draft with the price.
     expect(engine.reviews[0]!.categories[0]!.questions[0]!.answer).toBe(ANSWER);
     expect(await faqOf(root.id)).toMatchObject({ status: "published", attempts: 0, notes: null });
+  });
+
+  it("gives a section without a description of its own an introduction, keeping its published questions", async () => {
+    const { section } = await seed({ sectionDescription: null });
+    const INTRO =
+      "При термопомпата моноблок цялата хидравлика е във външното тяло, а към дома влизат само водни тръби.";
+    const META =
+      "Термопомпи моноблок Artel от 4 до 16 kW за отопление, охлаждане и топла вода, с оглед и монтаж до ключ от нашия екип.";
+    await db.insert(schema.categoryFaqs).values({
+      categoryId: section.id,
+      items: questions("Термопомпи моноблок", 3),
+      status: "published",
+    });
+    const engine = scripted({
+      write: (batch) => ({
+        categories: batch.categories.map((category) => ({
+          slug: category.slug,
+          questions: category.previous?.questions ?? questions(category.name, category.parent === null ? 5 : 3),
+          ...(category.writeIntro ? { intro: INTRO, metaDescription: META } : {}),
+        })),
+      }),
+      review: pass,
+    });
+
+    const result = await run(engine.generate);
+
+    // The section, which owes an introduction; the top level has its own description and was already done.
+    const sectionWrite = engine.writes.flatMap((batch) => batch.categories).find((c) => c.slug === "monoblok")!;
+    expect(sectionWrite.writeIntro).toBe(true);
+    expect(sectionWrite.previous).toEqual({
+      questions: questions("Термопомпи моноблок", 3),
+      notes: [expect.stringContaining("Keep these questions")],
+    });
+    expect(engine.reviews.flatMap((batch) => batch.categories).find((c) => c.slug === "monoblok")).toMatchObject({
+      intro: INTRO,
+      metaDescription: META,
+    });
+    expect(result.published).toContain("monoblok");
+    expect(await faqOf(section.id)).toMatchObject({
+      status: "published",
+      intro: INTRO,
+      metaDescription: META,
+      items: questions("Термопомпи моноблок", 3),
+    });
   });
 
   it("keeps a held draft for the admin, gives up after three, and never touches the admin's questions", async () => {

@@ -13,9 +13,13 @@ const item = (overrides: Partial<FaqItem> = {}): FaqItem => ({
   installation: null,
   searches: [],
   answeredAbove: [],
+  questionRange: { min: 5, max: 7 },
+  writeIntro: false,
   previous: null,
   ...overrides,
 });
+
+const SECTION = { parent: "Термопомпи", questionRange: { min: 3, max: 5 } };
 
 const answer = (count: number, text = "Зависи от топлинните загуби на дома и от това дали къщата е изолирана.") => ({
   slug: "termopompi",
@@ -70,17 +74,17 @@ describe("searchesFor", () => {
 
 describe("checkFaqAnswer", () => {
   it("passes a well-formed draft", () => {
-    expect(checkFaqAnswer(item(), answer(5), true)).toEqual([]);
+    expect(checkFaqAnswer(item(), answer(5))).toEqual([]);
   });
 
   it("wants 5 to 7 questions on a top-level page and 3 to 5 on a section", () => {
-    expect(checkFaqAnswer(item(), answer(4), true)[0]).toContain("5 to 7");
-    expect(checkFaqAnswer(item({ parent: "Термопомпи" }), answer(3), false)).toEqual([]);
-    expect(checkFaqAnswer(item({ parent: "Термопомпи" }), answer(6), false)[0]).toContain("3 to 5");
+    expect(checkFaqAnswer(item(), answer(4))[0]).toContain("5 to 7");
+    expect(checkFaqAnswer(item(SECTION), answer(3))).toEqual([]);
+    expect(checkFaqAnswer(item(SECTION), answer(6))[0]).toContain("3 to 5");
   });
 
   it("refuses prices, links, lists and exclamation marks", () => {
-    const issues = (text: string) => checkFaqAnswer(item(), answer(5, text), true).join(" ");
+    const issues = (text: string) => checkFaqAnswer(item(), answer(5, text)).join(" ");
     expect(issues("Моделите в каталога започват от 2 400 € с ДДС и стигат до доста повече.")).toContain("prices");
     expect(issues("Цената е около 1500 лв. за малките модели, а големите са по-скъпи.")).toContain("prices");
     expect(issues("Вижте повече на www.example.com, където има подробно описание на всичко.")).toContain("links");
@@ -93,17 +97,39 @@ describe("checkFaqAnswer", () => {
   it("refuses a question without its question mark, in English, asked twice or asked above", () => {
     const draft = answer(5);
     draft.questions[0]!.question = "Какво да проверя преди покупка";
-    expect(checkFaqAnswer(item(), draft, true).join(" ")).toContain("question mark");
+    expect(checkFaqAnswer(item(), draft).join(" ")).toContain("question mark");
 
     const english = answer(5, "It depends on the heat loss of the house and on its insulation, mostly.");
-    expect(checkFaqAnswer(item(), english, true).join(" ")).toContain("Bulgarian");
+    expect(checkFaqAnswer(item(), english).join(" ")).toContain("Bulgarian");
 
     const twice = answer(5);
     twice.questions[1]!.question = twice.questions[0]!.question;
-    expect(checkFaqAnswer(item(), twice, true).join(" ")).toContain("ask the same");
+    expect(checkFaqAnswer(item(), twice).join(" ")).toContain("ask the same");
 
-    const section = item({ parent: "Термопомпи", answeredAbove: ["Какво да проверя преди покупка, точка 1?"] });
-    expect(checkFaqAnswer(section, answer(3), false).join(" ")).toContain("parent category");
+    const section = item({ ...SECTION, answeredAbove: ["Какво да проверя преди покупка, точка 1?"] });
+    expect(checkFaqAnswer(section, answer(3)).join(" ")).toContain("parent category");
+  });
+
+  it("wants the introduction and meta description of a category without its own, and none of its questions when it is too small", () => {
+    const META =
+      "Термопомпи моноблок Artel от 4,58 до 30,1 kW, монофазни и трифазни, с хладилен агент R32 или R410A и монтаж до ключ.";
+    const INTRO =
+      "При термопомпата моноблок цялата хидравлика е във външното тяло, а към дома влизат само водни тръби.";
+    const needs = item({ ...SECTION, writeIntro: true });
+    expect(checkFaqAnswer(needs, answer(3)).join(" ")).toContain("introduction");
+    expect(checkFaqAnswer(needs, { ...answer(3), intro: INTRO, metaDescription: META })).toEqual([]);
+    expect(checkFaqAnswer(needs, { ...answer(3), intro: INTRO, metaDescription: "Кратко." }).join(" ")).toContain(
+      "110–170",
+    );
+    expect(
+      checkFaqAnswer(needs, { ...answer(3), intro: `${INTRO} Цена от 900 €.`, metaDescription: META }).join(" "),
+    ).toContain("prices");
+
+    const small = item({ ...SECTION, writeIntro: true, questionRange: { min: 0, max: 0 } });
+    expect(checkFaqAnswer(small, { slug: "termopompi", questions: [], intro: INTRO, metaDescription: META })).toEqual(
+      [],
+    );
+    expect(checkFaqAnswer(small, { ...answer(1), intro: INTRO, metaDescription: META })[0]).toContain("no questions");
   });
 });
 
@@ -112,6 +138,8 @@ describe("needsFaqWork", () => {
     ({ status, source }) as Parameters<typeof needsFaqWork>[0];
 
   it("writes new and sent-back questions, the rest only on --force, and never the admin's", () => {
+    expect(needsFaqWork({ ...row("published"), intro: null } as never, false, true)).toBe(true);
+    expect(needsFaqWork({ ...row("published"), intro: "Въведение." } as never, false, true)).toBe(false);
     expect(needsFaqWork(undefined, false)).toBe(true);
     expect(needsFaqWork(row("revise"), false)).toBe(true);
     expect(needsFaqWork(row("published"), false)).toBe(false);

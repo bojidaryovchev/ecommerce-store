@@ -105,6 +105,10 @@ The category pages end with "Въпроси и отговори" (Bulgarian page
 
 - **Who gets them:** categories with a topic in `FAQ_TOPICS` and at least `FAQ_MIN_PRODUCTS` (8) live products:
   5 to 7 questions for a top-level category, 3 to 5 for a section.
+- **Introductions:** a category without a description of its own (and at least `FAQ_MIN_INTRO_PRODUCTS`, 3, live
+  products) also gets an introduction above its products and a meta description, written and checked with its
+  questions. A small one gets only those. Published questions that still lack them are kept, and only the
+  introduction is written. The category's own description, once someone writes one, always wins.
 - **What the writer gets** (the `catalog-faq` skill):
   - the searches for the category's topic (`search-demand.ts`, minus other shops, towns, second-hand goods and
     laundry dryers);

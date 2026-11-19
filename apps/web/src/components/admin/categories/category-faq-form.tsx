@@ -16,6 +16,10 @@ import toast from "react-hot-toast";
 
 export type CategoryFaqState = {
   items: CategoryFaqItem[];
+  intro: string | null;
+  metaDescription: string | null;
+  /** The category has a description of its own, which the page shows instead of the written introduction. */
+  ownDescription: boolean;
   draft: CategoryFaqItem[] | null;
   status: "published" | "revise" | "held" | "failed" | null;
   source: "generated" | "admin" | null;
@@ -40,7 +44,7 @@ const CategoryFaqForm: React.FC<Props> = ({ categoryId, faq }) => {
     formState: { errors, isSubmitting, isDirty },
   } = useForm<CategoryFaqInput>({
     resolver: zodResolver(categoryFaqSchema),
-    defaultValues: { items: faq.items },
+    defaultValues: { items: faq.items, intro: faq.intro ?? "", metaDescription: faq.metaDescription ?? "" },
   });
   const { fields, append, remove, replace } = useFieldArray({ control, name: "items" });
 
@@ -99,6 +103,37 @@ const CategoryFaqForm: React.FC<Props> = ({ categoryId, faq }) => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        {faq.ownDescription ? (
+          <p className="text-muted-foreground text-sm">
+            The page shows the category&apos;s own description above its products, so no introduction is written for it.
+          </p>
+        ) : (
+          <div className="space-y-3 rounded-xl border p-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="faq-intro">Introduction above the products</Label>
+              <Textarea
+                id="faq-intro"
+                rows={3}
+                {...register("intro")}
+                aria-invalid={Boolean(errors.intro)}
+                disabled={isSubmitting}
+              />
+              {errors.intro?.message && <p className="text-destructive text-xs">{errors.intro.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="faq-meta">Meta description (the line under the title in search results)</Label>
+              <Input
+                id="faq-meta"
+                {...register("metaDescription")}
+                aria-invalid={Boolean(errors.metaDescription)}
+                disabled={isSubmitting}
+              />
+              {errors.metaDescription?.message && (
+                <p className="text-destructive text-xs">{errors.metaDescription.message}</p>
+              )}
+            </div>
+          </div>
+        )}
         <ol className="space-y-4">
           {fields.map((field, index) => (
             <li key={field.id} className="space-y-2 rounded-xl border p-4">

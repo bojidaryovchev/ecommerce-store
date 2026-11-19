@@ -1,10 +1,11 @@
 import { CatalogView } from "@/components/catalog";
 import { CategoryDetail, CategoryFaq } from "@/components/categories";
 import { permanentRedirect } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { parseCatalogFilters, type SearchParamsInput } from "@/lib/catalog-filters";
 import { categoryTrail } from "@/lib/category-tree";
 import { categoryHref } from "@/lib/routes";
-import { getCategoryBySlug, getCategoryIndex } from "@/queries/categories";
+import { getCategoryBySlug, getCategoryFaq, getCategoryIndex } from "@/queries/categories";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -41,12 +42,17 @@ const CategoryLoader: React.FC<Props> = async ({ path, searchParams }) => {
     permanentRedirect({ href: query ? `${href}?${query}` : href, locale });
   }
 
+  // The written introduction is Bulgarian: only the Bulgarian page shows it, and only where the category has no text.
+  const faq =
+    locale === routing.defaultLocale && !category.description?.trim() ? await getCategoryFaq(category.id) : null;
+  const shown = faq?.intro ? { ...category, description: faq.intro } : category;
+
   const subcategories = categories
     .filter((c) => c.parentId === category.id)
     .map((child) => ({ href: categoryHref([...trail, child]), label: child.name }));
 
   return (
-    <CategoryDetail category={category} trail={trail} subcategories={subcategories}>
+    <CategoryDetail category={shown} trail={trail} subcategories={subcategories}>
       <CatalogView
         filters={parseCatalogFilters(search, { categoryId: category.id })}
         basePath={href}

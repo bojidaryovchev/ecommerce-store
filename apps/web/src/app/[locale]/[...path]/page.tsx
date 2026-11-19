@@ -5,7 +5,7 @@ import { routing } from "@/i18n/routing";
 import type { SearchParamsInput } from "@/lib/catalog-filters";
 import { categoryTrail } from "@/lib/category-tree";
 import { categoryHref } from "@/lib/routes";
-import { getCategoryBySlug, getCategoryIndex, getCategoryStats } from "@/queries/categories";
+import { getCategoryBySlug, getCategoryFaq, getCategoryIndex, getCategoryStats } from "@/queries/categories";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -41,6 +41,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const stats = await getCategoryStats();
   const empty = (stats[category.id]?.productCount ?? 0) === 0;
   const indexable = locale === routing.defaultLocale && !filtered && !empty;
+  // A category without its own description: the meta description written with its questions (Bulgarian pages).
+  const written =
+    !details?.description && locale === routing.defaultLocale
+      ? (await getCategoryFaq(category.id)).metaDescription
+      : null;
 
   // The section's picture as the preview: its own, or its top-level section's.
   const picture = [category, ...categoryTrail(categories, category.id).reverse()]
@@ -50,7 +55,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   return {
     title: page > 1 ? t("metadata.pagedTitle", { name: category.name, page }) : category.name,
     ...(picture && { openGraph: { images: [picture] } }),
-    description: details?.description || t("metadata.categoryDescription", { name: category.name }),
+    description: details?.description || written || t("metadata.categoryDescription", { name: category.name }),
     alternates: { canonical: !filtered && page > 1 ? `${href}?page=${page}` : href },
     ...(!indexable && { robots: { index: false, follow: true } }),
   };

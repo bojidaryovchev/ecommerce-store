@@ -23,6 +23,12 @@ export const categoryFaqs = pgTable("category_faq", {
     .primaryKey()
     .references(() => categories.id, { onDelete: "cascade" }),
   items: jsonb("items").$type<CategoryFaqItem[]>().notNull().default([]),
+  /**
+   * For a category without its own description: the introduction and the meta description, published with the
+   * questions. The category's own description, when someone writes one, always wins.
+   */
+  intro: text("intro"),
+  metaDescription: text("meta_description"),
   draft: jsonb("draft").$type<CategoryFaqItem[] | null>(),
   status: text("status").$type<CategoryFaqStatus>().notNull(),
   /** The second reader's notes on the last draft. */

@@ -61,6 +61,12 @@ export const FAQ_TOPICS: Readonly<Record<string, readonly string[]>> = {
 /** A category with fewer live products than this gets no questions: there is too little to answer from. */
 export const FAQ_MIN_PRODUCTS = 8;
 
+/** A category without a description of its own gets an introduction and a meta description from this many on. */
+export const FAQ_MIN_INTRO_PRODUCTS = 3;
+
+const KEEP_QUESTIONS =
+  "Keep these questions and answers as they are unless one of them is wrong; write the introduction and the meta description.";
+
 /** What the shop installs, by top-level category (the web app's installation pages). */
 const INSTALLATION: Readonly<Record<string, string>> = {
   termopompi:
@@ -237,10 +243,12 @@ export async function loadFaqContexts(db: Database): Promise<FaqContext[]> {
 
   const contexts: FaqContext[] = [];
   for (const category of categories) {
-    if (!FAQ_TOPICS[category.slug]) continue;
     const ids = subtree(category.id);
     const inside = products.filter((product) => product.categoryId !== null && ids.has(product.categoryId));
-    if (inside.length < FAQ_MIN_PRODUCTS) continue;
+    // Questions where there is demand and enough to answer from; an introduction wherever the page has none.
+    const ask = Boolean(FAQ_TOPICS[category.slug]) && inside.length >= FAQ_MIN_PRODUCTS;
+    const writeIntro = !category.description?.trim() && inside.length >= FAQ_MIN_INTRO_PRODUCTS;
+    if (!ask && !writeIntro) continue;
     const productIds = new Set(inside.map((product) => product.id));
     const brands = new Map<string, number>();
     for (const product of inside) if (product.brand) brands.set(product.brand, (brands.get(product.brand) ?? 0) + 1);
@@ -270,6 +278,8 @@ export async function loadFaqContexts(db: Database): Promise<FaqContext[]> {
         },
         installation: INSTALLATION[root] ?? null,
         searches: searchesFor(category.slug),
+        questionRange: ask ? questionRange(category.parentId === null) : { min: 0, max: 0 },
+        writeIntro,
       },
     });
   }
@@ -291,11 +301,39 @@ const EMOJI = /\p{Extended_Pictographic}/u;
 export const questionRange = (topLevel: boolean) => (topLevel ? { min: 5, max: 7 } : { min: 3, max: 5 });
 
 /** Why a draft cannot go to the second reader as it is; empty when its form is right. */
-export function checkFaqAnswer(item: FaqItem, answer: FaqAnswer, topLevel: boolean): string[] {
+export function checkFaqAnswer(item: FaqItem, answer: FaqAnswer): string[] {
   const issues: string[] = [];
-  const { min, max } = questionRange(topLevel);
+  const { min, max } = item.questionRange;
   if (answer.questions.length < min || answer.questions.length > max) {
-    issues.push(`Write ${min} to ${max} questions; there are ${answer.questions.length}.`);
+    issues.push(
+      max === 0
+        ? `Write no questions for this category, only its introduction and meta description.`
+        : `Write ${min} to ${max} questions; there are ${answer.questions.length}.`,
+    );
+  }
+  if (item.writeIntro) {
+    const intro = answer.intro?.trim() ?? "";
+    const meta = answer.metaDescription?.trim() ?? "";
+    if (!intro) issues.push("Write the introduction: the category has none of its own.");
+    if (!meta) issues.push("Write the meta description.");
+    else if (meta.length < 110 || meta.length > 170) {
+      issues.push(`Keep the meta description to 110–170 characters; it has ${meta.length}.`);
+    }
+    if (/\n/.test(meta)) issues.push("Write the meta description as one line.");
+    for (const [label, text] of [
+      ["introduction", intro],
+      ["meta description", meta],
+    ] as const) {
+      if (!text) continue;
+      if (MARKUP.test(text) || text.includes("!") || EMOJI.test(text)) {
+        issues.push(`Plain text only in the ${label}: no Markdown, lists, emoji or exclamation marks.`);
+      }
+      if (PRICE.test(text)) issues.push(`State no prices in the ${label}: they change.`);
+      if (CONTACT.test(text)) issues.push(`No links or contact details in the ${label}.`);
+      const letters = text.match(/\p{L}/gu) ?? [];
+      const cyrillic = letters.filter((letter) => /\p{Script=Cyrillic}/u.test(letter)).length;
+      if (letters.length > 0 && cyrillic / letters.length < 0.7) issues.push(`Write the ${label} in Bulgarian.`);
+    }
   }
   const above = new Set(item.answeredAbove.map(comparable));
   const seen = new Set<string>();
@@ -354,11 +392,12 @@ async function loadFaqRows(db: Database): Promise<Map<string, FaqRow>> {
   return new Map(rows.map((row) => [row.categoryId, row]));
 }
 
-/** Whether a category's questions are to be written this run. */
-export function needsFaqWork(row: FaqRow | undefined, force: boolean): boolean {
+/** Whether a category's questions are to be written this run: also published ones still missing their introduction. */
+export function needsFaqWork(row: FaqRow | undefined, force: boolean, writeIntro = false): boolean {
   if (!row) return true;
   if (row.source === "admin") return false;
   if (row.status === "revise") return true;
+  if (writeIntro && row.status === "published" && !row.intro) return true;
   return force;
 }
 
@@ -366,7 +405,9 @@ export function needsFaqWork(row: FaqRow | undefined, force: boolean): boolean {
 async function saveFaq(
   db: Database,
   categoryId: string,
-  values: { status: CategoryFaqStatus } & Partial<Pick<FaqRow, "items" | "draft" | "notes" | "attempts" | "model">>,
+  values: { status: CategoryFaqStatus } & Partial<
+    Pick<FaqRow, "items" | "intro" | "metaDescription" | "draft" | "notes" | "attempts" | "model">
+  >,
 ): Promise<void> {
   await db
     .insert(schema.categoryFaqs)
@@ -439,7 +480,9 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
     options.slugs && options.slugs.length > 0
       ? contexts.filter((context) => options.slugs!.includes(context.slug))
       : contexts;
-  const planned = wanted.filter((context) => needsFaqWork(rows.get(context.id), options.force ?? false));
+  const planned = wanted.filter((context) =>
+    needsFaqWork(rows.get(context.id), options.force ?? false, context.item.writeIntro),
+  );
   const result: FaqResult = {
     planned: planned.map((context) => context.slug),
     published: [],
@@ -464,10 +507,13 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
       const row = rows.get(context.id);
       // A draft that did not pass (sent back, held or given up on) is fixed from the reader's notes, even when
       // forced; only published questions are written afresh.
+      // Published questions still missing their introduction are kept; only the introduction is new.
       const previous =
         row && row.status !== "published" && row.draft
           ? { questions: row.draft, notes: (row.notes ?? "").split("\n").filter(Boolean) }
-          : null;
+          : row?.status === "published" && context.item.writeIntro && !row.intro && !options.force
+            ? { questions: row.items, notes: [KEEP_QUESTIONS] }
+            : null;
       return { context, attempts: options.force ? 0 : (row?.attempts ?? 0), previous };
     });
 
@@ -478,7 +524,8 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
           { ...entry.context.item, answeredAbove: answeredAbove(entry.context), previous: entry.previous } as FaqItem,
         ]),
       );
-      const sentBack: Array<{ entry: Pending; draft: CategoryFaqItem[] | null; issues: string[] }> = [];
+      const sentBack: Array<{ entry: Pending; draft: CategoryFaqItem[] | null; answer?: FaqAnswer; issues: string[] }> =
+        [];
 
       log.info("faq.write.start", { categories: [...items.keys()] });
       let written: SessionResult | null = null;
@@ -512,8 +559,8 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
             });
             continue;
           }
-          const issues = checkFaqAnswer(items.get(entry.context.slug)!, answer, entry.context.parentId === null);
-          if (issues.length > 0) sentBack.push({ entry, draft: answer.questions, issues });
+          const issues = checkFaqAnswer(items.get(entry.context.slug)!, answer);
+          if (issues.length > 0) sentBack.push({ entry, draft: answer.questions, answer, issues });
           else toReview.push({ entry, answer });
         }
       }
@@ -525,6 +572,8 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
             ...entry.context.item,
             answeredAbove: answeredAbove(entry.context),
             questions: answer.questions,
+            intro: entry.context.item.writeIntro ? (answer.intro?.trim() ?? null) : null,
+            metaDescription: entry.context.item.writeIntro ? (answer.metaDescription?.trim() ?? null) : null,
           })),
         };
         log.info("faq.review.start", { categories: toReview.map(({ entry }) => entry.context.slug) });
@@ -535,11 +584,13 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
           for (const { entry, answer } of toReview) {
             const verdict = verdicts.get(entry.context.slug);
             if (!verdict) {
-              sentBack.push({ entry, draft: answer.questions, issues: ["The second reader gave no verdict."] });
+              sentBack.push({ entry, draft: answer.questions, answer, issues: ["The second reader gave no verdict."] });
             } else if (verdict.verdict === "pass") {
               await saveFaq(options.db, entry.context.id, {
                 status: "published",
                 items: answer.questions,
+                intro: entry.context.item.writeIntro ? (answer.intro?.trim() ?? null) : null,
+                metaDescription: entry.context.item.writeIntro ? (answer.metaDescription?.trim() ?? null) : null,
                 draft: null,
                 notes: null,
                 attempts: 0,
@@ -558,7 +609,7 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
               result.held.push(entry.context.slug);
               log.warn("faq.held", { category: entry.context.slug, issues: verdict.issues });
             } else {
-              sentBack.push({ entry, draft: answer.questions, issues: verdict.issues });
+              sentBack.push({ entry, draft: answer.questions, answer, issues: verdict.issues });
             }
           }
         } catch (error) {
@@ -567,13 +618,18 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
           const message = error instanceof Error ? error.message : String(error);
           log.warn("faq.review.failed", { message: scrubForLog(message) });
           for (const { entry, answer } of toReview) {
-            sentBack.push({ entry, draft: answer.questions, issues: [`The review session failed: ${message}`] });
+            sentBack.push({
+              entry,
+              draft: answer.questions,
+              answer,
+              issues: [`The review session failed: ${message}`],
+            });
           }
         }
       }
 
       const next: Pending[] = [];
-      for (const { entry, draft, issues } of sentBack) {
+      for (const { entry, draft, answer, issues } of sentBack) {
         const attempts = entry.attempts + 1;
         const status: CategoryFaqStatus = attempts >= MAX_ATTEMPTS ? "failed" : "revise";
         await saveFaq(options.db, entry.context.id, {
@@ -591,7 +647,12 @@ export async function runCategoryFaq(options: FaqOptions): Promise<FaqResult> {
           next.push({
             ...entry,
             attempts,
-            previous: { questions: draft ?? entry.previous?.questions ?? [], notes: issues },
+            previous: {
+              questions: draft ?? entry.previous?.questions ?? [],
+              intro: answer?.intro ?? entry.previous?.intro ?? null,
+              metaDescription: answer?.metaDescription ?? entry.previous?.metaDescription ?? null,
+              notes: issues,
+            },
           });
         }
       }

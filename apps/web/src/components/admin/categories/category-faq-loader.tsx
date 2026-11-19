@@ -9,9 +9,15 @@ import { CategoryFaqForm, type CategoryFaqState } from "./category-faq-form";
 const CategoryFaqLoader: React.FC<{ categoryId: string }> = async ({ categoryId }) => {
   // At request time, never in a prerender: the pipeline changes this row outside the app.
   await connection();
-  const row = await db.query.categoryFaqs.findFirst({ where: eq(schema.categoryFaqs.categoryId, categoryId) });
+  const [row, category] = await Promise.all([
+    db.query.categoryFaqs.findFirst({ where: eq(schema.categoryFaqs.categoryId, categoryId) }),
+    db.query.categories.findFirst({ where: eq(schema.categories.id, categoryId), columns: { description: true } }),
+  ]);
   const faq: CategoryFaqState = {
     items: row?.items ?? [],
+    intro: row?.intro ?? null,
+    metaDescription: row?.metaDescription ?? null,
+    ownDescription: Boolean(category?.description?.trim()),
     draft: row?.draft ?? null,
     status: row?.status ?? null,
     source: row?.source ?? null,

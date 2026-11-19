@@ -298,8 +298,17 @@ export interface FaqItem {
   searches: Array<{ phrase: string; volume: number }>;
   /** Questions the parent category's page already answers: not to be asked again. */
   answeredAbove: string[];
+  /** How many questions to write: none for a category too small for them, which gets only its introduction. */
+  questionRange: { min: number; max: number };
+  /** The category has no description of its own: write its introduction and its meta description too. */
+  writeIntro: boolean;
   /** The last draft and the second reader's notes on it, when it was sent back. */
-  previous: { questions: Array<{ question: string; answer: string }>; notes: string[] } | null;
+  previous: {
+    questions: Array<{ question: string; answer: string }>;
+    intro?: string | null;
+    metaDescription?: string | null;
+    notes: string[];
+  } | null;
 }
 
 export interface FaqBatch {
@@ -318,6 +327,9 @@ export const faqCategorySchema = z
   .object({
     slug: z.string().min(1),
     questions: z.array(faqEntrySchema).max(8),
+    /** Only when `writeIntro`: the page's introduction and its meta description. */
+    intro: z.string().min(60).max(800).nullable().optional(),
+    metaDescription: z.string().min(80).max(200).nullable().optional(),
   })
   .strict();
 export type FaqAnswer = z.infer<typeof faqCategorySchema>;
@@ -326,6 +338,8 @@ export const faqOutputSchema = z.object({ categories: z.array(faqCategorySchema)
 
 export interface FaqReviewItem extends Omit<FaqItem, "previous"> {
   questions: Array<{ question: string; answer: string }>;
+  intro: string | null;
+  metaDescription: string | null;
 }
 
 export interface FaqReviewBatch {

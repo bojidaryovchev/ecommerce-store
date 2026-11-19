@@ -127,6 +127,13 @@
       "when": 1795094582407,
       "tag": "0017_stock_alert",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795097501946,
+      "tag": "0018_category_intro",
+      "breakpoints": true
     }
   ]
 }
