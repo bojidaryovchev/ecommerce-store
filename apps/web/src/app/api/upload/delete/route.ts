@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
+import { isAdminNow } from "@/lib/auth-guard";
 import { deleteS3Object, extractKeyFromUrl } from "@/lib/s3";
 import { db, schema } from "@ecommerce/database";
-import { UserRole } from "@ecommerce/database/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,8 +14,7 @@ export async function DELETE(request: NextRequest) {
   try {
     // Only admins can delete uploads
     const session = await auth();
-    const isAdmin = session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.SUPER_ADMIN;
-    if (!isAdmin) {
+    if (!(await isAdminNow(session?.user?.id))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

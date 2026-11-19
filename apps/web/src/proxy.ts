@@ -1,6 +1,6 @@
 import { routing } from "@/i18n/routing";
 import { auth } from "@/lib/auth";
-import { UserRole } from "@ecommerce/database/schema";
+import { isAdminNow } from "@/lib/auth-guard";
 import { NextAuthRequest } from "next-auth";
 import createIntlMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
@@ -41,8 +41,8 @@ export default auth(async (req) => {
     if (!user) {
       return finish(redirectToLogin(req, "", pathname), pathname);
     }
-    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
-    if (!isAdmin) {
+    // The database's role, not the cookie's: see lib/auth-guard.ts. Only admins come here, so the lookup is cheap.
+    if (!(await isAdminNow(user.id))) {
       return finish(NextResponse.redirect(new URL("/", req.url)), pathname);
     }
     // Shared components (order badges, summaries…) read their language from next-intl: English here.

@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { isAdminNow } from "@/lib/auth-guard";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import type { ActionResult } from "@/types/action-result.type";
 import { db, schema } from "@ecommerce/database";
@@ -27,9 +28,8 @@ async function deleteReview(reviewId: string): Promise<ActionResult> {
     }
 
     const isOwner = review.userId === session.user.id;
-    const isAdmin = session.user.role === "ADMIN" || session.user.role === "SUPER_ADMIN";
-
-    if (!isOwner && !isAdmin) {
+    // The database's role, not the cookie's (lib/auth-guard.ts); asked only when it is not their own review.
+    if (!isOwner && !(await isAdminNow(session.user.id))) {
       return { success: false, error: "You are not authorized to delete this review" };
     }
 

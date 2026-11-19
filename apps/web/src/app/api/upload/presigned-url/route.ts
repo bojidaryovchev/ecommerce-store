@@ -1,15 +1,14 @@
 import { auth } from "@/lib/auth";
+import { isAdminNow } from "@/lib/auth-guard";
 import { generateUploadKey, getS3ObjectUrl, getUploadPresignedUrl, S3_BUCKET_NAME } from "@/lib/s3";
 import { db, schema } from "@ecommerce/database";
-import { UserRole } from "@ecommerce/database/schema";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     // Only admins can upload
     const session = await auth();
-    const isAdmin = session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.SUPER_ADMIN;
-    if (!isAdmin) {
+    if (!(await isAdminNow(session?.user?.id))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
