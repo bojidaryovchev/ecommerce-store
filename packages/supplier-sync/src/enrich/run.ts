@@ -331,11 +331,23 @@ export async function runEnrich(options: EnrichOptions): Promise<EnrichResult> {
   const now = options.now ?? (() => new Date());
   const log = options.logger;
   let state = await loadEnrichState(options.db);
+  let reconciled = 0;
   if (options.apply) {
     // Stored research whose validation is out of date (the rules changed): validate again, no model needed.
     const { revalidate } = planWork(state, { ...options, limit: Number.MAX_SAFE_INTEGER });
     for (const product of revalidate) await runValidation(options, product, state, now());
     if (revalidate.length > 0) state = await loadEnrichState(options.db);
+    // A proposal that changed while its reviewed copy still stands (new rules that only stop showing a supplier
+    // figure) goes to approval now; nothing else would bring it there, as approval follows a review. Copy that is
+    // due to be rewritten or reviewed goes there after its review, below.
+    const due = planWork(state, { ...options, limit: Number.MAX_SAFE_INTEGER });
+    const working = new Set([...due.research, ...due.copyOnly, ...due.review].map((product) => product.id));
+    for (const product of state.products) {
+      if (working.has(product.id)) continue;
+      if (product.stages.rewrite?.status !== "succeeded" || product.stages.review?.status !== "succeeded") continue;
+      if (!product.stages.publish) continue;
+      if (await markPending(options.db, product.id, proposalHash(product.stages), now())) reconciled += 1;
+    }
   }
   const plan = planWork(state, options);
 
@@ -359,7 +371,7 @@ export async function runEnrich(options: EnrichOptions): Promise<EnrichResult> {
     reviewPassed: 0,
     reviewRevised: 0,
     reviewHeld: 0,
-    pendingApproval: 0,
+    pendingApproval: reconciled,
     stopped: null,
     costUsd: 0,
     mediaChanged: [],
