@@ -12,7 +12,7 @@ const NotFound: React.FC = async () => {
       <h1 className="mb-4 text-4xl font-bold">{t("title")}</h1>
       <p className="text-muted-foreground mb-8">{t("description")}</p>
       <Button asChild size="lg">
-        <Link href="/categories">{t("browseAll")}</Link>
+        <Link href="/kategorii">{t("browseAll")}</Link>
       </Button>
       <NotFoundHelp />
     </main>

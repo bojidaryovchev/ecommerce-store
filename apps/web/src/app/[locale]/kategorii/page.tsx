@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: CategoriesPageProps): Promise
   return {
     title: t("metadata.title"),
     description: t("metadata.description"),
-    alternates: { canonical: "/categories" },
+    alternates: { canonical: "/kategorii" },
     // The categories are Bulgarian content; the English page only translates the interface.
     ...(locale !== routing.defaultLocale && { robots: { index: false, follow: true } }),
   };

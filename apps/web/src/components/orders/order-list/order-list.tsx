@@ -23,7 +23,7 @@ const OrderList: React.FC<Props> = ({ orders }) => {
         <h2 className="mt-4 text-xl font-semibold">{t("emptyTitle")}</h2>
         <p className="text-muted-foreground mt-2">{t("emptyDescription")}</p>
         <Button asChild className="mt-6">
-          <Link href="/products">{t("startShopping")}</Link>
+          <Link href="/produkti">{t("startShopping")}</Link>
         </Button>
       </div>
     );

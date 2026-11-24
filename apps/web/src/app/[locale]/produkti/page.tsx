@@ -24,7 +24,7 @@ export async function generateMetadata({ params, searchParams }: ProductsPagePro
   return {
     title: t("title"),
     description: t("description"),
-    alternates: { canonical: !narrowed && page > 1 ? `/products?page=${page}` : "/products" },
+    alternates: { canonical: !narrowed && page > 1 ? `/produkti?page=${page}` : "/produkti" },
     ...((narrowed || locale !== routing.defaultLocale) && { robots: { index: false, follow: true } }),
   };
 }
@@ -49,7 +49,7 @@ const ProductsPage: React.FC<ProductsPageProps> = async ({ params, searchParams 
       </div>
       <CatalogView
         filters={filters}
-        basePath="/products"
+        basePath="/produkti"
         links={categories
           .filter((category) => category.parentId === null)
           .map((category) => ({ href: categoryHref(categoryTrail(categories, category.id)), label: category.name }))}

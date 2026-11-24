@@ -1,7 +1,7 @@
 import { defineRouting } from "next-intl/routing";
 
 /**
- * Bulgarian is the default and lives at the root (/products); English is under /en (/en/products).
+ * Bulgarian is the default and lives at the root (/produkti); English is under /en (/en/produkti).
  * No automatic redirect from the browser language: many Bulgarian shoppers run English browsers.
  * Without detection the locale cookie would be written and never read, so it is off: the URL alone
  * says the language, and the cookie policy stays short.

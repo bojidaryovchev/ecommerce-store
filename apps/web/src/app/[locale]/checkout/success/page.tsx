@@ -53,7 +53,7 @@ const CheckoutSuccessPage: React.FC<Props> = async ({ params, searchParams }) =>
           <p className="text-muted-foreground mt-2">{t("pendingDescription")}</p>
           <div className="mt-8">
             <Button asChild>
-              <Link href="/products">{t("continueShopping")}</Link>
+              <Link href="/produkti">{t("continueShopping")}</Link>
             </Button>
           </div>
         </div>
@@ -157,7 +157,7 @@ const CheckoutSuccessPage: React.FC<Props> = async ({ params, searchParams }) =>
         {/* Actions */}
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Button asChild>
-            <Link href="/products">{t("continueShopping")}</Link>
+            <Link href="/produkti">{t("continueShopping")}</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href="/account/orders">{t("viewOrders")}</Link>

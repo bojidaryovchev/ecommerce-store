@@ -150,7 +150,7 @@ const ProductsPanel: React.FC<{ menu: CategoryMenuItem[] }> = ({ menu }) => {
         <li className="mt-2 border-t pt-2">
           <Nav.Link asChild>
             <Link
-              href="/products"
+              href="/produkti"
               className="text-primary flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm font-semibold hover:underline"
             >
               {t("allProducts")}

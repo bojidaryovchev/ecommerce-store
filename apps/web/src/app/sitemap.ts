@@ -36,8 +36,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...bilingual("/", { changeFrequency: "daily", priority: 1 }),
     // Listings of Bulgarian product content: the English versions are not indexed.
-    bulgarian("/products", { changeFrequency: "daily", priority: 0.8 }),
-    bulgarian("/categories", { changeFrequency: "weekly", priority: 0.7 }),
+    bulgarian("/produkti", { changeFrequency: "daily", priority: 0.8 }),
+    bulgarian("/kategorii", { changeFrequency: "weekly", priority: 0.7 }),
     ...bilingual(installationHref(), { changeFrequency: "monthly", priority: 0.8 }),
     ...INSTALLATION_SYSTEMS.flatMap((system) =>
       bilingual(installationHref(system.slug), { changeFrequency: "monthly", priority: 0.8 }),

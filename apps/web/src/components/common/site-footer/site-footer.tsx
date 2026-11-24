@@ -102,12 +102,12 @@ const SiteFooter: React.FC = async () => {
               </li>
             ))}
             <li>
-              <Link href="/categories" className={linkClass}>
+              <Link href="/kategorii" className={linkClass}>
                 {t("allCategories")}
               </Link>
             </li>
             <li>
-              <Link href="/products" className="text-heat text-sm font-semibold hover:underline">
+              <Link href="/produkti" className="text-heat text-sm font-semibold hover:underline">
                 {t("allProducts")}
               </Link>
             </li>

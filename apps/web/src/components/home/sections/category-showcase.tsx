@@ -25,7 +25,7 @@ const CategoryShowcase: React.FC = async () => {
         eyebrow={t("eyebrow")}
         title={t("title")}
         description={t("description", { count: total, categories: menu.length })}
-        link={{ href: "/products", label: t("viewAll") }}
+        link={{ href: "/produkti", label: t("viewAll") }}
       />
       <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-5">
         {menu.map((root) => (

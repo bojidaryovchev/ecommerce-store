@@ -70,7 +70,7 @@ export default auth(async (req) => {
   const verdict = await catalogVerdict(path, req.nextUrl.searchParams);
   if (verdict.kind === "moved") {
     return finish(
-      NextResponse.redirect(new URL(`${prefix}${verdict.to}${req.nextUrl.search}`, req.url), 308),
+      NextResponse.redirect(new URL(`${prefix}${verdict.to}${verdict.search ?? req.nextUrl.search}`, req.url), 308),
       pathname,
     );
   }

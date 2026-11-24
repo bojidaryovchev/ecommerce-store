@@ -10,7 +10,7 @@ interface Props {
   linkText?: string;
 }
 
-const SectionHeader: React.FC<Props> = ({ title, link = "/categories", linkText }) => {
+const SectionHeader: React.FC<Props> = ({ title, link = "/kategorii", linkText }) => {
   const t = useTranslations("common.sectionHeader");
 
   return (

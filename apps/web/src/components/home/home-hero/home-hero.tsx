@@ -47,7 +47,7 @@ const HomeHero: React.FC = () => {
                 {t("primary")}
               </Link>
               <Link
-                href="/products"
+                href="/produkti"
                 className="inline-flex h-12 items-center rounded-full border border-white/40 px-7 text-sm font-semibold backdrop-blur-sm transition-colors hover:bg-white/10"
               >
                 {t("secondary")}

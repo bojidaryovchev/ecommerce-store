@@ -100,7 +100,7 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
     };
   }, [term, searchable, open]);
 
-  const resultsHref = useCallback((query: string) => `/products?q=${encodeURIComponent(query)}`, []);
+  const resultsHref = useCallback((query: string) => `/produkti?q=${encodeURIComponent(query)}`, []);
 
   /** Every row the arrow keys reach, in the order the panel draws them. */
   const options = useMemo<string[]>(() => {
@@ -108,7 +108,7 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
     const rows = [
       ...suggestions.products.map((product) => productHref(product)),
       ...suggestions.categories.map((category) => category.href),
-      ...suggestions.brands.map((brand) => `/products?brand=${encodeURIComponent(brand.name)}`),
+      ...suggestions.brands.map((brand) => `/produkti?brand=${encodeURIComponent(brand.name)}`),
     ];
     if (suggestions.total > 0) rows.push(resultsHref(term));
     return rows;
@@ -148,7 +148,7 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    goTo(term ? resultsHref(term) : "/products");
+    goTo(term ? resultsHref(term) : "/produkti");
   };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -183,7 +183,7 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
         if (!containerRef.current?.contains(event.relatedTarget as Node | null)) close();
       }}
     >
-      <form role="search" action={getPathname({ href: "/products", locale })} method="get" onSubmit={onSubmit}>
+      <form role="search" action={getPathname({ href: "/produkti", locale })} method="get" onSubmit={onSubmit}>
         <label htmlFor={inputId} className="sr-only">
           {t("label")}
         </label>
@@ -301,7 +301,7 @@ const SearchField: React.FC<Props> = ({ className, size = "default", autoFocus, 
                   id={listboxId}
                   index={brandOffset + i}
                   activeIndex={activeIndex}
-                  href={`/products?brand=${encodeURIComponent(brand.name)}`}
+                  href={`/produkti?brand=${encodeURIComponent(brand.name)}`}
                   onHover={setActiveIndex}
                   onSelect={goTo}
                 >

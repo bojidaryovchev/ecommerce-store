@@ -33,7 +33,7 @@ const CheckoutCancelPage: React.FC<Props> = async ({ params }) => {
         <p className="text-muted-foreground mt-2">{t("description")}</p>
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Button asChild>
-            <Link href="/products">{t("continueShopping")}</Link>
+            <Link href="/produkti">{t("continueShopping")}</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href="/">{t("backHome")}</Link>

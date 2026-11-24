@@ -1,7 +1,7 @@
 import { routing } from "@/i18n/routing";
 import { db, schema } from "@ecommerce/database";
 import { eq, isNotNull, isNull } from "drizzle-orm";
-import { CATALOG_PAGE_SIZE } from "./catalog-filters";
+import { CATALOG_PAGE_SIZE, joinBrands, queryString, splitBrands } from "./catalog-filters";
 import { storefrontPageExists } from "./storefront-routes";
 
 /**
@@ -26,6 +26,8 @@ type RouteIndex = {
 };
 
 const LIFETIME_MS = 60_000;
+/** The counts' key for the whole catalogue (no category slug contains a space). */
+const ALL_PRODUCTS = "all products";
 let current: RouteIndex | null = null;
 let loading: Promise<RouteIndex> | null = null;
 
@@ -61,18 +63,22 @@ async function load(): Promise<RouteIndex> {
     const path = pathOf(category.id);
     if (path) categoryPaths.set(category.slug, path);
   }
-  // Each live product counts toward its category and every ancestor, overall and for its brand.
+  // Each live product counts toward its category and every ancestor, and toward the whole catalogue
+  // (ALL_PRODUCTS, the /produkti listing), overall and for its brand.
   const counts = new Map<string, number>();
   const brandCounts = new Map<string, Map<string, number>>();
+  const add = (key: string, brand: string | null) => {
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+    if (!brand) return;
+    const brands = brandCounts.get(key) ?? new Map<string, number>();
+    brands.set(brand, (brands.get(brand) ?? 0) + 1);
+    brandCounts.set(key, brands);
+  };
   for (const { categoryId, brand } of live) {
+    add(ALL_PRODUCTS, brand);
     let node = categoryId ? byId.get(categoryId) : undefined;
     for (let depth = 0; node && depth < 10; depth++) {
-      counts.set(node.slug, (counts.get(node.slug) ?? 0) + 1);
-      if (brand) {
-        const brands = brandCounts.get(node.slug) ?? new Map<string, number>();
-        brands.set(brand, (brands.get(brand) ?? 0) + 1);
-        brandCounts.set(node.slug, brands);
-      }
+      add(node.slug, brand);
       node = node.parentId ? byId.get(node.parentId) : undefined;
     }
   }
@@ -94,7 +100,8 @@ async function routeIndex(): Promise<RouteIndex> {
   return loading;
 }
 
-export type CatalogVerdict = { kind: "ok" } | { kind: "missing" } | { kind: "moved"; to: string };
+/** `search`, when set, replaces the request's query on the redirect (a normalized filter). */
+export type CatalogVerdict = { kind: "ok" } | { kind: "missing" } | { kind: "moved"; to: string; search?: string };
 
 /** A path segment as text; a broken escape ("%C3") is no page at all. */
 const decode = (segment: string): string | null => {
@@ -142,14 +149,18 @@ export function judgePath(
   if (parts[0] === routing.defaultLocale) return OK;
 
   if (parts[0] === "produkt") return parts.length === 2 && index.products.has(parts[1]!) ? OK : MISSING;
-  // Old URLs from before slugs and nested category paths: a real redirect, not a page that redirects.
+  // Old URLs from before slugs, nested category paths and the Bulgarian listing paths: a real redirect,
+  // not a page that redirects (next.config.ts redirects the bare listings too, without the database).
   if (parts[0] === "products" || parts[0] === "categories") {
-    if (parts.length === 1) return OK;
+    if (parts.length === 1) return { kind: "moved", to: parts[0] === "products" ? "/produkti" : "/kategorii" };
     if (parts.length > 2) return MISSING;
     const productSlug = parts[0] === "products" ? index.productSlugById.get(parts[1]!) : undefined;
     const to = parts[0] === "products" ? productSlug && `/produkt/${productSlug}` : index.categoryPaths.get(parts[1]!);
     return to ? { kind: "moved", to } : MISSING;
   }
+
+  // The whole catalogue's listing takes the same brand and page checks as a category's.
+  if (parts.length === 1 && parts[0] === "produkti") return judgeListing(ALL_PRODUCTS, "/produkti", search, index);
 
   const page = storefrontPageExists(parts);
   if (page !== null) return page ? OK : MISSING;
@@ -159,23 +170,40 @@ export function judgePath(
   const canonical = index.categoryPaths.get(last);
   if (!canonical) return MISSING;
   if (canonical !== `/${parts.join("/")}`) return { kind: "moved", to: canonical };
+  return judgeListing(last, canonical, search, index);
+}
 
-  // A plain or brand-filtered listing (the crawlable views): the brands must be carried here, each named
-  // once, and the page must exist. Other filters are disallowed in robots.txt and render noindexed.
-  const keys = [...search.keys()];
-  if (keys.every((key) => key === "page" || key === "brand")) {
-    const brands = search.getAll("brand");
-    const carried = index.brandCounts.get(last);
-    if (new Set(brands).size !== brands.length) return MISSING;
-    if (brands.some((brand) => !carried?.has(brand))) return MISSING;
-    const products = brands.length
-      ? brands.reduce((sum, brand) => sum + (carried?.get(brand) ?? 0), 0)
-      : (index.productCounts.get(last) ?? 0);
-    const pageParams = search.getAll("page");
-    if (pageParams.length > 1) return MISSING;
-    const pageNumber = Number(pageParams[0] ?? "1");
-    const pages = Math.max(1, Math.ceil(products / CATALOG_PAGE_SIZE));
-    if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pages) return MISSING;
+/**
+ * A plain or brand-filtered listing (the crawlable views): the brands must be carried here, each named
+ * once, and the page must exist. One selection has one URL: brands in a single `brand` parameter, in a
+ * fixed order (lib/catalog-filters.ts); any other spelling of it redirects there. Other filters are
+ * disallowed in robots.txt and render noindexed, so they aren't judged.
+ */
+function judgeListing(
+  key: string,
+  path: string,
+  search: URLSearchParams,
+  index: Pick<RouteIndex, "productCounts" | "brandCounts">,
+): CatalogVerdict {
+  if (![...search.keys()].every((name) => name === "page" || name === "brand")) return OK;
+  const brandParams = search.getAll("brand");
+  const brands = splitBrands(brandParams);
+  const carried = index.brandCounts.get(key);
+  if (brandParams.length > 0 && brands.length === 0) return MISSING;
+  if (new Set(brands).size !== brands.length) return MISSING;
+  if (brands.some((brand) => !carried?.has(brand))) return MISSING;
+  if (brands.length > 0 && (brandParams.length > 1 || brandParams[0] !== joinBrands(brands))) {
+    const normalized = new URLSearchParams(search);
+    normalized.set("brand", joinBrands(brands));
+    return { kind: "moved", to: path, search: `?${queryString(normalized)}` };
   }
+  const products = brands.length
+    ? brands.reduce((sum, brand) => sum + (carried?.get(brand) ?? 0), 0)
+    : (index.productCounts.get(key) ?? 0);
+  const pageParams = search.getAll("page");
+  if (pageParams.length > 1) return MISSING;
+  const pageNumber = Number(pageParams[0] ?? "1");
+  const pages = Math.max(1, Math.ceil(products / CATALOG_PAGE_SIZE));
+  if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pages) return MISSING;
   return OK;
 }

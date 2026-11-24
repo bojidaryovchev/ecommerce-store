@@ -82,7 +82,7 @@ const MobileMenu: React.FC<Props> = ({ menu, session, isAdmin, className }) => {
                 </li>
               ))}
               <li>
-                <Link href="/products" onClick={close} className="text-primary block px-2 py-2 text-sm font-semibold">
+                <Link href="/produkti" onClick={close} className="text-primary block px-2 py-2 text-sm font-semibold">
                   {t("allProducts")} →
                 </Link>
               </li>

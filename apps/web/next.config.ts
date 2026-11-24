@@ -34,6 +34,16 @@ const nextConfig: NextConfig = {
     return [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];
   },
 
+  // The catalogue listings moved from English words to the site's language (Google: use words in the
+  // audience's language). Old product and category URLs below them are redirected by the proxy, which
+  // looks up their slugs (src/lib/route-index.ts).
+  async redirects() {
+    return ["", "/en"].flatMap((prefix) => [
+      { source: `${prefix}/products`, destination: `${prefix}/produkti`, permanent: true },
+      { source: `${prefix}/categories`, destination: `${prefix}/kategorii`, permanent: true },
+    ]);
+  },
+
   // Allow S3 images
   images: {
     remotePatterns: [

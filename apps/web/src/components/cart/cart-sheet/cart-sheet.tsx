@@ -97,7 +97,7 @@ const CartSheet: React.FC = () => {
                 {t("emptyHint")}
               </p>
               <Button asChild onClick={closeCart}>
-                <Link href="/products">{t("browseProducts")}</Link>
+                <Link href="/produkti">{t("browseProducts")}</Link>
               </Button>
             </div>
           ) : (

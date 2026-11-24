@@ -13,7 +13,7 @@ const ProductNotFound: React.FC = async () => {
         <h1 className="mb-4 text-4xl font-bold">{t("title")}</h1>
         <p className="text-muted-foreground mb-8">{t("description")}</p>
         <Button asChild>
-          <Link href="/products">{t("browseProducts")}</Link>
+          <Link href="/produkti">{t("browseProducts")}</Link>
         </Button>
       </div>
       <NotFoundHelp />

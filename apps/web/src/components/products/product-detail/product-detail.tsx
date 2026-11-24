@@ -105,7 +105,7 @@ const ProductDetail: React.FC<Props> = ({ product, categoryTrail, energyLabel })
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               {product.brand && (
-                <Link href={`/products?brand=${encodeURIComponent(product.brand)}`}>
+                <Link href={`/produkti?brand=${encodeURIComponent(product.brand)}`}>
                   <Badge variant="secondary">{product.brand}</Badge>
                 </Link>
               )}

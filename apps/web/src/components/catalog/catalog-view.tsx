@@ -12,7 +12,7 @@ import { CatalogToolbar } from "./catalog-toolbar";
 
 interface Props {
   filters: Filters;
-  /** The page the filters apply to, e.g. "/products" or "/categories/peletni-kamini". */
+  /** The page the filters apply to, e.g. "/produkti" or "/peletni-kamini". */
   basePath: string;
   /** Category (or subcategory) links shown at the top of the filters. */
   links?: CatalogLink[];

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "@/i18n/navigation";
+import { joinBrands, queryString, splitBrands } from "@/lib/catalog-filters";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useTransition } from "react";
 
@@ -18,7 +19,7 @@ export function useCatalogNavigation(basePath: string) {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("page");
       mutate(params);
-      const query = params.toString();
+      const query = queryString(params);
       startTransition(() => {
         router.replace(query ? `${basePath}?${query}` : basePath, { scroll: false });
       });
@@ -26,14 +27,22 @@ export function useCatalogNavigation(basePath: string) {
     [basePath, router, searchParams],
   );
 
-  /** Adds or removes one value of a repeatable parameter (brand, f.<attribute>). */
+  /**
+   * Adds or removes one value of a multi-value parameter. Brands share one comma-separated parameter
+   * (lib/catalog-filters.ts); `f.<attribute>` values repeat, since they can contain commas.
+   */
   const toggle = useCallback(
     (key: string, value: string, checked: boolean) =>
       update((params) => {
-        const values = params.getAll(key).filter((v) => v !== value);
+        const current = key === "brand" ? splitBrands(params.getAll(key)) : params.getAll(key);
+        const values = current.filter((v) => v !== value);
         if (checked) values.push(value);
         params.delete(key);
-        for (const v of values) params.append(key, v);
+        if (key === "brand") {
+          if (values.length > 0) params.set(key, joinBrands(values));
+        } else {
+          for (const v of values) params.append(key, v);
+        }
       }),
     [update],
   );

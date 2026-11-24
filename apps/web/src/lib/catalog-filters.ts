@@ -1,9 +1,10 @@
 /**
  * Catalog filters as they appear in the URL, shared by the server (queries) and the client (sidebar).
  *
- *   ?q=камина&brand=Artel&brand=Ocean&f.color=Бял&r.power-heating=6-12&minPrice=100&maxPrice=900&inStock=1&sort=price-asc&page=2
+ *   ?q=камина&brand=Artel,Ocean&f.color=Бял&r.power-heating=6-12&minPrice=100&maxPrice=900&inStock=1&sort=price-asc&page=2
  *
- * - `brand` (repeatable): brand names
+ * - `brand`: brand names, comma-separated in one parameter, in a fixed order (Google: each key once, so
+ *   Googlebot doesn't drop a value; one URL per selection). Brand pages are the crawlable filter.
  * - `f.<attribute>` (repeatable): exact attribute values (checkbox facets)
  * - `r.<attribute>`: numeric range "min-max", either end optional ("6-", "-12")
  * - `minPrice` / `maxPrice`: euros
@@ -38,6 +39,29 @@ export const CATALOG_PAGE_SIZE = 24;
 
 const list = (value: string | string[] | undefined): string[] =>
   (Array.isArray(value) ? value : value === undefined ? [] : [value]).map((v) => v.trim()).filter(Boolean);
+
+/** The brands named in a `brand` parameter (or in repeated ones, from older links), in URL order. */
+export function splitBrands(value: string | string[] | undefined): string[] {
+  return list(value).flatMap((v) =>
+    v
+      .split(",")
+      .map((brand) => brand.trim())
+      .filter(Boolean),
+  );
+}
+
+/**
+ * Brands as one `brand` value: each once, in a fixed order, so one selection has one URL. Brand names
+ * contain no commas (attribute values can, "2,5", which is why `f.` filters stay repeatable).
+ */
+export function joinBrands(brands: Iterable<string>): string {
+  return [...new Set(brands)].sort((a, b) => a.localeCompare(b, "bg")).join(",");
+}
+
+/** A query string with literal commas: `brand=Artel,Ocean`, not `brand=Artel%2COcean` (both parse the same). */
+export function queryString(params: URLSearchParams): string {
+  return params.toString().replace(/%2C/gi, ",");
+}
 
 const euroToCents = (value: string | undefined): number | undefined => {
   if (!value) return undefined;
@@ -80,7 +104,7 @@ export function parseCatalogFilters(params: SearchParamsInput, fixed: { category
   return {
     ...(query && { query }),
     ...((fixed.categoryId ?? first("category")) && { categoryId: fixed.categoryId ?? first("category") }),
-    brands: [...new Set(list(params.brand))],
+    brands: [...new Set(splitBrands(params.brand))],
     values,
     ranges,
     minPrice: euroToCents(first("minPrice")),
