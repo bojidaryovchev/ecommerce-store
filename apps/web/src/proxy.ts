@@ -51,14 +51,22 @@ export default auth(async (req) => {
     return finish(NextResponse.next({ request: { headers } }), pathname);
   }
 
+  // Bulgarian has no prefix: /bg/... is the same page without it, for good (next-intl's own redirect is a 307).
+  const defaultPrefix = `/${routing.defaultLocale}`;
+  if (pathname === defaultPrefix || pathname.startsWith(`${defaultPrefix}/`)) {
+    const to = pathname.slice(defaultPrefix.length) || "/";
+    return finish(NextResponse.redirect(new URL(`${to}${req.nextUrl.search}`, req.url), 308), pathname);
+  }
+
   // Storefront: account pages need a signed-in user; then let next-intl resolve the locale.
   const { prefix, path } = splitLocalePrefix(pathname);
   if (!user && (path.startsWith("/account") || path.startsWith("/orders"))) {
     return finish(redirectToLogin(req, prefix, pathname), pathname);
   }
 
-  // A catalog page that doesn't exist is a 404 and a category under an outdated path a 308, decided
-  // here: with Cache Components the page itself commits to 200 once its shell streams (lib/route-index.ts).
+  // A page that doesn't exist is a 404 and a category under an outdated path a 308, decided here: with
+  // Cache Components the page itself commits to 200 once its shell streams (lib/route-index.ts; the
+  // storefront's own pages are listed in lib/storefront-routes.ts, so a new route must be added there).
   const verdict = await catalogVerdict(path, req.nextUrl.searchParams);
   if (verdict.kind === "moved") {
     return finish(
