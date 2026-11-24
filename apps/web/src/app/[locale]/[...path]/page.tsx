@@ -33,14 +33,17 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   const href = categoryHref(categoryTrail(categories, category.id));
   if (`/${path.join("/")}` !== href) permanentRedirect({ href, locale });
-  // Each page of the listing is its own canonical page (Google's advice for pagination); filtered or
-  // sorted views are crawlable but not indexed, with the category itself as canonical.
+  // Each page of the listing is its own canonical page (Google's advice for pagination). Filtered or
+  // sorted views and the English pages repeat a Bulgarian listing, so they name it as canonical: one
+  // signal, not noindex as well (Google: don't use noindex to choose canonicals).
   const page = typeof search.page === "string" && /^\d+$/.test(search.page) ? Number(search.page) : 1;
   const filtered = Object.keys(search).some((key) => key !== "page");
-  // An empty section (all its products withdrawn) is kept out of the index until it has products again.
+  const canonical = !filtered && page > 1 ? `${href}?page=${page}` : href;
+  // An empty section (all its products withdrawn) is kept out of the index until it has products again;
+  // then only its own Bulgarian page keeps a canonical, to itself.
   const stats = await getCategoryStats();
   const empty = (stats[category.id]?.productCount ?? 0) === 0;
-  const indexable = locale === routing.defaultLocale && !filtered && !empty;
+  const ownPage = locale === routing.defaultLocale && !filtered;
   // A category without its own description: the meta description written with its questions (Bulgarian pages).
   const written =
     !details?.description && locale === routing.defaultLocale
@@ -56,8 +59,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title: page > 1 ? t("metadata.pagedTitle", { name: category.name, page }) : category.name,
     ...(picture && { openGraph: { images: [picture] } }),
     description: details?.description || written || t("metadata.categoryDescription", { name: category.name }),
-    alternates: { canonical: !filtered && page > 1 ? `${href}?page=${page}` : href },
-    ...(!indexable && { robots: { index: false, follow: true } }),
+    ...((!empty || ownPage) && { alternates: { canonical } }),
+    ...(empty && { robots: { index: false, follow: true } }),
   };
 }
 

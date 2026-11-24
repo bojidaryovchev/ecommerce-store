@@ -34,14 +34,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     truncate(product.description ?? t("productDescription", { name: product.name }), 160);
   const path = productHref(product);
   const photo = primaryPhoto(product);
-  // Product content is Bulgarian; the English pages only translate the interface, so they stay out of the index.
-  // So does a page whose text is still the supplier's, until its own copy is published, and a hidden product's.
-  const indexable = locale === routing.defaultLocale && hasOwnCopy(product) && product.active;
+  // A page whose text is still the supplier's (until its own copy is published) and a hidden product's stay out of
+  // the index. Product content is Bulgarian and the English page only translates the interface, so it names the
+  // Bulgarian page as canonical rather than saying noindex (Google: don't use noindex to choose canonicals); a
+  // page kept out says noindex and points nowhere else.
+  const indexable = hasOwnCopy(product) && product.active;
+  const ownPage = locale === routing.defaultLocale;
 
   return {
     title: product.name,
     description,
-    ...(locale === routing.defaultLocale && { alternates: { canonical: path } }),
+    ...((indexable || ownPage) && { alternates: { canonical: path } }),
     ...(!indexable && { robots: { index: false, follow: true } }),
     openGraph: { type: "website", title: product.name, description, url: path, images: photo ? [photo] : [] },
   };
